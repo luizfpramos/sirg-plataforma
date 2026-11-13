@@ -21,6 +21,7 @@ urlpatterns = [
     path("auditoria/", V.auditoria, name="auditoria"),
     path("ajuda/", V.ajuda, name="ajuda"),
     path("sobre/", V.sobre, name="sobre"),
+    path("sobre/enviar-producao/", V.enviar_producao, name="enviar_producao"),
     path("graficos/cores/", V.cores_graficos, name="cores_graficos"),
     path("graficos/cores/nova/", V.paleta_editar, name="paleta_nova"),
     path("graficos/cores/<slug:chave>/editar/", V.paleta_editar, name="paleta_editar"),

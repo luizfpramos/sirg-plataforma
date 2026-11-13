@@ -6,7 +6,11 @@
 #   2. se implantar/hml mudou: instala aquele codigo na homologacao (implantar.ps1 -Alvo hml);
 #   3. se implantar/prd mudou: instala na producao (implantar.ps1 -Alvo prd), SO se esse codigo ja foi
 #      instalado na homologacao antes;
-#   4. grava o resultado em <ambiente>\dados\implantacao.json (aparece na tela Sobre do SiRG) e no log.
+#   4. se alguem clicou em "Enviar para a producao" na tela Sobre da homologacao (arquivo
+#      <hml>\dados\pedido_prd.json): instala na producao exatamente o codigo que esta na homologacao;
+#   5. grava o resultado em <ambiente>\dados\implantacao.json (aparece na tela Sobre do SiRG) e no log, e
+#      grava em <hml>\dados\producao.json a versao que esta na producao (a tela Sobre da HML mostra);
+#   6. depois de instalar na producao, atualiza este proprio script com o da versao instalada.
 #
 # Nada e enviado ao GitHub: a chave usada so tem permissao de leitura.
 # Este arquivo e so ASCII de proposito (o PowerShell 5 le scripts sem BOM como ANSI).
@@ -49,15 +53,18 @@ try {
     }
     function SalvarEstado { $estado | ConvertTo-Json | Set-Content -Path $ArqEstado -Encoding UTF8 }
 
-    function Registrar($alvo, $commit, $versao, $ok, $erro) {
-        $pasta = if ($alvo -eq "hml") { Join-Path $Raiz "hml\sirg-plataforma" } else { Join-Path $Raiz "producao\sirg-plataforma" }
+    $PastaHml = Join-Path $Raiz "hml\sirg-plataforma"
+    $PastaPrd = Join-Path $Raiz "producao\sirg-plataforma"
+    function Registrar($alvo, $commit, $versao, $ok, $erro, $onde = "") {
+        if (-not $onde) { $onde = $alvo }
+        $pasta = if ($onde -eq "hml") { $PastaHml } else { $PastaPrd }
         $dados = Join-Path $pasta "dados"
         if (-not (Test-Path $dados)) { return }
         $arq = Join-Path $dados "implantacao.json"
         $lista = @()
         if (Test-Path $arq) { try { $lista = @(Get-Content $arq -Raw -Encoding UTF8 | ConvertFrom-Json) } catch { $lista = @() } }
         $lista += [pscustomobject]@{ quando = (Get-Date -Format "dd/MM/yyyy HH:mm"); alvo = $alvo; versao = $versao;
-                                     commit = $commit; ok = $ok; erro = $erro }
+                                     commit = $commit; ok = $ok; erro = $erro; quem = $script:Quem }
         if ($lista.Count -gt 30) { $lista = $lista[($lista.Count - 30)..($lista.Count - 1)] }
         ConvertTo-Json -InputObject @($lista) -Depth 3 | Set-Content -Path $arq -Encoding UTF8
     }
@@ -85,9 +92,28 @@ try {
             $erro = ($linhas | Select-Object -Last 12) -join "`n"
             if (-not $erro) { $erro = "codigo de saida $codigo" }
         }
+        if ($alvo -eq "prd" -and -not $erro) {
+            # o implantador passa a ser o da versao que acabou de entrar na producao
+            $novo = Join-Path $origem "implantacao\git\implantador.ps1"
+            $atual = Join-Path $Base "implantador.ps1"
+            if ((Test-Path $novo) -and (Select-String -Path $novo -Pattern "SiRG-Implantador" -Quiet)) {
+                if ((Get-FileHash $novo).Hash -ne (Get-FileHash $atual).Hash) {
+                    Copy-Item $novo $atual -Force
+                    Logar "Implantador atualizado com o da versao $versao."
+                }
+            }
+        }
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
         return @{ ok = (-not $erro); versao = $versao; erro = $erro }
     }
+
+    function VersaoDe($pasta) {
+        $arq = Join-Path $pasta "config\settings.py"
+        if (-not (Test-Path $arq)) { return "" }
+        foreach ($l in Get-Content $arq) { if ($l -match '^\s*SIRG_VERSAO\s*=\s*"([^"]+)"') { return $Matches[1] } }
+        return ""
+    }
+    $script:Quem = ""
 
     foreach ($alvo in @("hml", "prd")) {
         $commit = (G rev-parse --verify --quiet "refs/remotes/origin/implantar/$alvo" 2>$null)
@@ -95,6 +121,11 @@ try {
         $commit = "$commit".Trim()
         if ($commit -eq $estado[$alvo]) { continue }                       # ja instalado
         if ($commit -eq $estado["${alvo}_falhou"] -and -not $Agora) { continue }   # ja falhou: espera codigo novo
+        if ($alvo -eq "prd" -and $estado["prd"]) {
+            # a producao ja recebeu (pelo botao da homologacao) um codigo mais novo que este: nao volta atras
+            G merge-base --is-ancestor $commit $estado["prd"] 2>$null
+            if ($LASTEXITCODE -eq 0) { Logar "PRD: o codigo $($commit.Substring(0, 8)) ja esta contido na producao."; continue }
+        }
         if ($alvo -eq "prd") {
             # a producao so recebe codigo que ja foi instalado na homologacao
             if (-not $estado["hml"]) { Logar "PRD: aguardando a primeira instalacao na homologacao."; continue }
@@ -118,6 +149,43 @@ try {
         }
         Registrar $alvo $commit $r.versao $r.ok $r.erro
         SalvarEstado
+    }
+
+    # pedido "Enviar para a producao" feito na tela Sobre da homologacao
+    $ArqPedido = Join-Path $PastaHml "dados\pedido_prd.json"
+    if (Test-Path $ArqPedido) {
+        $pedido = $null
+        try { $pedido = Get-Content $ArqPedido -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
+        Move-Item $ArqPedido (Join-Path $PastaLog ("pedido_prd-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".json")) -Force
+        $script:Quem = if ($pedido) { [string]$pedido.quem } else { "" }
+        $commit = if ($pedido) { [string]$pedido.commit } else { "" }
+        $msg = ""
+        if (-not $commit) { $msg = "pedido invalido." }
+        elseif ($commit -ne $estado["hml"]) { $msg = "o codigo pedido ($($commit.Substring(0, [Math]::Min(8, $commit.Length)))) nao e o que esta instalado na homologacao agora." }
+        elseif ($commit -eq $estado["prd"]) { $msg = "a producao ja esta com este codigo." }
+        else {
+            $vHml = VersaoDe $PastaHml; $vPrd = VersaoDe $PastaPrd
+            if ($vHml -and $vHml -eq $vPrd) { $msg = "a versao $vHml ja esta na producao; suba a SIRG_VERSAO antes de enviar." }
+        }
+        if ($msg) {
+            Logar "PRD (pedido da homologacao) recusada: $msg"
+            Registrar "prd" $commit "" $false $msg "hml"
+        } else {
+            Logar "PRD: pedido da homologacao feito por $($script:Quem)."
+            $r = Instalar "prd" $commit
+            if ($r.ok) { $estado["prd"] = $commit; $estado["prd_falhou"] = ""; Logar "prd : versao $($r.versao) instalada." }
+            else { $estado["prd_falhou"] = $commit; Logar "prd : FALHOU. $($r.erro)" }
+            Registrar "prd" $commit $r.versao $r.ok $r.erro "prd"
+            Registrar "prd" $commit $r.versao $r.ok $r.erro "hml"
+            SalvarEstado
+        }
+        $script:Quem = ""
+    }
+
+    # a tela Sobre da homologacao mostra o que esta na producao
+    if (Test-Path (Join-Path $PastaHml "dados")) {
+        [pscustomobject]@{ versao = (VersaoDe $PastaPrd); commit = $estado["prd"]; quando = (Get-Date -Format "dd/MM/yyyy HH:mm") } |
+            ConvertTo-Json | Set-Content -Path (Join-Path $PastaHml "dados\producao.json") -Encoding UTF8
     }
 } catch {
     Logar "ERRO inesperado: $_"
