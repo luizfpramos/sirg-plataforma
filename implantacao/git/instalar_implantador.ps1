@@ -51,7 +51,10 @@ Read-Host "   Depois de cadastrar, aperte Enter para testar" | Out-Null
 $k = ($Base -replace '\\', '/')
 $env:GIT_SSH_COMMAND = "ssh -i `"$k/chave_github`" -o IdentitiesOnly=yes -o UserKnownHostsFile=`"$k/known_hosts`" -o StrictHostKeyChecking=accept-new"
 $ErrorActionPreference = "Continue"
-& git ls-remote $rep "refs/heads/main" 2>&1 | Out-Host
+# o aviso do SSH na primeira conexao ("Permanently added ... known hosts") vai para o canal de erro e o
+# PowerShell 5 mostraria em vermelho como se fosse erro: so a resposta do GitHub aparece
+$resposta = & git ls-remote $rep "refs/heads/main" 2>$null
+if ($resposta) { Write-Host "   $resposta" }
 if ($LASTEXITCODE -ne 0) { Write-Host "Nao consegui ler o repositorio. Confira a deploy key e o endereco e rode de novo." -ForegroundColor Red; exit 1 }
 Write-Host "   ok: o repositorio pode ser lido." -ForegroundColor Green
 $ErrorActionPreference = "Stop"
