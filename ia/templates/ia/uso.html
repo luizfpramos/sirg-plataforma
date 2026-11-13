@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Assistente SiRG{% endblock %}
+{% block conteudo %}
+<h1 class="mb-0"><i class="bi bi-stars"></i> Assistente SiRG</h1>
+<div class="subtitulo mb-3">Configuração e uso da inteligência artificial que ajuda a escrever e revisar o relatório.</div>
+<div class="row g-3 mb-3">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Configuração</div><div class="card-body">
+    {% if resumo.erro %}<div class="alert alert-danger">{{ resumo.erro }}</div>{% else %}
+    <dl class="row mb-2 mini">
+      <dt class="col-5">Situação</dt><dd class="col-7">{% if resumo.ativo %}<span class="badge text-bg-success">ativo</span>{% else %}<span class="badge text-bg-secondary">desativado</span>{% endif %}</dd>
+      <dt class="col-5">Provedor / modelo</dt><dd class="col-7"><span class="codigo">{{ resumo.provedor }}</span> / <span class="codigo">{{ resumo.modelo }}</span></dd>
+      <dt class="col-5">Chave da API</dt><dd class="col-7">{% if resumo.chave_configurada %}<span class="text-success">configurada</span>{% else %}<span class="text-danger">não configurada — coloque GEMINI_API_KEY no arquivo .env</span>{% endif %}</dd>
+    </dl>{% endif %}
+    <form method="post">{% csrf_token %}<button class="btn btn-sm btn-outline-primary" name="testar" value="1"><i class="bi bi-plug"></i> Testar conexão e listar modelos</button></form>
+    {% if teste %}<div class="mt-2 mini">
+      {% if teste.ok %}<div class="text-success"><i class="bi bi-check-circle"></i> Conexão ok.{% if teste.mensagem %} {{ teste.mensagem }}{% endif %}</div>
+        {% if teste.modelos %}<div class="mt-1">{% if teste.encontrado %}O modelo configurado (<span class="codigo">{{ teste.configurado }}</span>) está disponível.{% else %}<span class="text-danger">O modelo configurado (<span class="codigo">{{ teste.configurado }}</span>) não está na lista. Troque em <span class="codigo">config_ia/ia.toml</span> por um destes:</span>{% endif %}</div>
+        <div class="border rounded p-2 mt-1" style="max-height:180px;overflow:auto">{% for m in teste.modelos %}<span class="codigo d-inline-block me-3">{{ m }}</span>{% endfor %}</div>{% endif %}
+      {% else %}<div class="text-danger"><i class="bi bi-x-circle"></i> {{ teste.erro }}</div>{% endif %}
+    </div>{% endif %}
+    <p class="mini text-secondary mt-3 mb-0">Provedor, modelo, limites e instruções ficam em <span class="codigo">config_ia/ia.toml</span> e <span class="codigo">config_ia/prompts/assistente.md</span> (valem sem reiniciar). <strong>Plano gratuito do Gemini:</strong> o Google pode usar o conteúdo enviado para melhorar seus produtos; não envie dados pessoais ou sigilosos.</p>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">O que o Assistente faz</div><div class="card-body mini">
+    <ul class="mb-2">{% for k, v in acoes.items %}<li><strong>{{ v.0 }}</strong></li>{% endfor %}<li><strong>Ligar números digitados aos quadros</strong> (sem IA)</li></ul>
+    <p class="mb-0 text-secondary">Nada é aplicado sozinho: o resultado aparece com as diferenças destacadas e a pessoa decide se aplica. Números que não existem nos dados são descartados automaticamente.</p>
+  </div></div></div>
+</div>
+<div class="card mb-3"><div class="card-header">Uso no mês ({{ hoje }} hoje)</div>
+  <div class="table-responsive"><table class="table table-sm mb-0">
+    <thead><tr><th>Usuário</th><th class="text-end">Pedidos</th><th class="text-end">Aplicados</th><th class="text-end">Falhas</th><th class="text-end">Tokens (entrada + saída)</th></tr></thead>
+    <tbody>{% for u in por_usuario %}<tr><td>{{ u.usuario__first_name }} {{ u.usuario__last_name }} <span class="codigo mini">{{ u.usuario__username }}</span></td><td class="text-end">{{ u.chamadas }}</td><td class="text-end">{{ u.aplicadas }}</td><td class="text-end">{{ u.falhas }}</td><td class="text-end">{{ u.entrada|add:u.saida }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="text-secondary text-center py-3">Nenhum uso neste mês.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% if por_acao %}<div class="card-footer mini">{% for nome, n in por_acao %}<span class="me-3">{{ nome }}: <strong>{{ n }}</strong></span>{% endfor %}</div>{% endif %}
+</div>
+<div class="card"><div class="card-header">Últimos pedidos</div>
+  <div class="table-responsive"><table class="table table-sm mb-0 mini"><thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Modelo</th><th class="text-end">Tokens</th><th>Resultado</th></tr></thead><tbody>
+  {% for x in ultimos %}<tr><td>{{ x.criado_em|date:"d/m H:i" }}</td><td>{{ x.usuario.get_full_name|default:x.usuario.username }}</td><td>{{ x.acao }}</td><td class="codigo fw-normal">{{ x.modelo }}</td><td class="text-end">{{ x.tokens_total }}</td><td>{% if not x.sucesso %}<span class="text-danger">{{ x.erro }}</span>{% elif x.aplicado %}<span class="text-success">aplicado</span>{% else %}—{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="text-secondary text-center py-3">Nada ainda.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

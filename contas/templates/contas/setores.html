@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Setores{% endblock %}
+{% block conteudo %}
+<div class="d-flex align-items-start mb-3 flex-wrap gap-2">
+  <div><h1 class="mb-0"><i class="bi bi-diagram-2"></i> Setores</h1><div class="subtitulo">Unidades responsáveis por partes do relatório</div></div>
+  <div class="ms-auto d-flex gap-2 align-items-center">
+    <a class="btn btn-sm btn-link" href="?{% if not mostrar_inativos %}inativos=1{% endif %}">{% if mostrar_inativos %}ocultar inativos{% else %}mostrar inativos{% endif %}</a>
+    {% if E_ADMIN %}<a class="btn btn-primary" href="{% url 'setor_novo' %}"><i class="bi bi-plus-lg"></i> Novo setor</a>{% endif %}
+  </div>
+</div>
+<div class="card"><div class="table-responsive">
+<table class="table table-sm table-hover mb-0">
+  <thead><tr><th>Sigla</th><th>Nome</th><th class="text-end">Membros</th><th>Situação</th></tr></thead>
+  <tbody>
+  {% for s in setores %}
+  <tr><td><a class="codigo" href="{% url 'setor' s.pk %}">{{ s.sigla }}</a></td><td>{{ s.nome }}</td><td class="text-end">{{ s.n_membros }}</td>
+    <td>{% if s.ativo %}<span class="badge text-bg-success">ativo</span>{% else %}<span class="badge text-bg-secondary">inativo</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="text-center text-secondary py-4">Nenhum setor cadastrado.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock %}

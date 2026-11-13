@@ -1,0 +1,62 @@
+{% load sirg_rel %}<div class="card quadro mb-4" id="quadro-{{ b.q.chave }}" data-quadro="{{ b.q.pk }}" data-chave="{{ b.q.chave }}" data-meu="{{ b.meu|yesno:'1,0' }}" data-opcional="{{ b.q.obrigatorio|yesno:'0,1' }}">
+  <div class="card-header d-flex flex-wrap align-items-center gap-2">
+    <div class="me-auto">
+      <span class="fw-semibold">{{ b.q.titulo }}</span>{% if not b.q.obrigatorio %} <span class="badge text-bg-light border" title="Preencha se tiver o dado; o quadro não conta como pendência">opcional</span>{% endif %}
+      {% for s in b.setores %}<span class="badge badge-setor ms-1" title="{{ s.nome }}">{{ s.sigla }}</span>{% endfor %}
+      {% if pode_estruturar %}<span class="codigo mini text-secondary ms-1" title="Chave usada nas fórmulas">{{ b.q.chave }}</span>{% endif %}
+      {% if b.emprestado %}<div class="mini text-secondary mt-1"><i class="bi bi-link-45deg"></i> Este quadro sai nesta seção e também aparece em “{{ b.emprestado.titulo }}”. É o mesmo número: preencha aqui ou lá.</div>{% endif %}
+    </div>
+    <span class="mini text-secondary js-progresso" title="Células a preencher nas colunas abertas">{% if b.total_celulas %}{{ b.preenchidas }} de {{ b.total_celulas }} preenchidas{% else %}calculado automaticamente{% endif %}</span>
+    <span class="js-contagem">{% if b.aguardando and not b.erros and not b.faltam %}<span class="badge badge-aguarda" title="Os números deste quadro vêm de outros quadros que ainda não foram preenchidos">aguardando dados</span>{% else %}{% include "relatorio/_contagem.html" with erros=b.erros avisos=b.avisos faltam=b.faltam %}{% endif %}</span>
+    {% if b.pode_corrigir and not gaveta %}{% if b.corrigir %}<a class="btn btn-sm btn-warning" href="?aba=dados#quadro-{{ b.q.chave }}" title="Voltar a travar os anos publicados"><i class="bi bi-unlock"></i> Corrigindo anos publicados — concluir</a>{% else %}<a class="btn btn-sm btn-outline-secondary" href="?aba=dados&corrigir={{ b.q.chave }}#quadro-{{ b.q.chave }}" title="Master: corrigir um valor de ano já publicado (exige justificativa)"><i class="bi bi-lock"></i> Corrigir anos publicados</a>{% endif %}{% endif %}
+    {% if pode_estruturar %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'quadro_editar' ciclo.ano b.q.chave %}" title="Editar estrutura do quadro"><i class="bi bi-gear"></i></a>{% endif %}
+  </div>
+  <div class="card-body pb-2">
+    {% if b.usos %}{% if b.usos.blocos or b.usos.textos or b.usos.calculos %}<p class="quadro-usos"><i class="bi bi-eye"></i> <strong>No relatório:</strong>
+      {% for u in b.usos.blocos %}{% if not forloop.first %}; {% endif %}<a href="{% url 'escrever' ciclo.ano %}?secao={{ u.secao.chave }}" title="Ver no documento">{{ u.nome|default:"tabela/gráfico" }}</a> em “{{ u.secao.titulo }}”{% if u.secao.pk != b.q.secao_id %} <span class="badge text-bg-warning-subtle border text-dark" title="Este número é preenchido aqui, mas aparece em outra seção do relatório">outra seção</span>{% endif %}{% empty %}nenhuma tabela ou gráfico{% endfor %}{% if b.usos.textos %}; citado no texto de {% for s in b.usos.textos %}“{{ s.titulo }}”{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}.
+      {% if b.usos.calculos %}<br><i class="bi bi-calculator"></i> Também entra no cálculo de: {% for x in b.usos.calculos %}“{{ x.titulo }}”{% if not forloop.last %}, {% endif %}{% endfor %}.{% endif %}</p>{% endif %}{% endif %}
+    {% if b.q.descricao or b.q.fonte %}<p class="mini text-secondary mb-2{% if gaveta %} quadro-desc-curta{% endif %}">{% if b.q.descricao %}{{ b.q.descricao|linebreaksbr }}{% endif %}{% if b.q.fonte %}<br><strong>Fonte:</strong> {{ b.q.fonte }}{% endif %}</p>{% endif %}
+    {% if gaveta %}{% if b.importadas %}<p class="mini mb-2 text-secondary"><i class="bi bi-arrow-left-right"></i> Valores em cinza vêm de {% for f in b.fontes %}{% if not forloop.first %}, {% endif %}{{ f.titulo }}{% for s in f.setores_responsaveis %} ({{ s.sigla }}){% endfor %}{% empty %}outro quadro{% endfor %}. Digite só se o número do seu setor for diferente.</p>{% elif not b.total_celulas %}<p class="mini mb-2 text-secondary"><i class="bi bi-calculator"></i> Calculado a partir de {% for f in b.fontes %}{% if not forloop.first %}, {% endif %}{{ f.titulo }}{% empty %}outros quadros{% endfor %}: não é preciso digitar.</p>{% endif %}
+    {% elif b.importadas %}<p class="mini mb-2 aviso-calculado"><i class="bi bi-arrow-left-right"></i> <strong>Números que vêm de outro quadro.</strong> O valor automático aparece em cinza dentro do campo e já vai para o relatório: não é preciso digitar. Se quiser, digite o valor do seu setor; se ele for diferente do automático, a plataforma avisa e você escolhe <strong>corrigir</strong> (fica o automático) ou <strong>ignorar</strong> (fica o digitado). Origem:{% for f in b.fontes %} {% if not forloop.first %}{% if forloop.last %}e{% else %},{% endif %} {% endif %}<a href="{% url 'secao' ciclo.ano f.secao.chave %}?aba=dados#quadro-{{ f.chave }}">{{ f.titulo }}</a>{% for s in f.setores_responsaveis %} ({{ s.sigla }}){% endfor %}{% empty %} outros quadros{% endfor %}.{% if b.aguardando %} <span class="text-warning-emphasis">Ainda faltam {{ b.aguardando }} valor{{ b.aguardando|pluralize:"es" }}: a origem não foi preenchida e nada foi digitado aqui.</span>{% endif %}</p>
+    {% elif not b.total_celulas %}<p class="mini mb-2 aviso-calculado"><i class="bi bi-calculator"></i> <strong>Não é preciso digitar nada aqui.</strong> Estes números são calculados a partir de{% for f in b.fontes %} {% if not forloop.first %}{% if forloop.last %}e{% else %},{% endif %} {% endif %}<a href="{% url 'secao' ciclo.ano f.secao.chave %}?aba=dados#quadro-{{ f.chave }}">{{ f.titulo }}</a>{% for s in f.setores_responsaveis %} ({{ s.sigla }}){% endfor %}{% empty %} outros quadros{% endfor %}.{% if b.aguardando %} <span class="text-warning-emphasis">Ainda faltam {{ b.aguardando }} valor{{ b.aguardando|pluralize:"es" }}, que aparece{{ b.aguardando|pluralize:"m" }} quando a origem for preenchida.</span>{% endif %}</p>
+    {% elif b.aguardando and b.preenchidas == b.total_celulas %}<p class="mini mb-2 text-secondary"><i class="bi bi-calculator"></i> Os totais e cálculos deste quadro dependem também de: {% for f in b.fontes %}{{ f.titulo }}{% if not forloop.last %}, {% endif %}{% empty %}outros valores{% endfor %}.</p>{% endif %}
+    {% if not b.editavel and b.total_celulas %}<p class="mini mb-2"><i class="bi bi-lock"></i> {{ b.motivo }}</p>{% endif %}
+    {% if b.graficos %}<div class="quadro-com-grafico"><div class="quadro-grade">{% endif %}
+    <div class="table-responsive js-rolar-fim">
+    <table class="table table-sm grade mb-1" data-tipo="{{ b.q.tipo_valor }}">
+      <thead><tr><th class="rot"></th>{% for c in b.colunas %}<th class="text-end {% if c.atual %}col-atual{% endif %}{% if c.total %} col-total{% endif %}" scope="col">{% if c.travada %}<i class="bi bi-lock-fill text-secondary mini" title="Ano já publicado: só o Master altera, com justificativa"></i> {% endif %}{{ c.rotulo }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for l in b.linhas %}
+      <tr class="{% if l.total %}linha-total{% elif l.calculada %}linha-calc{% endif %}">
+        <th class="rot" scope="row">{% if l.total %}{{ l.rotulo }}{% else %}{{ l.obj.rotulo }}{% if l.importada %} <span class="formula-sinal" title="Vem de outro quadro ({{ l.obj.formula }}); aceita valor digitado">⇄</span>{% elif l.calculada %} <span class="formula-sinal" title="Calculada: {{ l.obj.formula }}">ƒ</span>{% endif %}{% endif %}</th>
+        {% for cel in l.celulas %}
+        {% if cel.editavel %}
+        <td class="cel ed {{ cel.severidade }}{% if cel.travada %} travada{% endif %}{% if cel.importada %} importada{% if not cel.digitado %} usa-auto{% endif %}{% endif %}" id="c-{{ cel.id }}" title="{% if cel.mensagens %}{{ cel.mensagens|join:' · ' }}{% elif cel.importada %}Automático: {{ cel.auto|default:'ainda sem valor' }}. Você pode digitar outro valor.{% endif %}">
+          {% if l.tipo == 'sim_nao' %}
+          <select class="cel-input" data-l="{{ cel.linha_id }}" data-c="{{ cel.coluna_id }}" data-travada="{{ cel.travada|yesno:'1,0' }}" aria-label="{{ l.obj.rotulo }} — {{ forloop.counter0|rotulo_coluna:b.colunas }}">
+            <option value=""></option><option {% if cel.edicao == 'Sim' %}selected{% endif %}>Sim</option><option {% if cel.edicao == 'Não' %}selected{% endif %}>Não</option></select>
+          {% else %}
+          {% if l.tipo == 'texto' %}<textarea class="cel-input texto" rows="1" data-l="{{ cel.linha_id }}" data-c="{{ cel.coluna_id }}" data-travada="{{ cel.travada|yesno:'1,0' }}" aria-label="{{ l.obj.rotulo }} — {{ forloop.counter0|rotulo_coluna:b.colunas }}">{{ cel.edicao }}</textarea>{% else %}<input class="cel-input" data-l="{{ cel.linha_id }}" data-c="{{ cel.coluna_id }}" data-travada="{{ cel.travada|yesno:'1,0' }}" value="{{ cel.edicao }}"{% if cel.importada %} placeholder="{{ cel.auto }}" data-auto="{{ cel.auto }}"{% endif %} inputmode="decimal" autocomplete="off" aria-label="{{ l.obj.rotulo }} — {{ forloop.counter0|rotulo_coluna:b.colunas }}">{% endif %}
+          {% endif %}
+          <button type="button" class="cel-hist" data-l="{{ cel.linha_id }}" data-c="{{ cel.coluna_id }}" tabindex="-1" title="Histórico desta célula"><i class="bi bi-clock-history"></i></button>
+          {% if cel.pede_justificativa or cel.justificativa %}<button type="button" class="cel-just {% if cel.justificativa %}feita{% endif %}" data-l="{{ cel.linha_id }}" data-c="{{ cel.coluna_id }}" data-texto="{{ cel.justificativa }}" tabindex="-1" title="{% if cel.justificativa %}Justificativa: {{ cel.justificativa }}{% else %}Justificar a variação{% endif %}"><i class="bi bi-chat-left-text"></i></button>{% endif %}
+        </td>
+        {% else %}
+        <td class="cel ro {{ cel.severidade }}{% if cel.calculada %} calc{% endif %}{% if cel.travada %} travada{% endif %}" id="c-{{ cel.id }}" title="{% if cel.erro_formula %}{{ cel.erro_formula }}{% else %}{{ cel.mensagens|join:' · ' }}{% endif %}">{{ cel.exibido }}{% if cel.linha_id and not cel.calculada %}<button type="button" class="cel-hist" data-l="{{ cel.linha_id }}" data-c="{{ cel.coluna_id }}" tabindex="-1" title="Histórico desta célula"><i class="bi bi-clock-history"></i></button>{% endif %}</td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <ul class="lista-pend js-pendencias mini mb-0">
+      {% for p in b.pendencias %}<li class="{{ p.severidade }}"><a href="#{{ p.ancora }}" class="js-ir">{{ p.mensagem }}</a>{% if p.detalhe %} <span class="text-secondary">— {{ p.detalhe }}</span>{% endif %}{% if p.acao and b.editavel %} <span class="acoes-div text-nowrap"><button type="button" class="btn btn-xs btn-outline-primary js-div" data-acao="corrigir" data-l="{{ p.linha.pk }}" data-c="{{ p.coluna.pk }}">Corrigir: usar {{ p.acao.auto }}</button> <button type="button" class="btn btn-xs btn-outline-secondary js-div" data-acao="ignorar" data-l="{{ p.linha.pk }}" data-c="{{ p.coluna.pk }}">Ignorar: manter {{ p.acao.digitado }}</button></span>{% endif %}</li>{% endfor %}
+    </ul>
+    {% if b.graficos %}</div>
+    <aside class="quadro-grafico js-grafico" aria-live="polite">
+      <div class="quadro-grafico-titulo"><i class="bi bi-bar-chart"></i> Como fica no relatório <span class="ms-auto mini text-secondary js-grafico-status">atualiza sozinho</span></div>
+      <div class="js-grafico-corpo">{% for g in b.graficos %}<figure class="mb-2">{% if b.graficos|length > 1 or g.titulo != b.q.titulo %}<figcaption class="legenda">{{ g.titulo }}</figcaption>{% endif %}<div class="grafico">{% if g.svg %}{{ g.svg|safe }}{% else %}<p class="grafico-vazio">O gráfico aparece aqui assim que houver valores.</p>{% endif %}</div>{% if g.usa %}<div class="grafico-usa"><i class="bi bi-info-circle"></i> {{ g.usa }}</div>{% endif %}</figure>{% endfor %}</div>
+    </aside></div>{% endif %}
+  </div>
+</div>

@@ -1,0 +1,50 @@
+{% extends "base.html" %}{% load static sirg_rel %}
+{% block titulo %}Ler — {{ ciclo.titulo }}{% endblock %}
+{% block pagina_classe %}pagina-doc{% endblock %}
+{% block conteudo %}
+<div class="doc-app leitura">
+  <div class="doc-ferramentas d-print-none">
+    <div class="doc-ferramentas-linha">
+      <div class="doc-titulo-app"><i class="bi bi-book"></i> Ler o {{ ciclo.titulo }}</div>
+      <span class="badge text-bg-light border"><i class="bi bi-eye"></i> Somente leitura</span>
+      <span class="mini text-secondary d-none d-lg-inline">{{ n_aprovadas }} de {{ n_secoes }} seções aprovadas pelo Master</span>
+      <span class="ms-auto d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'escrever' ciclo.ano %}"><i class="bi bi-pencil-square"></i> Ir para a edição</a>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+        {% if pode_exportar %}<a class="btn btn-sm btn-primary" href="{% url 'exportar' ciclo.ano %}"><i class="bi bi-file-earmark-word"></i> Baixar em Word</a>{% endif %}
+      </span>
+    </div>
+  </div>
+  <div class="doc-corpo">
+    <aside class="doc-sumario d-print-none" aria-label="Sumário">
+      <div class="doc-sumario-titulo">Sumário</div>
+      <nav>
+        {% for cap in caps %}<a href="#sec-{{ cap.s.chave }}" class="cap">{{ cap.s.titulo }}</a>
+        {% for it in cap.secoes %}<a href="#sec-{{ it.s.chave }}" class="sec{% if it.s.nivel == 2 %} sub{% endif %}">{{ it.s.titulo }}</a>{% endfor %}{% endfor %}
+      </nav>
+    </aside>
+    <div class="doc-mesa">
+      {% if numeros_pendentes or n_marcas or n_alt %}<div class="alert alert-light border d-print-none mini"><i class="bi bi-hourglass-split"></i> O relatório ainda está sendo escrito.
+        {% if n_alt %}Há {{ n_alt }} alteraç{{ n_alt|pluralize:"ão,ões" }} sugerida{{ n_alt|pluralize }} no texto esperando alguém aceitar ou recusar: aqui (e no Word) o texto aparece sem ela{{ n_alt|pluralize }}. <a href="{% url 'escrever' ciclo.ano %}?revisao=1">Revisar</a>.{% endif %}
+        {% if n_marcas %}<mark class="atualizar">{{ n_marcas }} trecho{{ n_marcas|pluralize }} em amarelo</mark> ainda {{ n_marcas|pluralize:"vem,vêm" }} do RG {{ ciclo.ano|add:"-1" }} e precisa{{ n_marcas|pluralize:"m" }} ser atualizado{{ n_marcas|pluralize }}.{% endif %}
+        {% if numeros_pendentes %}{{ numeros_pendentes }} número{{ numeros_pendentes|pluralize }} ainda aparece{{ numeros_pendentes|pluralize:"m" }} como <span class="sirg-num pendente">xxxxx</span>, porque os dados não foram digitados.{% endif %}</div>{% endif %}
+      {% include "relatorio/_folha.html" with editor=False %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+(function () {
+  var links = {};
+  document.querySelectorAll(".doc-sumario a").forEach(function (a) { links[a.getAttribute("href").slice(1)] = a; });
+  if (!("IntersectionObserver" in window)) return;
+  var obs = new IntersectionObserver(function (ents) {
+    ents.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      Object.keys(links).forEach(function (k) { links[k].classList.remove("atual"); });
+      if (links[en.target.id]) links[en.target.id].classList.add("atual");
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  document.querySelectorAll(".doc-sec, .doc-cap").forEach(function (s) { obs.observe(s); });
+})();
+</script>{% endblock %}

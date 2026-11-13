@@ -1,0 +1,7 @@
+<div class="mb-3">
+  <label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+  {% if f.field.widget.input_type == "checkbox" %}{% endif %}
+  <input type="{{ f.field.widget.input_type|default:'text' }}" id="{{ f.id_for_label }}" name="{{ f.html_name }}" value="{{ f.value|default_if_none:'' }}" class="form-control {% if f.errors %}is-invalid{% endif %}" {% if f.field.disabled %}disabled{% endif %} {% if f.field.required %}required{% endif %}>
+  {% for e in f.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+  {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+</div>

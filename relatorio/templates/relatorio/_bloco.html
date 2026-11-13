@@ -1,0 +1,50 @@
+<section class="bloco bloco-{{ d.b.tipo }}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}" data-tipo="{{ d.b.tipo }}">
+  <div class="bloco-barra">
+    <span class="bloco-tipo"><i class="bi {% if d.b.tipo == 'texto' %}bi-file-text{% elif d.b.tipo == 'tabela' %}bi-table{% elif d.b.tipo == 'grafico' %}bi-bar-chart{% else %}bi-123{% endif %}"></i> {{ d.b.get_tipo_display }}{% if d.quadro %} · {{ d.quadro.titulo }}{% endif %}</span>
+    {% if d.b.config.herdado_de %}<span class="badge text-bg-warning" title="Este texto veio do relatório anterior. Atualize os fatos e as datas.">texto de {{ d.b.config.herdado_de }} — atualize</span>{% endif %}{% if d.b.config.modelo and d.html %}<span class="badge text-bg-warning" title="Texto sugerido como ponto de partida. Revise e complete.">texto-modelo — revise</span>{% endif %}
+    {% if d.travado_por %}<span class="badge text-bg-warning"><i class="bi bi-pencil"></i> {{ d.travado_por.get_full_name|default:d.travado_por.username }} está editando</span>{% endif %}
+    <span class="ms-auto d-flex gap-1">
+      {% if d.b.tipo == 'texto' %}
+        {% if pode_texto and not d.travado_por %}<button type="button" class="btn btn-sm btn-primary js-editar" data-modo="editar"><i class="bi bi-pencil"></i> Editar</button>{% endif %}
+        {% if d.n_alteracoes %}<a class="btn btn-sm btn-outline-success" href="{% url 'escrever' ciclo.ano %}?secao={{ d.b.secao.chave }}&revisao=1#bloco-{{ d.b.pk }}" title="Alterações sugeridas com o controle de alterações: aceite ou recuse no documento"><i class="bi bi-pencil-square"></i> {{ d.n_alteracoes }} alteraç{{ d.n_alteracoes|pluralize:"ão,ões" }} para revisar</a>{% endif %}
+        <button type="button" class="btn btn-sm btn-outline-secondary js-hist-bloco" title="Versões deste texto"><i class="bi bi-clock-history"></i></button>
+      {% elif pode_texto %}<a class="btn btn-sm btn-outline-primary" href="{% url 'bloco_configurar' ciclo.ano d.b.pk %}"><i class="bi bi-sliders"></i> Configurar</a>{% endif %}
+      <button type="button" class="btn btn-sm btn-outline-secondary js-comentar" title="Comentar este trecho"><i class="bi bi-chat-left"></i>{% if d.comentarios %} {{ d.comentarios|length }}{% endif %}</button>
+      {% if pode_texto %}
+      <div class="dropdown"><button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" aria-label="Mais ações"><i class="bi bi-three-dots"></i></button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><form method="post" action="{% url 'bloco_mover' ciclo.ano d.b.pk 'subir' %}">{% csrf_token %}<button class="dropdown-item"><i class="bi bi-arrow-up"></i> Mover para cima</button></form></li>
+          <li><form method="post" action="{% url 'bloco_mover' ciclo.ano d.b.pk 'descer' %}">{% csrf_token %}<button class="dropdown-item"><i class="bi bi-arrow-down"></i> Mover para baixo</button></form></li>
+          {% if d.b.tipo == 'texto' %}<li><a class="dropdown-item" href="{% url 'bloco_configurar' ciclo.ano d.b.pk %}"><i class="bi bi-type"></i> Título do trecho</a></li>{% endif %}
+          <li><hr class="dropdown-divider"></li>
+          <li><form method="post" action="{% url 'bloco_mover' ciclo.ano d.b.pk 'excluir' %}" onsubmit="return confirm('Excluir este bloco? Ele continua registrado no histórico.')">{% csrf_token %}<button class="dropdown-item text-danger"><i class="bi bi-trash"></i> Excluir bloco</button></form></li>
+        </ul></div>
+      {% endif %}
+    </span>
+  </div>
+  {% for s in d.sugestoes %}
+  <div class="sugestao">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span class="fw-semibold"><i class="bi bi-lightbulb"></i> Sugestão de {{ s.autor.get_full_name|default:s.autor.username }}</span><span class="mini text-secondary">{{ s.criada_em|date:"d/m/Y H:i" }}</span></div>
+    {% if s.comentario %}<p class="mini mb-1">“{{ s.comentario }}”</p>{% endif %}
+    <div class="trecho-diff texto-rg mini">{{ s.diff|safe }}</div>
+    <div class="d-flex gap-2 mt-2 flex-wrap">
+      {% if pode_responder %}
+      <form method="post" action="{% url 'sugestao_responder' ciclo.ano s.pk 'aceitar' %}">{% csrf_token %}<button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Aceitar</button></form>
+      <form method="post" action="{% url 'sugestao_responder' ciclo.ano s.pk 'recusar' %}" class="d-flex gap-1">{% csrf_token %}<input class="form-control form-control-sm" name="resposta" placeholder="motivo (opcional)" aria-label="Motivo da recusa"><button class="btn btn-sm btn-outline-danger">Recusar</button></form>
+      {% endif %}
+      {% if s.autor == user %}<form method="post" action="{% url 'sugestao_responder' ciclo.ano s.pk 'retirar' %}">{% csrf_token %}<button class="btn btn-sm btn-link">retirar sugestão</button></form>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% if d.b.titulo and d.b.tipo == 'texto' %}<h3 class="titulo-bloco">{{ d.b.titulo }}</h3>{% endif %}
+  <div class="bloco-corpo">{% include "relatorio/_bloco_conteudo.html" %}</div>
+  {% if d.b.tipo == 'texto' and not d.html %}<p class="text-secondary mini fst-italic mb-0">(texto vazio)</p>{% endif %}
+  {% if d.comentarios %}
+  <div class="comentarios-bloco">
+    {% for c in d.comentarios %}<div class="comentario"><strong>{{ c.autor.get_full_name|default:c.autor.username }}</strong> <span class="mini text-secondary">{{ c.criado_em|date:"d/m H:i" }}</span><div>{{ c.texto|linebreaksbr }}</div>
+      <form method="post" action="{% url 'comentario_resolver' ciclo.ano c.pk %}">{% csrf_token %}<button class="btn btn-link btn-sm p-0 mini">marcar como resolvido</button></form></div>{% endfor %}
+  </div>
+  {% endif %}
+  {% if d.b.atualizado_por %}<div class="bloco-rodape">atualizado por {{ d.b.atualizado_por.get_full_name|default:d.b.atualizado_por.username }} em {{ d.b.atualizado_em|date:"d/m/Y H:i" }}</div>{% endif %}
+  {% if pode_texto %}<div class="bloco-inserir">{% include "relatorio/_novo_bloco.html" with depois=d.b.pk compacto=True %}</div>{% endif %}
+</section>

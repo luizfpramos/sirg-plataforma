@@ -1,0 +1,5 @@
+{% load static %}{% if it.s.referencia %}<details class="doc-ref d-print-none js-ref">
+  <summary><i class="bi bi-journal-text"></i> Ver o texto do {{ it.s.referencia_fonte|default:"relatório anterior" }} <span class="doc-ref-dica">(referência, não vai para o relatório)</span></summary>
+  <div class="doc-ref-corpo texto-rg">{{ it.s.referencia|safe }}</div>
+  {% if it.s.referencia_pagina %}<div class="doc-ref-pdf"><a href="{% static 'referencia/RG'|add:ano_ref_txt|add:'.pdf' %}#page={{ it.s.referencia_pagina }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Abrir o PDF publicado nesta página (com as figuras)</a></div>{% endif %}
+</details>{% endif %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}{% load humanize sirg sirg_rel %}
+{% block titulo %}Início{% endblock %}
+{% block conteudo %}
+<div class="mb-3">
+  <h1 class="mb-0">Olá, {{ user.first_name|default:user.username }}!</h1>
+  <div class="subtitulo">{% if ciclo %}{{ ciclo.titulo }} · <span class="badge text-bg-{{ ciclo.situacao|situacao_cor }}">{{ ciclo.get_situacao_display }}</span>{% if ciclo.prazo %} · prazo: <strong>{{ ciclo.prazo|date:"d/m/Y" }}</strong>{% endif %}{% else %}Plataforma do Relatório de Gestão · {{ INST.sigla }}{% endif %}</div>
+</div>
+
+{% if not ciclo %}
+<div class="card card-body">{% if E_ADMIN %}O Relatório de Gestão ainda não foi criado. <a href="{% url 'ciclo_novo' %}">Criar agora</a>.{% else %}O Relatório de Gestão ainda não foi aberto. Aguarde o aviso da DGDI.{% endif %}</div>
+{% else %}
+
+{% if ciclo.prazo and minhas_secoes %}<div class="alert {% if prazo_dias < 0 %}alert-danger{% elif prazo_dias <= 7 %}alert-warning{% else %}alert-light border{% endif %} d-flex align-items-center gap-2 py-2"><i class="bi bi-calendar-event"></i> <span>Prazo para preencher e enviar: <strong>{{ ciclo.prazo|date:"d/m/Y" }}</strong> — {% if prazo_dias > 1 %}faltam {{ prazo_dias }} dias{% elif prazo_dias == 1 %}falta 1 dia{% elif prazo_dias == 0 %}é hoje{% else %}venceu há {{ prazo_dias|cut:"-" }} dia{{ prazo_dias|cut:"-"|pluralize }}{% endif %}.</span></div>{% endif %}
+{% if minhas_secoes %}
+<div class="card mb-3 painel-hero"><div class="card-body d-flex flex-wrap align-items-center gap-3">
+  <div class="me-auto">
+    <div class="painel-hero-num">{% if falta_total %}Faltam <strong>{{ falta_total }}</strong> número{{ falta_total|pluralize }}{% else %}<i class="bi bi-check2-circle text-success"></i> Números completos{% endif %}</div>
+    <div class="text-secondary">{{ n_entregues }} de {{ minhas_secoes|length }} seç{{ minhas_secoes|length|pluralize:"ão,ões" }} enviada{{ minhas_secoes|length|pluralize }} ao Master</div>
+  </div>
+  <a class="btn btn-primary btn-lg" href="{% url 'escrever' ciclo.ano %}{% if primeira_minha %}?secao={{ primeira_minha }}{% endif %}"><i class="bi bi-file-earmark-text"></i> Abrir o relatório</a>
+</div></div>
+
+<div class="card mb-3"><div class="card-header">Suas seções</div>
+  <div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+    <thead><tr><th>Seção</th><th>Falta</th><th>Situação</th><th>Última alteração</th><th></th></tr></thead>
+    <tbody>
+  {% for it in minhas_secoes %}<tr>
+    <td><span class="fw-semibold">{{ it.s.titulo }}</span><div class="mini text-secondary">{% if it.s.pai %}{{ it.s.pai.titulo }}{% else %}abertura do capítulo{% endif %}</div></td>
+    <td>{% if it.falta %}<span class="badge badge-faltam">{{ it.falta }}</span>{% else %}<i class="bi bi-check2 text-success"></i>{% endif %}{% if it.erros %} <span class="badge text-bg-danger">{{ it.erros }} para corrigir</span>{% endif %}</td>
+    <td><span class="badge text-bg-{{ it.s.situacao|situacao_cor }} border">{{ it.s.get_situacao_display }}</span></td>
+    <td class="mini text-secondary text-nowrap">{{ it.ultima|date:"d/m H:i"|default:"—" }}</td>
+    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'escrever' ciclo.ano %}?secao={{ it.s.chave }}">Abrir</a></td></tr>{% endfor %}
+    </tbody></table></div></div>
+{% else %}
+<div class="card mb-3 painel-hero"><div class="card-body d-flex flex-wrap align-items-center gap-3"><div class="me-auto"><div class="painel-hero-num">{{ ciclo.titulo }}</div><div class="text-secondary">{% if E_MASTER %}Revise, aceite ou recuse as alterações dos setores e aprove as seções.{% else %}O relatório inteiro, como está sendo escrito.{% endif %}</div></div><a class="btn btn-primary btn-lg" href="{% url 'escrever' ciclo.ano %}"><i class="bi bi-file-earmark-text"></i> Abrir o relatório</a></div></div>
+{% endif %}
+
+{% if andamento %}
+<div class="card mb-3"><div class="card-header d-flex align-items-center"><i class="bi bi-speedometer2 me-1"></i> Andamento do {{ ciclo.titulo }}<a class="ms-auto mini" href="{% url 'pendencias' ciclo.ano %}?minhas=0">ver o que falta</a></div>
+  <div class="card-body pb-1">
+    <div class="row g-3 text-center mb-2">
+      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.pct }}%</div><div class="mini text-secondary">dos números preenchidos</div></div>
+      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.escritas }}<span class="fs-6 text-secondary">/{{ andamento.com_texto }}</span></div><div class="mini text-secondary">seções com o texto revisado{% if andamento.marcas %}<br><span class="badge badge-atualizar">{{ andamento.marcas }} trechos marcados</span>{% endif %}</div></div>
+      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.enviadas }}<span class="fs-6 text-secondary">/{{ andamento.secoes }}</span></div><div class="mini text-secondary">seções enviadas ao Master</div></div>
+      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.aprovadas }}<span class="fs-6 text-secondary">/{{ andamento.secoes }}</span></div><div class="mini text-secondary">seções aprovadas</div></div>
+    </div>
+  </div>
+  <details class="px-3 pb-2" open><summary class="mini text-secondary">Por setor (clique no setor para ver o que falta)</summary>
+  <div class="table-responsive mt-2"><table class="table table-sm align-middle mb-2">
+    <thead><tr><th>Setor</th><th style="width:30%">Números</th><th>Texto revisado</th><th>Trechos marcados</th><th>Enviadas</th><th>Aprovadas</th></tr></thead>
+    <tbody>{% for d in por_setor %}<tr><td><a href="{% url 'pendencias' ciclo.ano %}?minhas=0&amp;setor={{ d.setor.sigla|urlencode }}" title="Ver o que falta para {{ d.setor.sigla }}"><span class="badge badge-setor">{{ d.setor.sigla }}</span> <span class="mini">{{ d.setor.nome }}</span></a></td>
+      <td>{% if d.t %}<div class="d-flex align-items-center gap-2"><div class="progress flex-grow-1" style="height:6px"><div class="progress-bar {% if d.pct == 100 %}bg-success{% endif %}" style="width:{{ d.pct }}%"></div></div><span class="mini">{{ d.pct }}%</span></div>{% else %}<span class="mini text-secondary">—</span>{% endif %}</td>
+      <td class="mini">{{ d.escritas }} de {{ d.com_texto|default:0 }}</td><td class="mini">{% if d.marcas %}<span class="badge badge-atualizar">{{ d.marcas }}</span>{% else %}—{% endif %}</td><td class="mini">{{ d.enviadas }} de {{ d.secoes }}</td><td class="mini">{{ d.aprovadas }} de {{ d.secoes }}</td></tr>{% endfor %}</tbody>
+  </table></div></details>
+</div>
+{% endif %}
+
+{% if andamento %}
+<div class="card mb-3{% if n_atrasadas %} border-danger{% endif %}"><div class="card-header d-flex align-items-center flex-wrap gap-2"><i class="bi bi-hourglass-split"></i> Seções ainda não enviadas: {{ n_paradas }}{% if n_atrasadas %} <span class="badge text-bg-danger">{{ n_atrasadas }} atrasada{{ n_atrasadas|pluralize }}</span>{% endif %}
+  <span class="ms-auto mini text-secondary">{% if ciclo.prazo %}prazo: {{ ciclo.prazo|date:"d/m/Y" }}{% else %}sem prazo definido — <a href="{% url 'ciclo_editar' ciclo.ano %}">definir em Situação e prazo</a>{% endif %}</span></div>
+  {% if paradas %}<div class="table-responsive"><table class="table table-sm table-hover mb-0 align-middle">
+    <thead><tr><th>Seção</th><th>Setor</th><th>Situação</th><th>Última alteração</th></tr></thead>
+    <tbody>{% for d in paradas %}<tr{% if d.atrasada %} class="table-danger"{% endif %}><td><a href="{% url 'secao' ciclo.ano d.s.chave %}">{{ d.s.titulo }}</a></td><td>{% for x in d.setores %}<span class="badge badge-setor me-1">{{ x.sigla }}</span>{% endfor %}</td><td><span class="badge text-bg-{{ d.s.situacao|situacao_cor }} border">{{ d.s.get_situacao_display }}</span>{% if d.atrasada %} <span class="badge text-bg-danger">atrasada</span>{% endif %}</td><td class="mini">{{ d.ultima|date:"d/m/Y H:i"|default:"nunca alterada" }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <div class="card-footer mini text-secondary">Ordenadas pela última alteração: as paradas há mais tempo primeiro.{% if n_paradas > paradas|length %} Mostrando {{ paradas|length }} de {{ n_paradas }}.{% endif %}</div>{% endif %}
+</div>
+{% endif %}
+
+{% if aguardando %}
+<div class="card mb-3 border-warning"><div class="card-header"><i class="bi bi-inbox"></i> Aguardando a sua revisão (Master): {{ aguardando|length }} seç{{ aguardando|length|pluralize:"ão,ões" }}</div>
+  <div class="list-group list-group-flush">{% for s in aguardando %}<a class="list-group-item list-group-item-action d-flex align-items-center" href="{% url 'escrever' ciclo.ano %}?secao={{ s.chave }}">{{ s.titulo }} <span class="mini text-secondary ms-2">{{ s.pai.titulo }}</span><span class="ms-auto btn btn-sm btn-outline-success">Revisar</span></a>{% endfor %}</div>
+</div>
+{% endif %}
+
+{% if not minhas_secoes and not E_MASTER and not E_ADMIN %}<p class="mini text-secondary"><i class="bi bi-info-circle"></i> Você ainda não está ligado a um setor, por isso só pode ler o relatório. Se precisar escrever, peça à DGDI para incluir você no seu setor.</p>{% endif %}
+{% endif %}
+
+{% if E_ADMIN %}
+<h2 class="h6 text-secondary text-uppercase mini mt-4">Administração</h2>
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{% url 'usuarios' %}"><div class="card card-body"><div class="mini text-secondary">Usuários ativos</div><div class="cartao-num">{{ n_usuarios }}</div></div></a></div>
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{% url 'setores' %}"><div class="card card-body"><div class="mini text-secondary">Setores ativos</div><div class="cartao-num">{{ n_setores }}</div></div></a></div>
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{% url 'usuarios' %}?setor=sem"><div class="card card-body"><div class="mini text-secondary">Usuários sem setor</div><div class="cartao-num">{{ n_sem_setor }}</div></div></a></div>
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{% url 'usuarios' %}?situacao=pendentes"><div class="card card-body"><div class="mini text-secondary">Aguardando 1º acesso</div><div class="cartao-num">{{ n_pendentes }}</div></div></a></div>
+</div>
+<div class="card">
+  <div class="card-header d-flex">Atividade recente <a class="ms-auto mini" href="{% url 'auditoria' %}">ver tudo</a></div>
+  <div class="list-group list-group-flush">
+    {% for e in eventos %}<div class="list-group-item mini">{% include "contas/_evento.html" %}</div>
+    {% empty %}<div class="list-group-item text-secondary mini">Nenhuma atividade registrada.</div>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

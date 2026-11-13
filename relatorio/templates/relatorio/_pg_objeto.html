@@ -1,0 +1,6 @@
+<div class="doc-bloco pg-obj doc-tipo-{{ d.b.tipo }}{% if editor and it.pode %} pode{% endif %}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-titulo="{{ it.s.titulo }}" style="{{ d.caixa_css }}">
+        <div class="doc-figura{% if editor and d.origens %} com-dados{% endif %}{% if d.caixa.titulo %} com-titulo{% endif %}"{% if editor and d.origens %} data-quadros="{% for o in d.origens %}{{ o.quadro.pk }}{% if not forloop.last %},{% endif %}{% endfor %}" data-chaves="{% for o in d.origens %}{{ o.quadro.chave }}{% if not forloop.last %},{% endif %}{% endfor %}"{% endif %}>
+          {% include "relatorio/_bloco_conteudo.html" %}
+          {% if editor and d.origens %}<div class="pg-obj-dados d-print-none">{% for o in d.origens %}<button type="button" class="btn btn-sm btn-primary js-dados" data-quadro="{{ o.quadro.pk }}" title="Dados de “{{ o.quadro.titulo }}” ({% for s in o.setores %}{{ s.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %})"><i class="bi bi-pencil-square"></i> Dados{% if d.origens|length > 1 %} {{ forloop.counter }}{% endif %}</button>{% endfor %}</div>{% endif %}
+        </div>
+      </div>

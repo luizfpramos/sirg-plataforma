@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}{% if novo %}Novo setor{% else %}{{ setor.sigla }}{% endif %}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'setores' %}"><i class="bi bi-arrow-left"></i> Setores</a></nav>
+<h1 class="mb-0">{% if novo %}Novo setor{% else %}{{ setor.sigla }}{% endif %}</h1>
+{% if not novo %}<div class="subtitulo mb-3">{{ setor.nome }}{% if not setor.ativo %} · <span class="badge text-bg-secondary">inativo</span>{% endif %}</div>{% else %}<div class="mb-3"></div>{% endif %}
+<div class="row g-3">
+  {% if form %}
+  <div class="col-xl-6">
+    <form method="post" class="card">{% csrf_token %}<div class="card-body">
+      <div class="row">
+        <div class="col-md-4">{% include "contas/_campo.html" with f=form.sigla %}</div>
+        <div class="col-md-8">{% include "contas/_campo.html" with f=form.nome %}</div>
+      </div>
+      <div class="mb-3"><label class="form-label" for="{{ form.descricao.id_for_label }}">Descrição</label>
+        <textarea id="{{ form.descricao.id_for_label }}" name="descricao" rows="3" class="form-control">{{ form.descricao.value|default_if_none:'' }}</textarea></div>
+      <div class="row">
+        <div class="col-md-4">{% include "contas/_campo.html" with f=form.ordem %}</div>
+        <div class="col-md-8 pt-md-4">{% include "contas/_check.html" with f=form.ativo %}</div>
+      </div>
+      {% if not novo %}<p class="mini text-secondary mb-0"><i class="bi bi-info-circle"></i> Um setor inativo não aparece para novos vínculos e os membros dele deixam de editar o conteúdo do setor. Renomear o setor (por exemplo, de Diretoria para Pró-Reitoria) mantém todo o histórico.</p>{% endif %}
+    </div>
+    <div class="card-footer"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> {% if novo %}Criar setor{% else %}Salvar{% endif %}</button></div>
+    </form>
+  </div>
+  {% endif %}
+  {% if not novo %}
+  <div class="col-xl-6">
+    <div class="card mb-3"><div class="card-header">Membros atuais ({{ membros|length }})</div>
+      <div class="list-group list-group-flush">
+      {% for v in membros %}<div class="list-group-item">{% if E_ADMIN %}<a href="{% url 'usuario' v.usuario.pk %}">{% endif %}{{ v.usuario.get_full_name|default:v.usuario.username }}{% if E_ADMIN %}</a>{% endif %} <span class="mini text-secondary">desde {{ v.inicio|date:"d/m/Y" }}</span></div>
+      {% empty %}<div class="list-group-item text-secondary mini">Nenhum membro.{% if E_ADMIN %} Vincule pessoas pela tela de <a href="{% url 'usuarios' %}">Usuários</a>.{% endif %}</div>{% endfor %}
+      </div>
+    </div>
+    {% if E_ADMIN %}<div class="card"><div class="card-header">Histórico de vínculos</div><div class="card-body">{% include "contas/_vinculos.html" with vinculos=vinculos mostrar="usuario" %}</div></div>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

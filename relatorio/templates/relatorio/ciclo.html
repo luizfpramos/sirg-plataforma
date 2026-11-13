@@ -1,0 +1,87 @@
+{% extends "base.html" %}{% load static sirg_rel %}
+{% block titulo %}Preencher os números — {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="mb-0"><i class="bi bi-table"></i> Preencher os números</h1>
+    <div class="subtitulo">{{ ciclo.titulo }} · <span class="badge text-bg-{{ ciclo.situacao|situacao_cor }}">{{ ciclo.get_situacao_display }}</span>
+      {% if ciclo.prazo %} · prazo: <strong>{{ ciclo.prazo|date:"d/m/Y" }}</strong>{% endif %}</div>
+  </div>
+  <div class="ms-auto d-flex gap-2 flex-wrap">
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'excel_importar' ciclo.ano %}"><i class="bi bi-file-earmark-excel"></i> Preencher pelo Excel</a>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'pendencias' ciclo.ano %}{% if so_minhas %}?minhas=1{% endif %}"><i class="bi bi-list-check"></i> O que falta {% include "relatorio/_contagem.html" with erros=resumo.erros avisos=resumo.avisos faltam=resumo.faltam %}</a>
+    {% if pode_estruturar %}
+    <div class="dropdown"><button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-gear"></i> Estrutura</button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% url 'ciclo_editar' ciclo.ano %}"><i class="bi bi-sliders"></i> Situação e prazo</a></li>
+        <li><a class="dropdown-item" href="{% url 'secao_nova' ciclo.ano %}"><i class="bi bi-plus-lg"></i> Novo capítulo</a></li>
+      </ul></div>
+    {% endif %}
+  </div>
+</div>
+{% if ciclo.observacao %}<div class="alert alert-light border mini">{{ ciclo.observacao|linebreaksbr }}</div>{% endif %}
+<details class="ajuda-tela larga" data-ajuda="preencher" open>
+  <summary><i class="bi bi-info-circle"></i> Como funciona</summary>
+  <ol>
+    <li>Abaixo estão as seções do relatório. {% if tem_setor %}As do seu setor estão marcadas com <i class="bi bi-person-check text-primary" aria-hidden="true"></i><span class="visually-hidden">o ícone “do seu setor”</span>.{% endif %}</li>
+    <li>Clique em <strong>Preencher</strong> para abrir as tabelas da seção e digitar os números de {{ ciclo.ano }}. Os anos anteriores já estão preenchidos.</li>
+    <li>A barra mostra quanto já foi preenchido. Quando chegar a 100%, escreva o texto em <a href="{% url 'escrever' ciclo.ano %}">Escrever o relatório</a>.</li>
+    <li>Aqui ficam só os <strong>números</strong>. As metas do PDI (status e justificativa) são preenchidas no próprio texto, em <a href="{% url 'escrever' ciclo.ano %}">Escrever o relatório</a>.</li>
+  </ol>
+</details>
+<div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+  <div class="flex-grow-1" style="max-width:420px">
+    <div class="mini text-secondary">{% if so_minhas %}Suas seções{% else %}Relatório inteiro{% endif %}: {{ pct_geral }}% dos números preenchidos</div>
+    <div class="progress" style="height:10px" role="progressbar" aria-valuenow="{{ pct_geral }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if pct_geral == 100 %}bg-success{% endif %}" style="width:{{ pct_geral }}%"></div></div>
+  </div>
+  {% if tem_setor %}
+  <div class="btn-group btn-group-sm" role="group" aria-label="Filtro">
+    <a class="btn {% if so_minhas %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?minhas=1">Só as minhas seções</a>
+    <a class="btn {% if not so_minhas %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?minhas=0">Relatório inteiro</a>
+  </div>
+  {% endif %}
+</div>
+<div class="filtros" data-alvo="#lista-secoes" role="search" aria-label="Filtrar seções">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4"><label for="fp-busca">Procurar</label><input id="fp-busca" class="form-control form-control-sm" data-campo="busca" type="search" placeholder="nome da seção ou do setor"></div>
+    <div class="col-6 col-md-2"><label for="fp-setor">Setor</label><select id="fp-setor" class="form-select form-select-sm" data-campo="setor" data-ordenar="1"><option value="">todos</option></select></div>
+    <div class="col-6 col-md-3"><label for="fp-cap">Capítulo</label><select id="fp-cap" class="form-select form-select-sm" data-campo="cap"><option value="">todos</option></select></div>
+    <div class="col-6 col-md-2"><label for="fp-sit">Situação</label><select id="fp-sit" class="form-select form-select-sm" data-campo="sit" data-fixo="1"><option value="">todas</option><option value="falta">com números a preencher</option><option value="pendencia">com algo para corrigir ou conferir</option><option value="completa">números completos</option><option value="enviada">enviadas ao Master</option><option value="aprovada">aprovadas</option></select></div>
+    <div class="col-6 col-md-1 text-md-end"><button type="button" class="btn btn-sm btn-link js-filtro-limpar" hidden>limpar</button></div>
+  </div>
+  <div class="mini text-secondary mt-1 js-filtro-n"></div>
+</div>
+<div id="lista-secoes">
+<p class="text-secondary js-filtro-vazio" hidden>Nenhuma seção com estes filtros.</p>
+{% for cap in arvore %}
+<div class="card mb-3" data-grupo>
+  <div class="card-header d-flex align-items-center">
+    <span>{{ cap.cap.titulo }}</span>
+    {% if pode_estruturar %}<a class="ms-auto mini" href="{% url 'secao' ciclo.ano cap.cap.chave %}"><i class="bi bi-gear"></i> capítulo</a><a class="ms-3 mini" href="{% url 'secao_nova' ciclo.ano %}?pai={{ cap.cap.chave }}"><i class="bi bi-plus"></i> seção</a>{% endif %}
+  </div>
+  {% if cap.secoes %}
+  <div class="table-responsive"><table class="table table-hover mb-0 align-middle tabela-secoes">
+    <tbody>
+    {% for it in cap.secoes %}
+    <tr class="{% if it.minha %}minha{% endif %}" data-item data-f-cap="{{ cap.cap.pk }}" data-f-cap-nome="{{ cap.cap.titulo }}" data-f-setor="{% for s in it.s.setores.all %}{{ s.sigla }} {% endfor %}" data-f-sit="{% if not it.tem_dados %}texto{% elif it.pend.faltam %}falta{% elif it.pct == 100 %}completa{% endif %}{% if it.pend.erros or it.pend.avisos %} pendencia{% endif %}{% if it.s.situacao == 'enviada' %} enviada{% elif it.s.situacao == 'aprovada' %} aprovada{% endif %}">
+      <td style="width:38%"><a class="fw-semibold text-decoration-none" href="{% url 'secao' ciclo.ano it.s.chave %}">{% if it.abertura %}Abertura do capítulo{% else %}{{ it.s.titulo }}{% endif %}</a>{% if it.minha %} <i class="bi bi-person-check text-primary" title="Seção do seu setor"></i>{% endif %}
+        <div class="mini">{% for s in it.s.setores.all %}<span class="badge badge-setor me-1" title="{{ s.nome }}">{{ s.sigla }}</span>{% endfor %}<span class="badge text-bg-{{ it.s.situacao|situacao_cor }} border">{{ it.s.get_situacao_display }}</span></div></td>
+      <td style="width:28%">{% if it.tem_dados %}<div class="d-flex align-items-center gap-2"><div class="progress flex-grow-1" style="height:8px"><div class="progress-bar {% if it.pct == 100 %}bg-success{% endif %}" style="width:{{ it.pct }}%"></div></div><span class="mini text-nowrap">{{ it.pct }}%</span></div>
+        <div class="mini text-secondary mt-1">{% if it.pend.faltam %}{{ it.pend.faltam }} número{{ it.pend.faltam|pluralize }} a preencher{% else %}números completos{% endif %}{% if it.pend.erros %} · <span class="text-danger">{{ it.pend.erros }} para corrigir</span>{% endif %}{% if it.pend.avisos %} · <span class="text-warning-emphasis">{{ it.pend.avisos }} para conferir</span>{% endif %}</div>
+        {% else %}<span class="mini text-secondary">Seção só de texto</span>{% endif %}</td>
+      <td class="text-end text-nowrap">
+        {% if it.tem_dados %}<a class="btn btn-sm {% if it.minha %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'secao' ciclo.ano it.s.chave %}?aba=dados"><i class="bi bi-table"></i> {% if it.minha %}Preencher{% else %}Ver números{% endif %}</a>{% endif %}
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'escrever' ciclo.ano %}?secao={{ it.s.chave }}"><i class="bi bi-pencil-square"></i> Texto</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+</div>
+{% empty %}
+<div class="card card-body text-secondary" data-grupo><span data-item>{% if so_minhas %}Nenhuma seção do seu setor. <a href="?minhas=0">Ver o relatório inteiro</a>.{% else %}O relatório ainda não tem capítulos.{% if pode_estruturar %} <a href="{% url 'secao_nova' ciclo.ano %}">Criar o primeiro capítulo</a>.{% endif %}{% endif %}</span></div>
+{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/filtros.js' %}?v={{ VERSAO }}"></script>{% endblock %}

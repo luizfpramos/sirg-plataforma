@@ -1,0 +1,151 @@
+{% extends "base.html" %}{% load static sirg_rel %}
+{% block titulo %}{{ secao.titulo }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2" aria-label="Caminho"><a href="{% url 'ciclo' ciclo.ano %}">{{ ciclo.titulo }}</a>{% if secao.pai %} › <a href="{% url 'secao' ciclo.ano secao.pai.chave %}">{{ secao.pai.titulo }}</a>{% endif %}</nav>
+<div class="d-flex align-items-start flex-wrap gap-2 mb-2">
+  <div>
+    <h1 class="mb-0">{{ secao.titulo }}</h1>
+    <div class="subtitulo">{% for s in secao.setores.all %}<span class="badge badge-setor me-1" title="{{ s.nome }}">{{ s.sigla }}</span>{% empty %}<span class="mini">Sem setor responsável definido</span>{% endfor %}
+      <span class="badge text-bg-{{ secao.situacao|situacao_cor }} border ms-1">Seção: {{ secao.get_situacao_display }}</span>
+      <span class="badge text-bg-{{ ciclo.situacao|situacao_cor }} ms-1">{{ ciclo.get_situacao_display }}</span></div>
+  </div>
+  <div class="ms-auto d-flex gap-2 flex-wrap">
+    {% for a in acoes %}
+      {% if a == 'enviar' %}{% if envio_falta %}<span class="d-inline-flex align-items-center gap-2"><button class="btn btn-sm btn-outline-secondary" disabled aria-describedby="envio-motivo"><i class="bi bi-send"></i> Enviar ao Master</button><span id="envio-motivo" class="mini text-secondary">{{ envio_falta }} antes de enviar</span></span>{% else %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}" onsubmit="return confirm('Enviar esta seção ao Master? Depois de enviada, o setor só volta a editar se o Master devolver.')">{% csrf_token %}<input type="hidden" name="acao" value="enviar"><button class="btn btn-sm btn-success"><i class="bi bi-send"></i> Enviar ao Master</button></form>{% endif %}{% endif %}
+      {% if a == 'aprovar' %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}">{% csrf_token %}<input type="hidden" name="acao" value="aprovar"><button class="btn btn-sm btn-success"><i class="bi bi-check2-circle"></i> Aprovar seção</button></form>{% endif %}
+      {% if a == 'devolver' %}<button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modal-devolver"><i class="bi bi-arrow-return-left"></i> Devolver ao setor</button>{% endif %}
+      {% if a == 'reabrir' %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}">{% csrf_token %}<input type="hidden" name="acao" value="reabrir"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-unlock"></i> Reabrir</button></form>{% endif %}
+    {% endfor %}
+    {% if pode_estruturar %}
+    <div class="dropdown"><button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-gear"></i> Estrutura</button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% url 'secao_editar' ciclo.ano secao.chave %}"><i class="bi bi-pencil"></i> Editar seção</a></li>
+        {% if secao.e_capitulo %}<li><a class="dropdown-item" href="{% url 'secao_nova' ciclo.ano %}?pai={{ secao.chave }}"><i class="bi bi-plus-lg"></i> Nova seção neste capítulo</a></li>{% endif %}
+        <li><a class="dropdown-item" href="{% url 'quadro_novo' ciclo.ano %}?secao={{ secao.chave }}"><i class="bi bi-table"></i> Novo quadro de dados</a></li>
+      </ul></div>
+    {% endif %}
+  </div>
+</div>
+{% if secao.orientacao and aba != 'dados' %}<div class="alert alert-light border mini mb-2"><i class="bi bi-info-circle"></i> {{ secao.orientacao|linebreaksbr }}</div>{% endif %}
+{% if filhas %}<div class="list-group mb-3">{% for f in filhas %}<a class="list-group-item list-group-item-action d-flex" href="{% url 'secao' ciclo.ano f.chave %}">{{ f.titulo }} <span class="ms-auto badge text-bg-{{ f.situacao|situacao_cor }} border">{{ f.get_situacao_display }}</span></a>{% endfor %}</div>{% endif %}
+
+<ul class="nav nav-tabs mt-3" role="tablist">
+  {% if blocos %}<li class="nav-item" role="presentation"><button class="nav-link {% if aba == 'dados' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#aba-dados" type="button" role="tab"><i class="bi bi-table"></i> Preencher os números {% include "relatorio/_contagem.html" with erros=resumo.erros avisos=resumo.avisos faltam=resumo.faltam %}</button></li>{% endif %}
+  {% if pode_estruturar or not blocos %}<li class="nav-item" role="presentation"><button class="nav-link {% if aba == 'texto' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#aba-texto" type="button" role="tab"><i class="bi bi-file-text"></i> {% if pode_estruturar %}Montagem: texto, tabelas e gráficos{% else %}Texto{% endif %}</button></li>{% endif %}
+  <li class="nav-item" role="presentation"><button class="nav-link {% if aba == 'conversa' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#aba-conversa" type="button" role="tab"><i class="bi bi-chat-left-dots"></i> Comentários e andamento{% if comentarios_secao %} <span class="badge text-bg-primary">{{ comentarios_secao|length }}</span>{% endif %}</button></li>
+</ul>
+<div class="tab-content pt-3">
+  <div class="tab-pane fade {% if aba == 'texto' %}show active{% endif %}" id="aba-texto" role="tabpanel">
+    <div class="alert alert-primary d-flex align-items-center gap-3 flex-wrap">
+      <div><i class="bi bi-pencil-square"></i> <strong>Para escrever o texto, use o documento.</strong> Lá você vê o relatório inteiro e digita direto, como no Word.</div>
+      <a class="btn btn-primary btn-sm ms-auto" href="{% url 'escrever' ciclo.ano %}?secao={{ secao.chave }}"><i class="bi bi-file-earmark-text"></i> Escrever no documento</a>
+    </div>
+    <p class="mini text-secondary">Nesta aba você também organiza os elementos da seção: incluir uma tabela, um gráfico ou números em destaque, mudar a ordem e escolher o que cada gráfico mostra.</p>
+    {% if not pode_texto %}<p class="mini text-secondary"><i class="bi bi-lock"></i> {{ motivo_texto }}{% if pode_sugerir %} Como Master, você pode sugerir alterações.{% endif %}</p>{% endif %}
+    <div class="documento-secao">
+    {% for d in blocos_texto %}{% include "relatorio/_bloco.html" %}{% empty %}
+      <div class="card card-body text-secondary mb-3">Esta seção ainda não tem texto.{% if pode_texto %} Comece adicionando um bloco de texto abaixo.{% endif %}</div>
+    {% endfor %}
+    </div>
+    {% if pode_texto %}{% include "relatorio/_novo_bloco.html" with depois="" %}{% endif %}
+  </div>
+  <div class="tab-pane fade {% if aba == 'dados' %}show active{% endif %}" id="aba-dados" role="tabpanel">
+    {% if blocos %}
+    <div class="linha-ajuda d-flex align-items-center gap-2 mb-2 flex-wrap">
+      <span class="mini text-secondary"><i class="bi bi-cursor-text"></i> Clique na célula em branco da coluna <strong>{{ ciclo.ano }}</strong> e digite. Grava sozinho.</span>
+      <details class="ajuda-curta ms-auto" data-ajuda="dados">
+        <summary class="btn btn-sm btn-link p-0">Mais ajuda</summary>
+        <ul class="mini mb-0">
+          <li>Use vírgula para decimais (<code>12,5</code>). O valor é guardado ao apertar Enter, Tab ou clicar fora; aparece um ✓.</li>
+          <li>Colunas com <i class="bi bi-lock-fill"></i> são de anos já publicados. Totais e cálculos (em itálico) são feitos sozinhos.</li>
+          <li>O gráfico ao lado mostra como os números saem no relatório e muda enquanto você preenche.</li>
+          <li>Vermelho ou amarelo: leia o aviso embaixo da tabela.</li>
+          <li>Teclado: Enter/↓ desce, ↑ sobe, Tab avança; dá para colar várias células do Excel (Ctrl+V).</li>
+          <li>Prefere o Excel? <a href="{% url 'excel_exportar' ciclo.ano %}?secao={{ secao.chave }}">Baixe a planilha desta seção</a>, preencha as células amarelas e <a href="{% url 'excel_importar' ciclo.ano %}">envie de volta</a>.</li>
+        </ul>
+      </details>
+    </div>
+    {% if outros and not ver_todos %}<div class="outros-setores"><i class="bi bi-people"></i> Aqui aparecem só os números do seu setor. Esta seção também tem {{ outros|length }} quadro{{ outros|length|pluralize }} preenchido{{ outros|length|pluralize }} por {{ setores_outros|join:", " }}, que você não precisa preencher. <a href="?aba=dados&todos=1">Ver também os quadros de outros setores</a></div>
+    {% elif outros and ver_todos and tem_meus %}<div class="outros-setores"><i class="bi bi-people"></i> Mostrando todos os quadros da seção, inclusive os de {{ setores_outros|join:", " }}. <a href="?aba=dados">Mostrar só os do meu setor</a></div>{% endif %}
+    {% for b in blocos %}{% include "relatorio/_quadro.html" %}{% endfor %}
+    {% if tem_meus or acoes %}
+    <section class="fim-secao{% if resumo_meus and not resumo_meus.faltam and not resumo_meus.erros %} pronto{% endif %}" id="fim-secao" aria-labelledby="fim-titulo">
+      {% if resumo_meus.faltam or resumo_meus.erros %}
+      <h2 id="fim-titulo"><i class="bi bi-hourglass-split"></i> Ainda falta{{ resumo_meus.faltam|pluralize:",m" }} {% if resumo_meus.faltam %}{{ resumo_meus.faltam }} número{{ resumo_meus.faltam|pluralize }}{% endif %}{% if resumo_meus.faltam and resumo_meus.erros %} e {% endif %}{% if resumo_meus.erros %}{{ resumo_meus.erros }} correç{{ resumo_meus.erros|pluralize:"ão,ões" }}{% endif %} do seu setor nesta seção</h2>
+      <p class="mb-2">Os campos em branco da coluna <strong>{{ ciclo.ano }}</strong> precisam ser preenchidos. {% if primeiro_falta %}<a href="#quadro-{{ primeiro_falta }}">Ir para o primeiro que falta</a>.{% endif %} Se algum número não existir, deixe um comentário na aba <strong>Comentários e andamento</strong>.</p>
+      {% else %}
+      <h2 id="fim-titulo"><i class="bi bi-check-circle-fill text-success"></i> Números do seu setor preenchidos</h2>
+      <p class="mb-2">O que fazer agora:</p>
+      <ol>
+        {% if tem_texto %}<li><strong>Revise o texto</strong> desta seção: <a class="btn btn-sm btn-outline-primary" href="{% url 'escrever' ciclo.ano %}?secao={{ secao.chave }}"><i class="bi bi-pencil-square"></i> Escrever o relatório</a></li>{% endif %}
+        <li>{% if 'enviar' in acoes %}<strong>Envie ao Master</strong> para revisão:
+          <form class="d-inline" method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}" onsubmit="return confirm('Enviar esta seção ao Master? Depois de enviada, o setor só volta a editar se o Master devolver.')">{% csrf_token %}<input type="hidden" name="acao" value="enviar"><button class="btn btn-sm btn-success"><i class="bi bi-send"></i> Enviar ao Master</button></form>
+          {% elif secao.situacao == 'enviada' %}A seção já foi <strong>enviada ao Master</strong>.
+          {% elif secao.situacao == 'aprovada' %}A seção já foi <strong>aprovada</strong>.
+          {% else %}Quem envia esta seção ao Master é o setor responsável por ela ({% for x in secao.setores.all %}{{ x.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}). Não é preciso fazer mais nada aqui.{% endif %}</li>
+      </ol>
+      {% endif %}
+      <a href="{% url 'ciclo' ciclo.ano %}" class="mini"><i class="bi bi-arrow-left"></i> Voltar para a lista dos meus números</a>
+    </section>
+    {% endif %}
+    {% else %}
+    <div class="card card-body text-secondary">Esta seção não tem quadros de dados.{% if pode_estruturar %} <a href="{% url 'quadro_novo' ciclo.ano %}?secao={{ secao.chave }}">Criar um quadro</a>.{% endif %}</div>
+    {% endif %}
+  </div>
+  <div class="tab-pane fade {% if aba == 'conversa' %}show active{% endif %}" id="aba-conversa" role="tabpanel">{% include "relatorio/_conversa.html" %}</div>
+</div>
+{% if tem_meus and aba == 'dados' %}<div class="barra-fim d-print-none" id="barra-fim" role="status"><i class="bi bi-list-check"></i> <span class="js-fim-contagem">Seus números nesta seção</span>
+  <a class="btn btn-sm btn-primary ms-auto js-terminei" href="?aba=dados&amp;fim=1#fim-secao"><i class="bi bi-flag"></i> Terminei: o que faço agora?</a></div>{% endif %}
+{% include "relatorio/_modais.html" %}
+{% include "relatorio/_modais_texto.html" %}
+{% endblock %}
+{% block scripts %}<script>window.SIRG = {ano: {{ ciclo.ano }}, csrf: "{{ csrf_token }}", editar: "{{ editar_bloco|escapejs }}", secao: {{ secao.pk }}, secaoChave: "{{ secao.chave|escapejs }}", master: {{ pode_sugerir|yesno:'true,false' }}};</script>
+<script src="{% static 'vendor/dompurify/purify.min.js' %}"></script>
+<script src="{% static 'js/quadros.js' %}?v={{ VERSAO }}"></script>
+<script>
+(function () {   // barra do fim: quantos números do setor já estão preenchidos (atualiza enquanto digita)
+  var alvo = document.querySelector(".js-fim-contagem");
+  if (!alvo) return;
+  function contar() {
+    var total = 0, feitos = 0;
+    document.querySelectorAll('#aba-dados .quadro[data-meu="1"][data-opcional="0"] td.cel.ed:not(.travada):not(.falhou) .cel-input, #aba-dados .quadro[data-meu="1"][data-opcional="0"] td.cel.ed.falhou .cel-input').forEach(function (el) {
+      if (el.closest("td").classList.contains("falhou")) { total++; return; }    // valor inválido: não conta como preenchido
+      total++;
+      if ((el.value || "").trim() || (el.dataset.auto || "").trim()) feitos++;
+    });
+    alvo.textContent = total ? "Seus números nesta seção: " + feitos + " de " + total + " preenchidos" +
+      (feitos === total ? " ✓" : "") : "Seus números nesta seção";
+  }
+  contar();
+  document.addEventListener("sirg:celula", contar);
+  // destino de um link (ex.: "Abrir" em O que falta): foco na célula, para digitar direto
+  if (location.hash.indexOf("#c-") === 0) {
+    var alvoCel = document.getElementById(location.hash.slice(1));
+    var inp = alvoCel && alvoCel.querySelector(".cel-input");
+    if (inp) setTimeout(function () { alvoCel.scrollIntoView({ block: "center" }); inp.focus({ preventScroll: true }); }, 300);
+  }
+  // "Terminei": recarrega a página (os números já estão gravados) para o painel do fim refletir o que foi
+  // digitado agora, e leva até ele com um destaque
+  var bt = document.querySelector(".js-terminei");
+  if (bt) bt.addEventListener("click", function (e) {
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // grava a célula em edição
+    bt.classList.add("disabled");
+    bt.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Conferindo…';
+    setTimeout(function () { location.href = location.pathname + "?aba=dados&fim=" + Date.now() + "#fim-secao"; }, 700);
+  });
+  if (/[?&]fim=/.test(location.search)) {
+    var fim = document.getElementById("fim-secao");
+    if (fim) {
+      fim.scrollIntoView({ block: "center" });
+      fim.classList.add("realce");
+      setTimeout(function () { fim.classList.remove("realce"); }, 2600);
+      var h = fim.querySelector("h2"); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+    }
+  }
+  // tabelas com muitos anos: abre já mostrando a coluna do ano do relatório (a última)
+  document.querySelectorAll(".js-rolar-fim").forEach(function (t) { t.scrollLeft = t.scrollWidth; });
+  document.addEventListener("focusout", function () { setTimeout(contar, 300); });
+  document.addEventListener("change", contar);
+})();
+</script><script src="{% static 'js/texto_comum.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/editor.js' %}?v={{ VERSAO }}"></script>{% endblock %}

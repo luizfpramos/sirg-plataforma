@@ -1,0 +1,11 @@
+<tr class="{% if f.errors %}table-danger{% endif %}">
+  <td>{{ f.id }}<input class="form-control form-control-sm" name="{{ f.descricao.html_name }}" value="{{ f.descricao.value|default_if_none:'' }}" aria-label="Descrição">{% for e in f.descricao.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><input class="form-control form-control-sm font-monospace" name="{{ f.esquerda.html_name }}" value="{{ f.esquerda.value|default_if_none:'' }}" aria-label="Expressão">{% for e in f.esquerda.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><select class="form-select form-select-sm" name="{{ f.operador.html_name }}" aria-label="Operador">{% for v, r in f.fields.operador.choices %}<option value="{{ v }}" {% if f.operador.value == v %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></td>
+  <td><input class="form-control form-control-sm font-monospace" name="{{ f.direita.html_name }}" value="{{ f.direita.value|default_if_none:'' }}" aria-label="Comparar com">{% for e in f.direita.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><input class="form-control form-control-sm" name="{{ f.tolerancia.html_name }}" value="{{ f.tolerancia.value|default_if_none:'0' }}" aria-label="Tolerância"></td>
+  <td><select class="form-select form-select-sm" name="{{ f.escopo.html_name }}" aria-label="Colunas">{% for v, r in f.fields.escopo.choices %}<option value="{{ v }}" {% if f.escopo.value == v %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></td>
+  <td><select class="form-select form-select-sm" name="{{ f.severidade.html_name }}" aria-label="Gravidade">{% for v, r in f.fields.severidade.choices %}<option value="{{ v }}" {% if f.severidade.value == v %}selected{% endif %}>{% if v == 'erro' %}Erro{% else %}Aviso{% endif %}</option>{% endfor %}</select></td>
+  <td><input class="form-check-input" type="checkbox" name="{{ f.ativa.html_name }}" {% if f.ativa.value %}checked{% endif %} aria-label="Ativa"></td>
+  <td>{% if f.instance.pk %}<input class="form-check-input" type="checkbox" name="{{ f.DELETE.html_name }}" aria-label="Excluir regra">{% endif %}</td>
+</tr>

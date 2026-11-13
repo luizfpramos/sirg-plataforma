@@ -1,0 +1,3 @@
+Carlito (fonte com as mesmas larguras da Calibri), de Google/tyPoland Lukasz Dziedzic,
+distribuida sob a SIL Open Font License 1.1 (https://openfontlicense.org).
+Usada nas paginas do relatorio quando o computador nao tem a Calibri.

@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load sirg_rel %}
+{% block titulo %}Exportar — {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'documento' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Documento</a></nav>
+<h1 class="mb-0"><i class="bi bi-box-arrow-up"></i> Exportar {{ ciclo.titulo }}</h1>
+<div class="subtitulo mb-3">O texto, as tabelas e os gráficos saem dos mesmos dados que estão na plataforma.</div>
+<div class="card mb-3" style="max-width:960px"><div class="card-body">
+  <h2 class="h6">Situação do relatório agora</h2>
+  <ul class="mb-0">
+    <li>Seções aprovadas pelo Master: <strong>{{ n_aprovadas }} de {{ n_secoes }}</strong></li>
+    <li>Dados: {% include "relatorio/_contagem.html" with erros=resumo.erros avisos=resumo.avisos faltam=resumo.faltam %} <a class="mini" href="{% url 'pendencias' ciclo.ano %}">ver inconsistências</a></li>
+    {% if n_alt %}<li>Texto: <strong>{{ n_alt }} alteraç{{ n_alt|pluralize:"ão,ões" }} sugerida{{ n_alt|pluralize }}</strong> esperando aceitar ou recusar. O arquivo sai sem ela{{ n_alt|pluralize }} (só vale o que foi aceito). <a class="mini" href="{% url 'escrever' ciclo.ano %}?revisao=1">revisar</a></li>{% endif %}
+    <li>{{ n_tabelas }} tabela{{ n_tabelas|pluralize }} e {{ n_graficos }} gráfico{{ n_graficos|pluralize }}</li>
+  </ul>
+  {% if resumo.erros or resumo.faltam or n_aprovadas < n_secoes %}<div class="alert alert-warning mt-3 mb-0 mini"><i class="bi bi-exclamation-triangle"></i> O relatório ainda não está completo: o arquivo sai marcado como <strong>versão preliminar</strong> na capa.</div>{% endif %}
+</div></div>
+<div class="row g-3" style="max-width:990px">
+  <div class="col-md-6"><div class="card h-100"><div class="card-body">
+    <h2 class="h5"><i class="bi bi-file-earmark-word text-primary"></i> Word (.docx)</h2>
+    <p class="mini">Capa, sumário automático, capítulos e seções como títulos, textos com os números já preenchidos, tabelas e gráficos numerados com legenda e fonte, números em destaque e paginação. Ao abrir no Word, aceite <em>atualizar os campos</em> para montar o sumário.</p>
+    <a class="btn btn-primary js-baixar" href="?formato=docx"><i class="bi bi-download"></i> Baixar .docx</a>
+  </div></div></div>
+  <div class="col-md-6"><div class="card h-100"><div class="card-body">
+    <h2 class="h5"><i class="bi bi-file-earmark-zip text-primary"></i> Pacote para a diagramadora (.zip)</h2>
+    <p class="mini">O .docx, cada gráfico em PNG (alta resolução) e SVG (vetorial, editável), uma planilha com os dados de cada gráfico, para refazê-los no estilo do relatório sem redigitar números, e todos os quadros em Excel.</p>
+    <a class="btn btn-outline-primary js-baixar" href="?formato=pacote"><i class="bi bi-download"></i> Baixar pacote</a>
+  </div></div></div>
+</div>
+<p class="mini text-secondary mt-3"><i class="bi bi-hourglass-split"></i> A geração leva alguns segundos (os gráficos são desenhados na hora).</p>
+{% endblock %}

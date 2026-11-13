@@ -1,0 +1,105 @@
+{% extends "base.html" %}{% load static sirg_rel %}
+{% block titulo %}Escrever — {{ ciclo.titulo }}{% endblock %}
+{% block pagina_classe %}pagina-doc{% endblock %}
+{% block conteudo %}
+<div class="doc-app" id="doc-app">
+  <div class="chip-destaque d-none" id="chip-destaque" role="status"><div class="chip-antes"></div><button type="button" class="btn btn-sm btn-success js-chip-concluir"><i class="bi bi-check2"></i> Tirar o destaque</button></div>
+  <div class="chip-destaque chip-revisao d-none" id="chip-revisao" role="dialog" aria-label="Alteração sugerida"><div class="chip-antes"><div class="mini text-secondary js-selo-quem"></div><div class="js-selo-desc"></div></div><div class="d-flex gap-1 js-selo-acoes"><button type="button" class="btn btn-sm btn-success js-selo-aceitar"><i class="bi bi-check-lg"></i> Aceitar</button><button type="button" class="btn btn-sm btn-outline-danger js-selo-recusar"><i class="bi bi-x-lg"></i> Recusar</button></div></div>
+  <div class="chip-destaque chip-nome d-none" id="chip-nome" role="dialog" aria-label="CEFET-MG ou UFCIMG?"><div class="chip-antes"><strong>CEFET-MG ou UFCIMG?</strong> Se o trecho fala da instituição hoje, troque. Se é um fato do tempo do CEFET-MG (histórico), mantenha.</div><div class="d-flex gap-1 flex-wrap"><button type="button" class="btn btn-sm btn-primary js-nome-ufcimg"><i class="bi bi-arrow-left-right"></i> Trocar por “<span class="js-nome-depois"></span>”</button><button type="button" class="btn btn-sm btn-outline-secondary js-nome-cefet"><i class="bi bi-clock-history"></i> Manter “<span class="js-nome-antes"></span>”</button><button type="button" class="btn btn-sm btn-link js-nome-todas d-none">Trocar as <span></span> deste trecho por UFCIMG</button></div></div>
+  <div class="doc-ferramentas" role="toolbar" aria-label="Ferramentas do documento">
+    <div class="doc-ferramentas-linha">
+      <div class="doc-status" aria-live="polite"><span class="js-status"><i class="bi bi-cloud-check"></i> Tudo salvo</span></div>
+      {% if n_editaveis %}<button type="button" class="btn btn-sm btn-faltam js-faltam" title="Ir para o próximo número a preencher nas suas seções"><i class="bi bi-arrow-down-circle"></i> <span>{% if n_faltam %}Faltam {{ n_faltam }}{% else %}Tudo preenchido{% endif %}</span></button>{% endif %}
+      {% if n_marcas_minhas %}<span class="badge badge-atualizar" title="Menções ao CEFET-MG em amarelo: clique e escolha manter ou trocar por UFCIMG">{{ n_marcas_minhas }} em amarelo</span>{% endif %}
+      <span class="doc-revisao-barra ms-auto">
+        {% if n_editaveis %}{% if e_master %}<button type="button" class="btn btn-sm btn-rastreio js-rastreio" aria-pressed="false" title="Ligado: o que você digitar ou apagar fica marcado, com o seu nome (como no Word)"><i class="bi bi-pencil-square"></i> <span>Controlar alterações</span></button>
+        {% else %}<span class="btn btn-sm btn-rastreio on" title="O que você digita ou apaga fica marcado, com o seu nome, até o Master aceitar"><i class="bi bi-pencil-square"></i> Controle de alterações ligado</span>{% endif %}{% endif %}
+        {% if pode_comentar %}<button type="button" class="btn btn-sm btn-outline-secondary js-comentar-sel" title="Selecione um trecho do texto e clique aqui"><i class="bi bi-chat-left-text"></i> Comentar</button>{% endif %}
+        <button type="button" class="btn btn-sm btn-cont js-cont-sug" title="Alterações no texto"><span>0 alterações</span></button>
+        <button type="button" class="btn btn-sm btn-cont js-cont-com" title="Comentários abertos"><span>0 comentários</span></button>
+      </span>
+      <a class="btn btn-sm btn-outline-secondary" href="{% static 'referencia/RG'|add:ano_ref_txt|add:'.pdf' %}" target="_blank" rel="noopener" title="O relatório do ano passado, para consultar ao lado"><i class="bi bi-file-earmark-pdf"></i> RG {{ ano_ref }}</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'ler' ciclo.ano %}" title="O texto final, sem marcas"><i class="bi bi-book"></i> Ver como fica</a>
+    </div>
+    <div class="doc-barra js-barra" data-ativa="0">
+      <button type="button" class="btn btn-sm btn-light" data-cmd="undo" title="Desfazer (Ctrl+Z)" aria-label="Desfazer"><i class="bi bi-arrow-counterclockwise"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="redo" title="Refazer (Ctrl+Y)" aria-label="Refazer"><i class="bi bi-arrow-clockwise"></i></button>
+      {% if e_master %}
+      <span class="ed-sep"></span>
+      <select class="form-select form-select-sm doc-estilo js-estilo" aria-label="Estilo do parágrafo" title="Estilo do parágrafo">
+        <option value="p">Texto normal</option><option value="h3">Título</option><option value="h4">Subtítulo</option><option value="blockquote">Destaque</option>
+      </select>
+      <span class="ed-sep"></span>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="bold" title="Negrito (Ctrl+B)" aria-label="Negrito"><i class="bi bi-type-bold"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="italic" title="Itálico (Ctrl+I)" aria-label="Itálico"><i class="bi bi-type-italic"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="underline" title="Sublinhado (Ctrl+U)" aria-label="Sublinhado"><i class="bi bi-type-underline"></i></button>
+      <span class="ed-sep"></span>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="insertUnorderedList" title="Lista com marcadores" aria-label="Lista"><i class="bi bi-list-ul"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="insertOrderedList" title="Lista numerada" aria-label="Lista numerada"><i class="bi bi-list-ol"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="link" title="Inserir link" aria-label="Link"><i class="bi bi-link-45deg"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="imagem" title="Inserir imagem" aria-label="Inserir imagem"><i class="bi bi-image"></i></button>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="removeFormat" title="Limpar formatação" aria-label="Limpar formatação"><i class="bi bi-eraser"></i></button>
+      <span class="ed-sep"></span>
+      <button type="button" class="btn btn-sm btn-light" data-cmd="numero" title="Inserir um número ligado a uma tabela"><i class="bi bi-123"></i> Número</button>
+      {% endif %}
+      <span class="doc-dica-barra mini text-secondary js-dica-barra">Clique num texto que você pode alterar.</span>
+    </div>
+  </div>
+  <div class="doc-corpo" id="doc-corpo">
+    <aside class="doc-sumario d-print-none" aria-label="Sumário">
+      <div class="doc-sumario-titulo">Sumário</div>
+      {% if tem_outras %}<div class="form-check form-switch doc-filtro-minhas"><input class="form-check-input js-so-minhas" type="checkbox" role="switch" id="so-minhas" checked><label class="form-check-label" for="so-minhas">Só o que eu escrevo</label></div>{% endif %}
+      <nav class="js-sumario">
+        {% for cap in caps %}
+        <a href="#sec-{{ cap.s.chave }}" class="cap{% if cap.pode %} pode{% endif %}"{% if cap.interessa and cap.blocos %} data-interessa="1"{% endif %}>{{ cap.s.titulo }}</a>
+        {% for it in cap.secoes %}<a href="#sec-{{ it.s.chave }}" class="sec{% if it.s.nivel == 2 %} sub{% endif %}{% if it.pode %} pode{% endif %}{% if it.minha %} minha{% endif %}" data-chave="{{ it.s.chave }}"{% if it.interessa %} data-interessa="1"{% endif %}>{% if it.pode %}<i class="bi bi-pencil-fill"></i> {% endif %}{{ it.s.titulo }}</a>{% endfor %}
+        {% endfor %}
+      </nav>
+    </aside>
+
+    <div class="doc-mesa">
+      {% if n_editaveis %}<div class="doc-dica-topo d-print-none js-dica-topo"><span><strong>xxxxx</strong> = número para preencher: clique nele. Tabelas e gráficos: clique para preencher os dados de {{ ciclo.ano }}. No texto, o que você muda fica marcado para o Master.</span><button type="button" class="btn-close btn-sm js-dica-fechar" aria-label="Fechar a dica"></button></div>
+      {% elif not modo_coleta %}<div class="doc-dica-topo d-print-none"><span><i class="bi bi-lock"></i> A coleta não está aberta agora: somente leitura.</span></div>{% endif %}
+      {% include "relatorio/_folha.html" with editor=True %}
+    </div>
+    <aside class="doc-revisao d-print-none" id="doc-revisao" aria-label="Revisão: alterações e comentários" hidden>
+      <div class="doc-revisao-cab">
+        <div class="nav nav-tabs" role="tablist">
+          <button type="button" class="nav-link" data-aba="sugestoes" role="tab">Alterações <span class="badge text-bg-light js-aba-n-sug">0</span></button>
+          <button type="button" class="nav-link" data-aba="comentarios" role="tab">Comentários <span class="badge text-bg-light js-aba-n-com">0</span></button>
+        </div>
+        <button type="button" class="btn-close js-rev-fechar" aria-label="Fechar o painel de revisão"></button>
+      </div>
+      <div class="doc-revisao-lista js-rev-lista" aria-live="polite"></div>
+    </aside>
+  </div>
+</div>
+
+<aside class="doc-gaveta d-print-none" id="doc-gaveta" aria-label="Dados da tabela ou do gráfico" hidden>
+  <div class="doc-gaveta-cab"><strong class="js-gaveta-titulo">Dados</strong><button type="button" class="btn-close js-gaveta-fechar" aria-label="Fechar"></button></div>
+  <div class="doc-gaveta-corpo js-gaveta-corpo"></div>
+</aside>
+{% include "relatorio/_modais_ferramentas.html" %}
+{% include "relatorio/_modais.html" %}
+
+<div class="modal fade" id="modal-comentar" tabindex="-1" aria-labelledby="modal-comentar-titulo" aria-hidden="true">
+  <div class="modal-dialog"><form class="modal-content" method="post" id="form-comentar">{% csrf_token %}<input type="hidden" name="voltar" id="comentar-voltar">
+    <div class="modal-header"><h2 class="modal-title h6" id="modal-comentar-titulo">Comentar este trecho</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+    <div class="modal-body"><input type="hidden" name="bloco" id="comentar-bloco"><label class="form-label mini text-secondary" for="comentar-texto">O comentário aparece para quem escreve e para o Master. Ele não vai para o relatório.</label><textarea class="form-control" name="texto" id="comentar-texto" rows="4" required></textarea></div>
+    <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary">Comentar</button></div>
+  </form></div>
+</div>
+<div class="modal fade" id="modal-devolver" tabindex="-1" aria-labelledby="modal-devolver-titulo" aria-hidden="true">
+  <div class="modal-dialog"><form class="modal-content" method="post" id="form-devolver">{% csrf_token %}<input type="hidden" name="acao" value="devolver"><input type="hidden" name="voltar" id="devolver-voltar">
+    <div class="modal-header"><h2 class="modal-title h6" id="modal-devolver-titulo">Devolver a seção ao setor</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+    <div class="modal-body"><label class="form-label" for="devolver-texto">O que precisa ser ajustado?</label><textarea class="form-control" id="devolver-texto" name="comentario" rows="4" required></textarea></div>
+    <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-warning">Devolver</button></div>
+  </form></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>window.SIRG = {ano: {{ ciclo.ano }}, csrf: "{{ csrf_token }}", inicio: "{{ inicio|escapejs }}", master: {{ e_master|yesno:'true,false' }},
+  usuario: {id: {{ user.pk }}, nome: "{{ user.get_full_name|default:user.username|escapejs }}"}, rastreioPadrao: false,
+  rastreioObrigatorio: {{ e_master|yesno:'false,true' }}, preencher: true};</script>
+<script src="{% static 'vendor/dompurify/purify.min.js' %}"></script>
+<script src="{% static 'js/texto_comum.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/revisao.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/escrever.js' %}?v={{ VERSAO }}"></script>
+<script src="{% static 'js/quadros.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/preencher.js' %}?v={{ VERSAO }}"></script>{% endblock %}

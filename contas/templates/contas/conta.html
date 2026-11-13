@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Minha conta{% endblock %}
+{% block conteudo %}
+<h1>Minha conta</h1>
+<div class="row g-3">
+  <div class="col-lg-5"><div class="card card-body">
+    <p class="mb-1"><strong>{{ user.get_full_name|default:user.username }}</strong></p>
+    <p class="mini text-secondary mb-2">Login: <span class="codigo">{{ user.username }}</span>{% if user.email %} · {{ user.email }}{% endif %}</p>
+    <p class="mb-2">{% for p in papeis %}<span class="badge text-bg-light border me-1">{{ p }}</span>{% endfor %}</p>
+    <a class="btn btn-outline-secondary btn-sm align-self-start" href="{% url 'senha' %}"><i class="bi bi-shield-lock"></i> Trocar senha</a>
+  </div></div>
+  <div class="col-lg-7"><div class="card card-body">
+    <h2 class="h6">Meus setores</h2>
+    {% include "contas/_vinculos.html" with vinculos=vinculos mostrar="setor" %}
+    <p class="mini text-secondary mt-2 mb-0">Mudou de setor? Peça a um administrador da plataforma para atualizar o seu vínculo.</p>
+  </div></div>
+</div>
+{% endblock %}

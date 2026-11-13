@@ -1,0 +1,340 @@
+{
+ "titulo": "RELATÓRIO DE GESTÃO 2026: ACOMPANHAMENTO DAS METAS DO PDI 2023-2027",
+ "instrucao": "INSTRUÇÃO: ①Preencha a coluna situação correspondente à meta;  ②Registre justificativa para as situações \"Não iniciado\" ou \"Interrompido\"; ③ Registre evidência para as situações \"Em andamento\" ou \"Concluído\"",
+ "situacoes": [
+  "Não iniciado",
+  "Em andamento",
+  "Interrompido",
+  "Concluído"
+ ],
+ "metas": [
+  {
+   "n": 1,
+   "oe": "OE-2 – Ampliar a oferta e aprimorar a qualidade do ensino",
+   "od": "OD-2.1 – Política de desenvolvimento do ensino",
+   "desc_od": "OD-2.1 – Desenvolver e implantar uma política institucional de desenvolvimento do ensino, fundamentada nos princípios da educação integral, diversa, equitativa e inclusiva, com vistas à ampliação e à consolidação da oferta educacional em todos os campi, níveis e modalidades de ensino, bem como à melhoria da qualidade e da efetividade dos processos de ensino e de aprendizagem.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DEPT"
+  },
+  {
+   "n": 2,
+   "oe": "OE-3 – Fortalecer o sistema de pesquisa, desenvolvimento e inovação",
+   "od": "OD-3.1 – Política de desenvolvimento da ciência, tecnologia e inovação",
+   "desc_od": "OD-3.1 – Desenvolver e implantar uma política institucional de ciência, tecnologia e inovação, que integre academia, setor científico e setor produtivo não-acadêmico, orientada à ampliação da geração, transferência e aplicação de conhecimento, tecnologias e soluções inovadoras para a sociedade, nos termos do Marco Legal de Ciência, Tecnologia e Inovação (CT&I). A política deve promover parcerias estratégicas, fortalecer a articulação entre formação de pessoas, pesquisa e demandas do setor produtivo não-acadêmico, e potencializar o impacto socioeconômico das ações institucionais, em consonância com o Marco Legal de CT&I e as diretrizes nacionais para a inovação no ambiente acadêmico.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DPPG"
+  },
+  {
+   "n": 3,
+   "oe": "OE-4 – Fortalecer a extensão e interação com a sociedade",
+   "od": "OD-4.1 – Política de desenvolvimento da extensão",
+   "desc_od": "OD-4.1 – Desenvolver e implantar política institucional de desenvolvimento da extensão, direcionada à melhoria, ampliação e fortalecimento das atividades extensionistas, contemplando as áreas da atuação institucional: esporte e lazer, arte e cultura, acompanhamento e integração de egressos, empreendedorismo e inovação, empresas juniores, desenvolvimento de carreiras, parcerias com movimentos sociais, outras instituições de ensino e setor produtivo etc.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DEDC"
+  },
+  {
+   "n": 4,
+   "oe": "OE-5 – Aprimorar a gestão de currículos e aprendizagens",
+   "od": "OD-5.1 – Política de gestão de currículos e aprendizagens",
+   "desc_od": "OD-5.1 – Desenvolver e implantar política(s) institucional(is) de gestão de currículos e aprendizagens, que estabeleça diretrizes institucionais para aperfeiçoar a gestão de currículos e as relações de ensino-aprendizagem no âmbito dos cursos de todos os níveis e modalidades de ensino, por meio da recontextualização e apropriação das melhores experiências nacionais e internacionais na área de gestão de currículos e aprendizagens.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DIRGRAD"
+  },
+  {
+   "n": 5,
+   "oe": "OE-5 – Aprimorar a gestão de currículos e aprendizagens",
+   "od": "OD-5.4 – Observatório de currículos e práticas pedagógicas",
+   "desc_od": "OD-5.4 – Instituir observatório de currículos e práticas pedagógicas visando identificar e avaliar as melhores experiências na área de gestão de currículos e aprendizagens desenvolvidas em instituições congêneres, nacionais e internacionais, e internalizar e disseminar as experiências inovadoras, contribuindo para a melhoria contínua do processo educativo e para a criação de um espaço institucional de compartilhamento, reconhecimento e valorização de ideias, práticas e experiências de sucesso.",
+   "meta": "1) Elaborar norma para criar e regulamentar o Observatório e submetê-lo à apreciação da instância competente.",
+   "unidade": "DEPT"
+  },
+  {
+   "n": 6,
+   "oe": "OE-5 – Aprimorar a gestão de currículos e aprendizagens",
+   "od": "OD-5.4 – Observatório de currículos e práticas pedagógicas",
+   "desc_od": "OD-5.4 – Instituir observatório de currículos e práticas pedagógicas visando identificar e avaliar as melhores experiências na área de gestão de currículos e aprendizagens desenvolvidas em instituições congêneres, nacionais e internacionais, e internalizar e disseminar as experiências inovadoras, contribuindo para a melhoria contínua do processo educativo e para a criação de um espaço institucional de compartilhamento, reconhecimento e valorização de ideias, práticas e experiências de sucesso.",
+   "meta": "2) Aprovar a norma para criar e regulamentar o Observatório na instância competente.",
+   "unidade": "GDG"
+  },
+  {
+   "n": 7,
+   "oe": "OE-5 – Aprimorar a gestão de currículos e aprendizagens",
+   "od": "OD-5.4 – Observatório de currículos e práticas pedagógicas",
+   "desc_od": "OD-5.4 – Instituir observatório de currículos e práticas pedagógicas visando identificar e avaliar as melhores experiências na área de gestão de currículos e aprendizagens desenvolvidas em instituições congêneres, nacionais e internacionais, e internalizar e disseminar as experiências inovadoras, contribuindo para a melhoria contínua do processo educativo e para a criação de um espaço institucional de compartilhamento, reconhecimento e valorização de ideias, práticas e experiências de sucesso.",
+   "meta": "3) Selecionar e designar equipe que atuará junto ao Observatório.",
+   "unidade": "DEPT"
+  },
+  {
+   "n": 8,
+   "oe": "OE-6 – Assegurar o acesso, permanência e êxito dos alunos",
+   "od": "OD-6.1 – Política de acesso, permanência e êxito",
+   "desc_od": "OD-6.1 – Desenvolver e implantar política de acesso, permanência e êxito que estabeleça diretrizes e estratégias (e.g., ações afirmativas, reserva de vagas etc.) para aprimorar as condições de ingresso na instituição, em quaisquer níveis de ensino, em particular dos grupos em situação de vulnerabilidade socioeconômica ou grupos historicamente sub-representados ou discriminados, e assegurar a permanência e o êxito de estudantes, com especial ênfase naqueles alunos com deficiência ou mobilidade reduzida ou, ainda, necessidades educacionais específicas.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DAE"
+  },
+  {
+   "n": 9,
+   "oe": "OE-6 – Assegurar o acesso, permanência e êxito dos alunos",
+   "od": "OD-6.7 – Observatório de permanência e êxito",
+   "desc_od": "OD-6.7 – Estabelecer observatório de permanência e êxito com a finalidade de monitorar indicadores diversos associados à permanência e êxito dos alunos (e.g., taxas de evasão, retenção, conclusão, tempo de integralização etc.), de realizar estudos sobre o tema e propor estratégias e ações preventivas e interventivas baseadas em evidências voltadas para a permanência e êxito dos alunos, identificar e promover a integração de iniciativas nas diferentes áreas de atuação da institucionais em prol da permanência, êxito e desenvolvimento integral do aluno.",
+   "meta": "1) Elaborar norma para criar e regulamentar o Observatório e submetê-lo à apreciação da instância competente.",
+   "unidade": "DIRGRAD"
+  },
+  {
+   "n": 10,
+   "oe": "OE-6 – Assegurar o acesso, permanência e êxito dos alunos",
+   "od": "OD-6.7 – Observatório de permanência e êxito",
+   "desc_od": "OD-6.7 – Estabelecer observatório de permanência e êxito com a finalidade de monitorar indicadores diversos associados à permanência e êxito dos alunos (e.g., taxas de evasão, retenção, conclusão, tempo de integralização etc.), de realizar estudos sobre o tema e propor estratégias e ações preventivas e interventivas baseadas em evidências voltadas para a permanência e êxito dos alunos, identificar e promover a integração de iniciativas nas diferentes áreas de atuação da institucionais em prol da permanência, êxito e desenvolvimento integral do aluno.",
+   "meta": "2) Aprovar a norma para criar e regulamentar o Observatório na instância competente.",
+   "unidade": "GDG"
+  },
+  {
+   "n": 11,
+   "oe": "OE-6 – Assegurar o acesso, permanência e êxito dos alunos",
+   "od": "OD-6.7 – Observatório de permanência e êxito",
+   "desc_od": "OD-6.7 – Estabelecer observatório de permanência e êxito com a finalidade de monitorar indicadores diversos associados à permanência e êxito dos alunos (e.g., taxas de evasão, retenção, conclusão, tempo de integralização etc.), de realizar estudos sobre o tema e propor estratégias e ações preventivas e interventivas baseadas em evidências voltadas para a permanência e êxito dos alunos, identificar e promover a integração de iniciativas nas diferentes áreas de atuação da institucionais em prol da permanência, êxito e desenvolvimento integral do aluno.",
+   "meta": "3) Selecionar e designar equipe que atuará junto ao Observatório.",
+   "unidade": "DIRGRAD"
+  },
+  {
+   "n": 12,
+   "oe": "OE-7 – Fortalecer a cooperação acadêmica internacional",
+   "od": "OD-7.1 – Política de cooperação acadêmica internacional",
+   "desc_od": "OD-7.1 – Desenvolver, implantar e consolidar uma política institucional de internacionalização voltada ao fortalecimento e à diversificação das relações acadêmicas e científicas com instituições congêneres internacionais. Essa política deve promover ambientes colaborativos que integrem ensino, pesquisa e inovação; ampliar e qualificar a mobilidade internacional (incoming e outgoing) de discentes e docentes por meio de intercâmbios, estágios, visitas técnicas e programas de cotutela; incorporar temas e bibliografia internacionais aos currículos acadêmicos, com a oferta de seminários e disciplinas em línguas estrangeiras e a realização de atividades presenciais ou híbridas com docentes e pesquisadores estrangeiros; adotar práticas institucionais que valorizem o multilinguismo, o multiculturalismo e a integração de comunidades acadêmicas globais; e fomentar parcerias técnico-científicas voltadas ao desenvolvimento de projetos de pesquisa inovadores e de produção intelectual em cooperação, consolidando a excelência acadêmica e a inserção internacional da instituição.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "SRI"
+  },
+  {
+   "n": 13,
+   "oe": "OE-7 – Fortalecer a cooperação acadêmica internacional",
+   "od": "OD-7.2 – Política linguística",
+   "desc_od": "OD-7.2 – Desenvolver e implementar uma política linguística institucional que estabeleça diretrizes e estratégias para valorizar e promover o multilinguismo e o multiculturalismo; fortalecer a internacionalização por meio da ampliação do acesso ao conhecimento e do letramento acadêmico em línguas estrangeiras e em Libras; estimular a oferta de disciplinas de graduação e pós-graduação ministradas em línguas estrangeiras, bem como a realização de atividades presenciais ou híbridas com docentes e pesquisadores estrangeiros; promover e consolidar o ensino de português para estrangeiros; incentivar a produção, publicação e disseminação de trabalhos acadêmicos em línguas estrangeiras e a produção intelectual em cooperação internacional.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "SRI"
+  },
+  {
+   "n": 14,
+   "oe": "OE-8 – Desenvolver a comunicação com a comunidade interna e com a sociedade",
+   "od": "OD-8.1 – Política de comunicação",
+   "desc_od": "OD-8.1 – Desenvolver e implantar política de comunicação institucional que estabeleça princípios, diretrizes e estratégicas para melhoria da comunicação interna e externa (e.g., servidores, colaboradores, alunos, parceiros, imprensa e comunidade em geral); ampliar e fortalecer a produção audiovisual digital; fortalecer a imagem institucional;  melhoria contínua da identidade visual da instituição; desenvolver e fortalecer os diferentes canais de comunicação e interação com as comunidades interna e externa; fomentar a participação ativa dos alunos, servidores e outros segmentos internos e da comunidade externa no desenvolvimento da instituição;  aperfeiçoar a gestão de crises; aprimorar a disseminação dos resultados de valor alcançados pela instituição; fortalecer a comunicação científica e tecnológica para divulgar à sociedade o conhecimento, tecnologias, produtos e serviços gerados na instituição; assegurar que as publicações nos canais oficiais atendam aos interesses públicos e institucionais; identificar e promover as melhores práticas de comunicação disponíveis.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "SECOM"
+  },
+  {
+   "n": 15,
+   "oe": "OE-9 – Aprimorar a governança institucional",
+   "od": "OD-9.1 – Política de governança",
+   "desc_od": "OD-9.1 – Implantar política de governança que estabeleça princípios, diretrizes e estratégicas para a melhoria da governança institucional - alicerçada nos princípios da capacidade de resposta, integridade, confiabilidade, melhoria regulatória, prestação de contas e responsabilidade (accountability) -, por meio da estruturação de um sistema interno de governança, de um sistema de medição do desempenho da instituição e de um conjunto coordenado de programas abrangendo todas os mecanismos, áreas e práticas de governança.",
+   "meta": "1) Elaborar pelo menos um Plano de Ação de um dos Programas e submetê-lo(s) à apreciação da(s) instância(s) competente(s).",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 16,
+   "oe": "OE-9 – Aprimorar a governança institucional",
+   "od": "OD-9.5 – Programa de desenvolvimento da gestão de riscos e da integridade",
+   "desc_od": "OD-9.5 – Implementar programa de desenvolvimento da gestão de riscos e da integridade com a finalidade de desenvolver um sistema de gestão de riscos, controle interno e de gestão da integridade; de desenvolver ações específicas nas áreas de gestão de riscos, controle e integridade,  contribuindo para a melhoria da gestão; desenvolver métodos e mecanismos para a identificação, avaliação, tratamento e monitoramento de riscos de qualquer natureza (e.g., estratégicos, táticos e operacionais, orçamentário-financeiros, de integridade e conformidade, de reputação etc.); fortalecer o sistema de controle interno;  apropriar os resultados decorrentes do controle interno e aprimorar os processos de governança e gestão; desenvolver mecanismos para a prevenção e enfrentamento ao assédio, à discriminação e à violência na instituição; contribuir para promover a cultura da ética na instituição.",
+   "meta": "1) Elaborar o Plano de Ação do Programa e submetê-lo à apreciação da instância competente.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 17,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.1 – Desenvolver metodologia de planejamento institucional",
+   "desc_od": "OD-10.1 – Desenvolver e implementar metodologia de planejamento integrado e gestão da instituição que assegure o alinhamento estratégico das políticas, programa, planos e projetos institucionais, desde o nível estratégico até o operacional; desenvolver mecanismos e instrumentos para o planejamento, execução, controle, monitoramento e avaliação das ações institucionais; fomentar a gestão de portfólios de programas e projetos institucionais visando assegurar a máxima efetividade de sua execução.",
+   "meta": "1) Revisar, se necessário, a metodologia de planejamento integrado institucional e submetê-la à apreciação da instância competente.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 18,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.1 – Desenvolver metodologia de planejamento institucional",
+   "desc_od": "OD-10.1 – Desenvolver e implementar metodologia de planejamento integrado e gestão da instituição que assegure o alinhamento estratégico das políticas, programa, planos e projetos institucionais, desde o nível estratégico até o operacional; desenvolver mecanismos e instrumentos para o planejamento, execução, controle, monitoramento e avaliação das ações institucionais; fomentar a gestão de portfólios de programas e projetos institucionais visando assegurar a máxima efetividade de sua execução.",
+   "meta": "2) Aprovar metodologia de planejamento integrado institucional na instância competente, se necessário.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 19,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.1 – Desenvolver metodologia de planejamento institucional",
+   "desc_od": "OD-10.1 – Desenvolver e implementar metodologia de planejamento integrado e gestão da instituição que assegure o alinhamento estratégico das políticas, programa, planos e projetos institucionais, desde o nível estratégico até o operacional; desenvolver mecanismos e instrumentos para o planejamento, execução, controle, monitoramento e avaliação das ações institucionais; fomentar a gestão de portfólios de programas e projetos institucionais visando assegurar a máxima efetividade de sua execução.",
+   "meta": "3) Elaborar os instrumentos de planejamento integrado.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 20,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.1 – Desenvolver metodologia de planejamento institucional",
+   "desc_od": "OD-10.1 – Desenvolver e implementar metodologia de planejamento integrado e gestão da instituição que assegure o alinhamento estratégico das políticas, programa, planos e projetos institucionais, desde o nível estratégico até o operacional; desenvolver mecanismos e instrumentos para o planejamento, execução, controle, monitoramento e avaliação das ações institucionais; fomentar a gestão de portfólios de programas e projetos institucionais visando assegurar a máxima efetividade de sua execução.",
+   "meta": "4) Elaborar e publicar manual de planejamento integrado institucional.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 21,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.3 – Programa de desenvolvimento da gestão analítica",
+   "desc_od": "OD-10.3 – Implementar programa de desenvolvimento da gestão analítica com a finalidade de desenvolver metodologia e ferramentas que possibilitem a mensuração dos resultados e a avaliação do desempenho; desenvolver métodos, técnicas e instrumentos para aprimorar a coleta, tratamento e análise de dados e informações institucionais; aprimorar o processo de tomada de decisão; fortalecer a gestão por meio monitoramento e avaliação contínua dos indicadores de desempenho e resultados institucionais; desenvolver ferramentas de business intelligence (BI) e de análise de dados para apoio à gestão baseada em evidência; desenvolver painéis analíticos integrados e relatórios automatizados  e customizáveis de desempenho institucional contribuindo para a transparência ativa, a participação e o controle social da gestão.",
+   "meta": "1) Elaborar ou revisar, conforme o caso, o Programa e submetê-lo à apreciação da instância competente.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 22,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.3 – Programa de desenvolvimento da gestão analítica",
+   "desc_od": "OD-10.3 – Implementar programa de desenvolvimento da gestão analítica com a finalidade de desenvolver metodologia e ferramentas que possibilitem a mensuração dos resultados e a avaliação do desempenho; desenvolver métodos, técnicas e instrumentos para aprimorar a coleta, tratamento e análise de dados e informações institucionais; aprimorar o processo de tomada de decisão; fortalecer a gestão por meio monitoramento e avaliação contínua dos indicadores de desempenho e resultados institucionais; desenvolver ferramentas de business intelligence (BI) e de análise de dados para apoio à gestão baseada em evidência; desenvolver painéis analíticos integrados e relatórios automatizados  e customizáveis de desempenho institucional contribuindo para a transparência ativa, a participação e o controle social da gestão.",
+   "meta": "2) Aprovar o Programa na instância competente.",
+   "unidade": "GDG"
+  },
+  {
+   "n": 23,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.3 – Programa de desenvolvimento da gestão analítica",
+   "desc_od": "OD-10.3 – Implementar programa de desenvolvimento da gestão analítica com a finalidade de desenvolver metodologia e ferramentas que possibilitem a mensuração dos resultados e a avaliação do desempenho; desenvolver métodos, técnicas e instrumentos para aprimorar a coleta, tratamento e análise de dados e informações institucionais; aprimorar o processo de tomada de decisão; fortalecer a gestão por meio monitoramento e avaliação contínua dos indicadores de desempenho e resultados institucionais; desenvolver ferramentas de business intelligence (BI) e de análise de dados para apoio à gestão baseada em evidência; desenvolver painéis analíticos integrados e relatórios automatizados  e customizáveis de desempenho institucional contribuindo para a transparência ativa, a participação e o controle social da gestão.",
+   "meta": "3) Elaborar o Plano de Ação do Programa e submetê-lo à apreciação da instância competente.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 24,
+   "oe": "OE-10 – Aprimorar a gestão da instituição",
+   "od": "OD-10.3 – Programa de desenvolvimento da gestão analítica",
+   "desc_od": "OD-10.3 – Implementar programa de desenvolvimento da gestão analítica com a finalidade de desenvolver metodologia e ferramentas que possibilitem a mensuração dos resultados e a avaliação do desempenho; desenvolver métodos, técnicas e instrumentos para aprimorar a coleta, tratamento e análise de dados e informações institucionais; aprimorar o processo de tomada de decisão; fortalecer a gestão por meio monitoramento e avaliação contínua dos indicadores de desempenho e resultados institucionais; desenvolver ferramentas de business intelligence (BI) e de análise de dados para apoio à gestão baseada em evidência; desenvolver painéis analíticos integrados e relatórios automatizados  e customizáveis de desempenho institucional contribuindo para a transparência ativa, a participação e o controle social da gestão.",
+   "meta": "4) Aprovar o Plano de Ação do Programa na instância competente.",
+   "unidade": "DGDI"
+  },
+  {
+   "n": 25,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.1 – Política de gestão de pessoas",
+   "desc_od": "OD-11.1 –Implantar política institucional de gestão de pessoas que estabeleça princípios, diretrizes e estratégicas para a gestão de pessoal, docentes e técnico-administrativos em educação, da instituição fundada no alinhamento das necessidades da instituição ao desenvolvimento dos servidores; planejamento e gestão da força de trabalho; no desenvolvimento e capacitação profissional de servidores docentes e técnico-administrativos em educação; no estimulo ao desenvolvimento do trabalho criativo e da cultura; no desenvolvimento da gestão por competências; na valorização e reconhecimento de servidores; na melhoria do clima organizacional e da qualidade de vida no trabalho; na melhoria das relações e condições de trabalho; na participação e comprometimento dos servidores com os objetivos estratégicos da instituição; promover a gestão orientada a resultados, baseada em evidências, com foco na melhoria contínua das entregas institucionais.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "SEGEP"
+  },
+  {
+   "n": 26,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.1 – Política de gestão de pessoas",
+   "desc_od": "OD-11.1 –Implantar política institucional de gestão de pessoas que estabeleça princípios, diretrizes e estratégicas para a gestão de pessoal, docentes e técnico-administrativos em educação, da instituição fundada no alinhamento das necessidades da instituição ao desenvolvimento dos servidores; planejamento e gestão da força de trabalho; no desenvolvimento e capacitação profissional de servidores docentes e técnico-administrativos em educação; no estimulo ao desenvolvimento do trabalho criativo e da cultura; no desenvolvimento da gestão por competências; na valorização e reconhecimento de servidores; na melhoria do clima organizacional e da qualidade de vida no trabalho; na melhoria das relações e condições de trabalho; na participação e comprometimento dos servidores com os objetivos estratégicos da instituição; promover a gestão orientada a resultados, baseada em evidências, com foco na melhoria contínua das entregas institucionais.",
+   "meta": "5) Elaborar pelo menos um Plano de Ação de um dos Programas e submetê-lo(s) à apreciação da(s) instância(s) competente(s).",
+   "unidade": "SEGEP"
+  },
+  {
+   "n": 27,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.1 – Política de gestão de pessoas",
+   "desc_od": "OD-11.1 –Implantar política institucional de gestão de pessoas que estabeleça princípios, diretrizes e estratégicas para a gestão de pessoal, docentes e técnico-administrativos em educação, da instituição fundada no alinhamento das necessidades da instituição ao desenvolvimento dos servidores; planejamento e gestão da força de trabalho; no desenvolvimento e capacitação profissional de servidores docentes e técnico-administrativos em educação; no estimulo ao desenvolvimento do trabalho criativo e da cultura; no desenvolvimento da gestão por competências; na valorização e reconhecimento de servidores; na melhoria do clima organizacional e da qualidade de vida no trabalho; na melhoria das relações e condições de trabalho; na participação e comprometimento dos servidores com os objetivos estratégicos da instituição; promover a gestão orientada a resultados, baseada em evidências, com foco na melhoria contínua das entregas institucionais.",
+   "meta": "6) Aprovar pelo menos um Plano de Ação de um dos Programas na(s) instância(s) competente(s).",
+   "unidade": "GDG"
+  },
+  {
+   "n": 28,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.1 – Política de gestão de pessoas",
+   "desc_od": "OD-11.1 –Implantar política institucional de gestão de pessoas que estabeleça princípios, diretrizes e estratégicas para a gestão de pessoal, docentes e técnico-administrativos em educação, da instituição fundada no alinhamento das necessidades da instituição ao desenvolvimento dos servidores; planejamento e gestão da força de trabalho; no desenvolvimento e capacitação profissional de servidores docentes e técnico-administrativos em educação; no estimulo ao desenvolvimento do trabalho criativo e da cultura; no desenvolvimento da gestão por competências; na valorização e reconhecimento de servidores; na melhoria do clima organizacional e da qualidade de vida no trabalho; na melhoria das relações e condições de trabalho; na participação e comprometimento dos servidores com os objetivos estratégicos da instituição; promover a gestão orientada a resultados, baseada em evidências, com foco na melhoria contínua das entregas institucionais.",
+   "meta": "7) Iniciar a execução de pelo menos um Plano de Ação de um dos Programas.",
+   "unidade": "SEGEP"
+  },
+  {
+   "n": 29,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.2 – Política de desenvolvimento de pessoas",
+   "desc_od": "OD-11.2 – Implantar política institucional de desenvolvimento de pessoas que estabeleça princípios, diretrizes e estratégicas diversificadas para orientar o desenvolvimento de pessoas como profissionais e cidadãos; promover o desenvolvimento de habilidades e competências dos servidores e colaboradores da instituição; assim como que defina os instrumentos e mecanismos para implementação da política.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "SEGEP"
+  },
+  {
+   "n": 30,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.3 – Política de clima organizacional e qualidade de vida no trabalho",
+   "desc_od": "OD-11.3 – Implantar política institucional de desenvolvimento do clima organizacional e da qualidade de vida no trabalhos que estabeleça princípios, diretrizes e estratégicas diversificadas para aprimorar a gestão da ambiência; promover melhorias no clima organizacional  trabalho;  promover a cultura de colaboração, nas relações interpessoais;  melhorar o grau de satisfação e bem-estar dos servidores e colaboradores com sua função e seu ambiente de trabalho; promover a saúde física e mental; melhorar as relações e condições de trabalho; assim como que defina os instrumentos e mecanismos para implementação da política.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "SEGEP"
+  },
+  {
+   "n": 31,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.4 – Programa de desenvolvimento de pessoas",
+   "desc_od": "OD-11.4 – Implementar programa de desenvolvimento de pessoas com a finalidade de promover o desenvolvimento e a capacitação profissional de servidores docentes e técnico-administrativos em educação; instituir e manter a Escola de Desenvolvimento de Servidores; incentivar a participação dos servidores nas ações de desenvolvimento de pessoas; realizar levantamento das necessidades de desenvolvimento das pessoas, com foco no desenvolvimento de habilidades e competências dos servidores e colaboradores da instituição; estabelecer modalidades de fomento ao desenvolvimento de pessoas; estabelecer mecanismos para a avaliação, seleção e priorização das demandas por capacitação ou qualificação; elaborar planejamento anual de desenvolvimento de servidores, incluindo previsão de metas físicas e orçamentárias; monitorar e avaliar os resultados do desenvolvimento de servidores e o impacto produzido na gestão.",
+   "meta": "1) Elaborar ou revisar, conforme o caso, o Programa e submetê-lo à apreciação da instância competente.",
+   "unidade": "SEGEP"
+  },
+  {
+   "n": 32,
+   "oe": "OE-11 – Aperfeiçoar a gestão de pessoas",
+   "od": "OD-11.4 – Programa de desenvolvimento de pessoas",
+   "desc_od": "OD-11.4 – Implementar programa de desenvolvimento de pessoas com a finalidade de promover o desenvolvimento e a capacitação profissional de servidores docentes e técnico-administrativos em educação; instituir e manter a Escola de Desenvolvimento de Servidores; incentivar a participação dos servidores nas ações de desenvolvimento de pessoas; realizar levantamento das necessidades de desenvolvimento das pessoas, com foco no desenvolvimento de habilidades e competências dos servidores e colaboradores da instituição; estabelecer modalidades de fomento ao desenvolvimento de pessoas; estabelecer mecanismos para a avaliação, seleção e priorização das demandas por capacitação ou qualificação; elaborar planejamento anual de desenvolvimento de servidores, incluindo previsão de metas físicas e orçamentárias; monitorar e avaliar os resultados do desenvolvimento de servidores e o impacto produzido na gestão.",
+   "meta": "2) Aprovar o Programa na instância competente.",
+   "unidade": "GDG"
+  },
+  {
+   "n": 33,
+   "oe": "OE-12 – Infraestrutura de TI e transformação digital",
+   "od": "OD-12.1 – Política de segurança da informação",
+   "desc_od": "OD-12.1 – Desenvolver e implantar política institucional de segurança da informação que estabeleça princípios, diretrizes e estratégicas e responsabilidades para assegurar a confidencialidade, integridade e disponibilidade das informações e serviços, estabelecer padrões para o uso seguro de sistemas, o armazenamento, o acesso, a avaliação e gestão de riscos e para a prevenção, identificação e tratamento de incidentes de segurança; promover uma cultura de segurança na comunidade interna, em especial nos servidores da instituição.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DTI"
+  },
+  {
+   "n": 34,
+   "oe": "OE-12 – Infraestrutura de TI e transformação digital",
+   "od": "OD-12.2 – Plano Diretor de Tecnologia da Informação e Comunicação",
+   "desc_od": "OD-12.2 – Desenvolver e implementar Plano Diretor de Tecnologia da Informação e Comunicação assegurando o seu alinhamento ao Plano Estratégico Institucional, ao Plano de Desenvolvimento Institucional e à Estratégia Federal de Governo Digital com a finalidade de estabelecer diagnóstico, planejamento e gestão dos recursos e processos de TI para o atendimento às necessidades informacionais e de recursos tecnológicos da instituição; aprimorar o planejamento das compras institucionais na área de TIC; promover maior transparência, controle e efetividade na gestão da TIC; estabelecer as iniciativas, metas e prioridades para o uso dos recursos de TIC; determinar o inventário de necessidades priorizado, o plano de metas e ações, o plano de gestão de pessoas, o plano orçamentário e plano de gestão de riscos.",
+   "meta": "1) Elaborar o Plano Diretor e submetê-lo à apreciação da instância competente.",
+   "unidade": "DTI"
+  },
+  {
+   "n": 35,
+   "oe": "OE-12 – Infraestrutura de TI e transformação digital",
+   "od": "OD-12.2 – Plano Diretor de Tecnologia da Informação e Comunicação",
+   "desc_od": "OD-12.2 – Desenvolver e implementar Plano Diretor de Tecnologia da Informação e Comunicação assegurando o seu alinhamento ao Plano Estratégico Institucional, ao Plano de Desenvolvimento Institucional e à Estratégia Federal de Governo Digital com a finalidade de estabelecer diagnóstico, planejamento e gestão dos recursos e processos de TI para o atendimento às necessidades informacionais e de recursos tecnológicos da instituição; aprimorar o planejamento das compras institucionais na área de TIC; promover maior transparência, controle e efetividade na gestão da TIC; estabelecer as iniciativas, metas e prioridades para o uso dos recursos de TIC; determinar o inventário de necessidades priorizado, o plano de metas e ações, o plano de gestão de pessoas, o plano orçamentário e plano de gestão de riscos.",
+   "meta": "2) Aprovar o Plano Diretor na instância competente.",
+   "unidade": "GDG"
+  },
+  {
+   "n": 36,
+   "oe": "OE-13 – Expandir e modernizar a infraestrutura física",
+   "od": "OD-13.1 – Política de infraestrutura física",
+   "desc_od": "OD-13.1 – Elaborar e implantar a política de infraestrutura física para o desenvolvimento institucional, com diretrizes claras para a expansão, modernização e melhoria da gestão da infraestrutura com a finalidade de assegurar a sustentabilidade das edificações, a acessibilidade, o uso otimizado dos ambientes, a construção de ambientes multiuso, o compartilhamento e integração dos ambientes.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DPG"
+  },
+  {
+   "n": 37,
+   "oe": "OE-14 – Otimizar a gestão orçamentária e financeira",
+   "od": "OD-14.1 – Política de gestão orçamentária e financeira",
+   "desc_od": "OD-14.1 – Desenvolver e implantar política orçamentária e financeira da instituição com princípios e diretrizes definidos para o planejamento, a execução, o controle e a transparência ativa dos gastos institucionais, para melhorar a efetividade no uso dos recursos financeiros e para assegurar o alcance dos objetivos estratégicos da instituição.",
+   "meta": "1) Elaborar a Política e submetê-la à apreciação da instância competente.",
+   "unidade": "DPG"
+  },
+  {
+   "n": 38,
+   "oe": "OE-14 – Otimizar a gestão orçamentária e financeira",
+   "od": "OD-14.3 – Programa de gestão orçamentária e financeira",
+   "desc_od": "OD-14.3 – Desenvolver e implementar programa de gestão orçamentária e financeira da instituição com a finalidade de estabelecer métodos e mecanismos para a assegurar a alocação de recursos orçamentários alinhada às prioridades estratégicas institucionais estabelecidas - e vinculada aos resultados dos indicadores de desempenho estabelecidos para a unidade executora e/ou centro de custos -, e para orientar a elaboração e implementação do plano diretor de logística sustentável (PDLS) e do plano de contratações anual (PCA).",
+   "meta": "1) Elaborar o Programa e submetê-lo à apreciação da instância competente.",
+   "unidade": "DPG"
+  },
+  {
+   "n": 39,
+   "oe": "OE-14 – Otimizar a gestão orçamentária e financeira",
+   "od": "OD-14.3 – Programa de gestão orçamentária e financeira",
+   "desc_od": "OD-14.3 – Desenvolver e implementar programa de gestão orçamentária e financeira da instituição com a finalidade de estabelecer métodos e mecanismos para a assegurar a alocação de recursos orçamentários alinhada às prioridades estratégicas institucionais estabelecidas - e vinculada aos resultados dos indicadores de desempenho estabelecidos para a unidade executora e/ou centro de custos -, e para orientar a elaboração e implementação do plano diretor de logística sustentável (PDLS) e do plano de contratações anual (PCA).",
+   "meta": "2) Aprovar o Programa na instância competente.",
+   "unidade": "GDG"
+  },
+  {
+   "n": 40,
+   "oe": "OE-14 – Otimizar a gestão orçamentária e financeira",
+   "od": "OD-14.5 – Plano Diretor de Logística Sustentável",
+   "desc_od": "OD-14.5 – Desenvolver e implementar Plano Diretor de Logística Sustentável (PDLS) com a finalidade de estabelecer estratégias e ações institucionais para, de forma sistêmica, contratar e para operar com sustentabilidade nas dimensões econômica, social, ambiental e cultural; contribuir para promoção do uso racional e eficiente dos recursos disponíveis; contribuir para a promoção de práticas socioambientais e de inovação; contribuir para minimizar os impactos socioambientais; aprimorar o planejamento das compras institucionais; orientar a elaboração e implementação do plano de contratações anual (PCA); contribuir para a criação de uma cultura de sustentabilidade e planejamento estratégico.",
+   "meta": "1) Elaborar ou revisar, conforme o caso, o Plano Diretor e submetê-lo à apreciação da instância competente.",
+   "unidade": "DPG"
+  },
+  {
+   "n": 41,
+   "oe": "OE-14 – Otimizar a gestão orçamentária e financeira",
+   "od": "OD-14.5 – Plano Diretor de Logística Sustentável",
+   "desc_od": "OD-14.5 – Desenvolver e implementar Plano Diretor de Logística Sustentável (PDLS) com a finalidade de estabelecer estratégias e ações institucionais para, de forma sistêmica, contratar e para operar com sustentabilidade nas dimensões econômica, social, ambiental e cultural; contribuir para promoção do uso racional e eficiente dos recursos disponíveis; contribuir para a promoção de práticas socioambientais e de inovação; contribuir para minimizar os impactos socioambientais; aprimorar o planejamento das compras institucionais; orientar a elaboração e implementação do plano de contratações anual (PCA); contribuir para a criação de uma cultura de sustentabilidade e planejamento estratégico.",
+   "meta": "2) Aprovar o Plano Diretor na instância competente.",
+   "unidade": "GDG"
+  }
+ ]
+}

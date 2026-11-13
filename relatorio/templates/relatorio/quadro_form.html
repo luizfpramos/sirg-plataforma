@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}{% if quadro %}Estrutura: {{ quadro.titulo }}{% else %}Novo quadro{% endif %}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% if quadro %}{% url 'secao' ciclo.ano quadro.secao.chave %}#quadro-{{ quadro.chave }}{% else %}{% url 'ciclo' ciclo.ano %}{% endif %}"><i class="bi bi-arrow-left"></i> voltar</a></nav>
+<h1>{% if quadro %}Estrutura do quadro{% else %}Novo quadro de dados{% endif %}</h1>
+<form method="post" id="form-quadro">{% csrf_token %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<div class="row g-3">
+<div class="col-xl-8">
+  <div class="card mb-3"><div class="card-header">Identificação</div><div class="card-body">
+    <div class="row">
+      <div class="col-md-8">{% include "contas/_campo.html" with f=form.titulo %}</div>
+      <div class="col-md-4">{% include "contas/_campo.html" with f=form.chave %}</div>
+      <div class="col-md-8">{% include "relatorio/_select.html" with f=form.secao %}</div>
+      <div class="col-md-4">{% include "contas/_campo.html" with f=form.ordem %}</div>
+      <div class="col-md-8">{% include "relatorio/_select.html" with f=form.setor %}</div>
+      <div class="col-md-4">{% include "contas/_campo.html" with f=form.fonte %}</div>
+    </div>
+    <div class="mb-0"><label class="form-label" for="id_descricao">Definição / orientação para quem preenche</label><textarea class="form-control" id="id_descricao" name="descricao" rows="3">{{ form.descricao.value|default_if_none:'' }}</textarea></div>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-header">Valores e colunas</div><div class="card-body">
+    <div class="row">
+      <div class="col-md-4">{% include "relatorio/_select.html" with f=form.tipo_valor %}</div>
+      <div class="col-md-2">{% include "contas/_campo.html" with f=form.casas_decimais %}</div>
+      <div class="col-md-3">{% include "relatorio/_select.html" with f=form.modo_colunas %}</div>
+      <div class="col-md-3">{% include "contas/_campo.html" with f=form.anos_exibidos %}</div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">{% include "contas/_check.html" with f=form.linha_total %}{% include "contas/_check.html" with f=form.coluna_total %}</div>
+      <div class="col-md-6">{% include "contas/_campo.html" with f=form.rotulo_total %}</div>
+      <div class="col-md-6">{% include "contas/_check.html" with f=form.obrigatorio %}</div>
+      <div class="col-md-6">{% include "contas/_campo.html" with f=form.variacao_alerta %}</div>
+    </div>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-header d-flex">Linhas <button type="button" class="btn btn-sm btn-outline-primary ms-auto js-mais" data-prefixo="linhas"><i class="bi bi-plus"></i> linha</button></div>
+    <div class="card-body p-0">
+    {{ linhas.management_form }}
+    {% if linhas.non_form_errors %}<div class="alert alert-danger m-2">{{ linhas.non_form_errors }}</div>{% endif %}
+    <div class="table-responsive"><table class="table table-sm mb-0 fs-tabela" id="tab-linhas">
+      <thead><tr><th style="width:60px">Ordem</th><th style="min-width:220px">Rótulo</th><th style="width:150px">Chave</th><th style="min-width:220px">Fórmula (vazio = preenchida)</th><th style="width:130px">Tipo</th><th style="width:90px">Mín.</th><th style="width:90px">Máx.</th><th title="Entra na linha de total">Σ</th><th title="Excluir"><i class="bi bi-trash"></i></th></tr></thead>
+      <tbody>
+      {% for f in linhas %}{% include "relatorio/_linha_form.html" %}{% endfor %}
+      </tbody>
+    </table></div>
+    <template id="vazio-linhas">{% with f=linhas.empty_form %}{% include "relatorio/_linha_form.html" %}{% endwith %}</template>
+    </div>
+    <div class="card-footer mini text-secondary">Fórmulas usam as chaves: <code>tecnico + graduacao</code>, <code>atendidos / matriculados * 100</code>, <code>gestao_matriculados.total</code> (outro quadro, mesmo ano), <code>pos_numeros.ingressantes.total</code> (linha e coluna de outro quadro). Linhas de percentual normalmente <strong>não</strong> entram no total (desmarque Σ).</div>
+  </div>
+
+  <div class="card mb-3"><div class="card-header d-flex">Colunas {% if not quadro or quadro.modo_colunas == 'categorias' %}<button type="button" class="btn btn-sm btn-outline-primary ms-auto js-mais" data-prefixo="colunas"><i class="bi bi-plus"></i> coluna</button>{% endif %}</div>
+    <div class="card-body p-0">
+    {{ colunas.management_form }}
+    {% if quadro and quadro.modo_colunas == 'anos' %}
+      <p class="mini text-secondary px-3 pt-2 mb-1">Colunas por ano, criadas conforme “anos exibidos” (terminando no ano-base {{ ciclo.ano }}). Marque <strong>travada</strong> nos anos já publicados: só o Master altera, com justificativa.</p>
+      <table class="table table-sm mb-0"><tbody>
+      {% for f in colunas %}{% if f.instance.pk %}<tr><td class="ps-3">{{ f.id }}<input type="hidden" name="{{ f.ordem.html_name }}" value="{{ f.ordem.value }}"><input type="hidden" name="{{ f.rotulo.html_name }}" value="{{ f.rotulo.value }}"><input type="hidden" name="{{ f.chave.html_name }}" value="{{ f.chave.value }}">{{ f.rotulo.value }}</td>
+        <td><div class="form-check"><input class="form-check-input" type="checkbox" name="{{ f.travada.html_name }}" id="{{ f.travada.id_for_label }}" {% if f.travada.value %}checked{% endif %}><label class="form-check-label mini" for="{{ f.travada.id_for_label }}">travada</label></div></td></tr>{% endif %}{% endfor %}
+      </tbody></table>
+    {% else %}
+      <p class="mini text-secondary px-3 pt-2 mb-1">Para quadros por <strong>anos</strong>, as colunas são criadas sozinhas. Para quadros por <strong>categorias</strong> (ex.: Mestrado, Doutorado), cadastre-as aqui.</p>
+      <table class="table table-sm mb-0" id="tab-colunas"><thead><tr><th style="width:60px">Ordem</th><th>Rótulo</th><th style="width:170px">Chave</th><th title="Excluir"><i class="bi bi-trash"></i></th></tr></thead><tbody>
+      {% for f in colunas %}{% include "relatorio/_coluna_form.html" %}{% endfor %}
+      </tbody></table>
+      <template id="vazio-colunas">{% with f=colunas.empty_form %}{% include "relatorio/_coluna_form.html" %}{% endwith %}</template>
+    {% endif %}
+    </div>
+  </div>
+
+  <div class="card mb-3"><div class="card-header d-flex">Regras de consistência <button type="button" class="btn btn-sm btn-outline-primary ms-auto js-mais" data-prefixo="regras"><i class="bi bi-plus"></i> regra</button></div>
+    <div class="card-body p-0">
+    {{ regras.management_form }}
+    <div class="table-responsive"><table class="table table-sm mb-0" id="tab-regras">
+      <thead><tr><th>Descrição</th><th>Expressão</th><th style="width:90px"></th><th>Comparar com</th><th style="width:80px">Tolerância</th><th style="width:120px">Colunas</th><th style="width:100px">Gravidade</th><th>Ativa</th><th><i class="bi bi-trash"></i></th></tr></thead>
+      <tbody>{% for f in regras %}{% include "relatorio/_regra_form.html" %}{% endfor %}</tbody>
+    </table></div>
+    <template id="vazio-regras">{% with f=regras.empty_form %}{% include "relatorio/_regra_form.html" %}{% endwith %}</template>
+    </div>
+    <div class="card-footer mini text-secondary">Ex.: <code>total</code> igual a <code>gestao_matriculados.total</code>; <code>tecnico + graduacao + pos</code> igual a <code>pos_numeros.ingressantes.total</code>. A regra é conferida em cada coluna (ou só no ano-base).</div>
+  </div>
+</div>
+<div class="col-xl-4">
+  <div class="card mb-3 sticky-xl-top" style="top:70px"><div class="card-header">Chaves para fórmulas</div>
+    <div class="card-body mini" style="max-height:70vh;overflow:auto">
+      {% if quadro %}<div class="mb-2"><strong>Este quadro</strong> (use só a chave da linha): {% for l in quadro.linhas.all %}<code>{{ l.chave }}</code> {% endfor %}{% if quadro.linha_total %}<code>total</code>{% endif %}</div>{% endif %}
+      {% for o in outros %}<div class="mb-2"><strong>{{ o.titulo }}</strong><br><code>{{ o.chave }}</code>.{% for l in o.linhas.all %}<code>{{ l.chave }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}{% if o.linha_total %}, <code>total</code>{% endif %}</div>{% endfor %}
+    </div></div>
+</div>
+</div>
+<div class="sticky-acoes d-flex gap-2">
+  <button class="btn btn-primary" name="salvar" value="1"><i class="bi bi-check-lg"></i> Salvar</button>
+  <button class="btn btn-outline-primary" name="continuar" value="1">Salvar e continuar editando</button>
+  {% if quadro %}<button class="btn btn-outline-danger ms-auto" name="excluir" value="1" formnovalidate onclick="return confirm('Excluir este quadro e todos os seus valores? Eles continuam registrados no histórico.')"><i class="bi bi-trash"></i> Excluir quadro</button>{% endif %}
+</div>
+</form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/formsets.js' %}?v={{ VERSAO }}"></script>{% endblock %}

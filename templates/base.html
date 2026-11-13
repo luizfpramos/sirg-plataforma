@@ -1,0 +1,84 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SiRG · {% block titulo %}Sistema do Relatório de Gestão{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/sirg-simbolo.svg' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/sirg-simbolo-32.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/sirg-simbolo-180.png' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sirg.css' %}?v={{ VERSAO }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+<div class="app app-topo">
+  <header class="barra-topo{% if HOMOLOGACAO %} hml{% endif %}" aria-label="Barra do sistema">
+    <a class="barra-marca" href="{% url 'painel' %}" title="Início"><img src="{% static 'img/ufcimg-simbolo-branco.png' %}" alt="" width="26" height="26"><span>SiRG</span></a>
+    {% if HOMOLOGACAO %}<span class="selo-hml" title="Ambiente de testes: o que for feito aqui não vale para o relatório oficial">HOMOLOGAÇÃO</span>{% endif %}
+    {% if CICLO_MENU and not TROCA_SENHA %}<a class="barra-titulo" href="{% url 'escrever' CICLO_MENU.ano %}">{{ CICLO_MENU.titulo }}</a>{% endif %}
+    <div class="barra-acoes">{% block barra_acoes %}{% endblock %}</div>
+    <div class="dropdown">
+      <button class="btn-menu-topo dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu">
+        <i class="bi bi-person-circle"></i><span class="quem">{{ user.get_full_name|default:user.username }}<small>{% for s in MEUS_SETORES %}{{ s.sigla }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if E_MASTER %}{% if MEUS_SETORES %} · {% endif %}Master{% endif %}</small></span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end menu-topo">
+        {% if not TROCA_SENHA %}
+        <li><a class="dropdown-item" href="{% url 'painel' %}"><i class="bi bi-house"></i> Início</a></li>
+        {% if CICLO_MENU %}
+        <li><a class="dropdown-item" href="{% url 'escrever' CICLO_MENU.ano %}"><i class="bi bi-file-earmark-text"></i> Relatório</a></li>
+        <li><a class="dropdown-item" href="{% url 'pendencias' CICLO_MENU.ano %}"><i class="bi bi-list-check"></i> O que falta</a></li>
+        {% endif %}
+        {% if E_MASTER or E_ADMIN or E_DIAGRAMACAO %}
+        <li><hr class="dropdown-divider"></li>
+        <li><h6 class="dropdown-header">{% if E_MASTER or E_ADMIN %}Master{% else %}Diagramação{% endif %}</h6></li>
+        {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'exportar' CICLO_MENU.ano %}"><i class="bi bi-file-earmark-word"></i> Baixar em Word</a></li>{% endif %}
+        <li><a class="dropdown-item" href="{% url 'cores_graficos' %}"><i class="bi bi-palette"></i> Cores dos gráficos</a></li>
+        {% if CICLO_MENU and E_MASTER or CICLO_MENU and E_ADMIN %}
+        <li><a class="dropdown-item" href="{% url 'ciclo' CICLO_MENU.ano %}"><i class="bi bi-table"></i> Quadros de números</a></li>
+        <li><a class="dropdown-item" href="{% url 'conferencia_conexoes' CICLO_MENU.ano %}"><i class="bi bi-diagram-3"></i> Conferência dos números</a></li>
+        {% endif %}
+        {% endif %}
+        {% if E_ADMIN %}
+        <li><hr class="dropdown-divider"></li>
+        <li><h6 class="dropdown-header">Administração</h6></li>
+        {% if not CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'ciclo_novo' %}"><i class="bi bi-plus-lg"></i> Criar o relatório</a></li>{% endif %}
+        <li><a class="dropdown-item" href="{% url 'usuarios' %}"><i class="bi bi-people"></i> Usuários</a></li>
+        <li><a class="dropdown-item" href="{% url 'setores' %}"><i class="bi bi-diagram-2"></i> Setores</a></li>
+        {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'ciclo_editar' CICLO_MENU.ano %}"><i class="bi bi-sliders"></i> Situação e prazo</a></li>{% endif %}
+        <li><a class="dropdown-item" href="{% url 'instituicao' %}"><i class="bi bi-building"></i> Instituição</a></li>
+        <li><a class="dropdown-item" href="{% url 'auditoria' %}"><i class="bi bi-shield-check"></i> Auditoria</a></li>
+        <li><a class="dropdown-item" href="{% url 'ciclos' %}"><i class="bi bi-calendar3"></i> Relatórios (anos)</a></li>
+        {% endif %}
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{% url 'ajuda' %}"><i class="bi bi-question-circle"></i> Manual de uso</a></li>
+        <li><a class="dropdown-item" href="{% url 'sobre' %}"><i class="bi bi-info-circle"></i> Sobre</a></li>
+        <li><a class="dropdown-item" href="{% url 'conta' %}"><i class="bi bi-person-vcard"></i> Minha conta</a></li>
+        <li><a class="dropdown-item" href="{% url 'senha' %}"><i class="bi bi-shield-lock"></i> Trocar senha</a></li>
+        {% endif %}
+        <li><hr class="dropdown-divider"></li>
+        <li><form method="post" action="{% url 'sair' %}">{% csrf_token %}<button class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Sair</button></form></li>
+      </ul>
+    </div>
+  </header>
+  <div class="conteudo">
+    <main class="pagina {% block pagina_classe %}{% endblock %}" id="conteudo" tabindex="-1">
+      {% for m in messages %}
+      <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show" role="alert">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button></div>
+      {% endfor %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+</div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="toast" class="toast align-items-center border-0" role="status" aria-live="polite"><div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button></div></div></div>
+{% else %}
+  {% block publico %}{% endblock %}
+{% endif %}
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/sirg.js' %}?v={{ VERSAO }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

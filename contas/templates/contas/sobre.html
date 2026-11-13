@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}Sobre{% endblock %}
+{% block conteudo %}
+<div class="sobre">
+  <div class="sobre-cab">
+    <img src="{% static 'img/sirg-simbolo-transparente.svg' %}" alt="" class="sobre-simbolo">
+    <div>
+      <h1 class="mb-0">{{ NOME_SISTEMA }}</h1>
+      <div class="subtitulo">{{ NOME_SISTEMA_LONGO }}</div>
+      <span class="badge text-bg-light border mt-1">Versão {{ VERSAO }}</span>
+    </div>
+  </div>
+
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6 text-uppercase text-secondary">O que é</h2>
+    <p>O {{ NOME_SISTEMA }} é o sistema em que os setores {% if INST %}do {{ INST.sigla }} {% endif %}preenchem os números e escrevem os textos do <strong>Relatório de Gestão</strong> anual, a prestação de contas ao Tribunal de Contas da União e à sociedade.</p>
+    <p class="mb-0">Tabelas, gráficos e números citados no texto saem de uma única fonte de dados. O relatório pode ser lido na própria plataforma, baixado em Word e enviado à diagramação.</p>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6 text-uppercase text-secondary">Desenvolvimento</h2>
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Responsável</dt><dd class="col-sm-9">{% if INST %}{{ INST.unidade_gestora }} ({{ INST.unidade_gestora_sigla }}) — {{ INST.nome }}{% else %}Diretoria de Governança e Desenvolvimento Institucional (DGDI){% endif %}</dd>
+      <dt class="col-sm-3">Versão atual</dt><dd class="col-sm-9">{{ VERSAO }}{% if implantacoes %} <span class="mini text-secondary">· código {{ implantacoes.0.commit|slice:":8" }}</span>{% endif %}</dd>
+      <dt class="col-sm-3">Tecnologia</dt><dd class="col-sm-9">Python e Django, banco SQLite, Bootstrap. Funciona no navegador, na rede interna.</dd>
+      <dt class="col-sm-3">Dúvidas</dt><dd class="col-sm-9">Consulte o <a href="{% url 'ajuda' %}">Manual de uso</a> ou fale com a {% if INST %}{{ INST.unidade_gestora_sigla }}{% else %}DGDI{% endif %}.</dd>
+    </dl>
+  </div></div>
+
+  {% if implantacoes %}
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6 text-uppercase text-secondary">Últimas instalações automáticas</h2>
+    <table class="table table-sm mini mb-0">
+      <thead><tr><th>Quando</th><th>Versão</th><th>Código</th><th>Resultado</th></tr></thead>
+      <tbody>{% for i in implantacoes %}
+        <tr><td>{{ i.quando }}</td><td>{{ i.versao }}</td><td><code>{{ i.commit|slice:":8" }}</code></td>
+          <td>{% if i.ok %}<span class="text-success">instalada</span>{% else %}<span class="text-danger">falhou</span>{% if i.erro %}<pre class="mb-0 mt-1 small text-wrap">{{ i.erro }}</pre>{% endif %}{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div></div>
+  {% endif %}
+
+  <div class="card"><div class="card-body">
+    <h2 class="h6 text-uppercase text-secondary">Histórico de versões</h2>
+    <ul class="linha-tempo mt-3">
+      {% for v, quando, itens in versoes %}
+      <li{% if not forloop.first %} class="encerrado"{% endif %}><strong>Versão {{ v }}</strong> <span class="mini text-secondary">· {{ quando }}</span>
+        <ul class="mini mb-0 mt-1">{% for i in itens %}<li class="border-0 p-0 m-0 ms-3" style="list-style:disc">{{ i }}</li>{% endfor %}</ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div></div>
+</div>
+{% endblock %}

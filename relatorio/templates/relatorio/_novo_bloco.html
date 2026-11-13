@@ -1,0 +1,8 @@
+<form method="post" action="{% url 'bloco_novo' ciclo.ano %}" class="novo-bloco {% if compacto %}compacto{% endif %}">{% csrf_token %}
+  <input type="hidden" name="secao" value="{{ secao.pk }}"><input type="hidden" name="depois" value="{{ depois }}">
+  <span class="mini text-secondary">{% if compacto %}Inserir aqui:{% else %}Adicionar ao final:{% endif %}</span>
+  <button class="btn btn-sm btn-outline-primary" name="tipo" value="texto"><i class="bi bi-file-text"></i> Texto</button>
+  <button class="btn btn-sm btn-outline-primary" name="tipo" value="tabela"><i class="bi bi-table"></i> Tabela</button>
+  <button class="btn btn-sm btn-outline-primary" name="tipo" value="grafico"><i class="bi bi-bar-chart"></i> Gráfico</button>
+  <button class="btn btn-sm btn-outline-primary" name="tipo" value="destaques"><i class="bi bi-123"></i> Números em destaque</button>
+</form>

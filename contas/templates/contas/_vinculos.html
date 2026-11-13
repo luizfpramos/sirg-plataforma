@@ -1,0 +1,13 @@
+{% if vinculos %}
+<ul class="linha-tempo">
+{% for v in vinculos %}
+<li class="{% if not v.ativo %}encerrado{% endif %}">
+  {% if mostrar == "setor" %}<span class="badge badge-setor">{{ v.setor.sigla }}</span> {{ v.setor.nome }}{% else %}<a href="{% if E_ADMIN %}{% url 'usuario' v.usuario.pk %}{% else %}#{% endif %}">{{ v.usuario.get_full_name|default:v.usuario.username }}</a>{% if not v.usuario.is_active %} <span class="badge text-bg-secondary">inativo</span>{% endif %}{% endif %}
+  <div class="mini text-secondary">
+    desde {{ v.inicio|date:"d/m/Y" }}{% if v.incluido_por %} (por {{ v.incluido_por.get_full_name|default:v.incluido_por.username }}){% endif %}
+    {% if v.fim %} · até {{ v.fim|date:"d/m/Y" }}{% if v.encerrado_por %} (por {{ v.encerrado_por.get_full_name|default:v.encerrado_por.username }}){% endif %}{% else %} · <span class="text-success">atual</span>{% endif %}
+  </div>
+</li>
+{% endfor %}
+</ul>
+{% else %}<p class="text-secondary mini mb-0">Nenhum vínculo com setor.</p>{% endif %}

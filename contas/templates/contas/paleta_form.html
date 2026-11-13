@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}{% if p %}Editar paleta{% else %}Nova paleta{% endif %}{% endblock %}
+{% block conteudo %}
+<a class="mini" href="{% url 'cores_graficos' %}"><i class="bi bi-arrow-left"></i> Cores dos gráficos</a>
+<h1 class="mt-1 mb-3">{% if p %}Editar “{{ p.nome }}”{% else %}Nova paleta{% endif %}</h1>
+{% for e in erros %}<div class="alert alert-danger py-2">{{ e }}</div>{% endfor %}
+<form method="post" enctype="multipart/form-data" class="row g-4" id="form-paleta">{% csrf_token %}
+  <div class="col-lg-6">
+    <div class="mb-3"><label class="form-label" for="p-nome">Nome</label><input class="form-control" id="p-nome" name="nome" value="{{ nome }}" maxlength="80" required></div>
+    <div class="mb-3"><label class="form-label" for="p-desc">Descrição <span class="text-secondary">(opcional)</span></label><input class="form-control" id="p-desc" name="descricao" value="{{ descricao }}" maxlength="300"></div>
+    <label class="form-label d-block">Cores, na ordem de uso <span class="mini text-secondary">(1ª: barras · 2ª: linha sobre as barras · demais: outras séries e fatias)</span></label>
+    <ol class="lista-cores js-cores">
+      {% for c in cores %}<li><input type="color" value="{{ c }}" aria-label="Cor {{ forloop.counter }}"><input class="form-control form-control-sm hex" name="cor" value="{{ c }}" maxlength="7" aria-label="Código da cor {{ forloop.counter }}"><button type="button" class="btn btn-sm btn-light js-subir" title="Subir"><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-sm btn-light js-descer" title="Descer"><i class="bi bi-arrow-down"></i></button><button type="button" class="btn btn-sm btn-light text-danger js-tirar" title="Tirar"><i class="bi bi-x-lg"></i></button></li>{% endfor %}
+    </ol>
+    <button type="button" class="btn btn-sm btn-outline-secondary js-mais"><i class="bi bi-plus-lg"></i> Mais uma cor</button>
+    <hr>
+    <div class="mb-2"><label class="form-label" for="p-arq">Importar de um arquivo</label><input class="form-control" type="file" id="p-arq" name="arquivo" accept=".ase,.gpl,.csv,.json,.txt,.css"><div class="form-text">.ase (InDesign, Illustrator, Photoshop), .gpl, ou um arquivo com códigos #RRGGBB.</div></div>
+    <div class="mb-3"><label class="form-label" for="p-colar">ou cole os códigos das cores</label><textarea class="form-control" id="p-colar" name="colar" rows="2" placeholder="#285C98, #2A9C8E, #E0802A"></textarea></div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" name="acao" value="salvar"><i class="bi bi-check2"></i> Salvar</button>
+      <button class="btn btn-outline-secondary" name="acao" value="previa"><i class="bi bi-eye"></i> Ver como fica</button>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    {% if barras %}<div class="card"><div class="card-body"><div class="grafico mb-2">{{ barras|safe }}</div><div class="grafico" style="max-width:380px">{{ pizza|safe }}</div></div></div>{% endif %}
+  </div>
+</form>
+<template id="tpl-cor"><li><input type="color" value="#888888" aria-label="Cor"><input class="form-control form-control-sm hex" name="cor" value="#888888" maxlength="7" aria-label="Código da cor"><button type="button" class="btn btn-sm btn-light js-subir" title="Subir"><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-sm btn-light js-descer" title="Descer"><i class="bi bi-arrow-down"></i></button><button type="button" class="btn btn-sm btn-light text-danger js-tirar" title="Tirar"><i class="bi bi-x-lg"></i></button></li></template>
+{% endblock %}
+{% block scripts %}<script>
+(function () {
+  var lista = document.querySelector(".js-cores");
+  lista.addEventListener("input", function (e) {
+    var li = e.target.closest("li"); if (!li) return;
+    if (e.target.type === "color") li.querySelector(".hex").value = e.target.value.toUpperCase();
+    else if (/^#?[0-9a-fA-F]{6}$/.test(e.target.value.trim())) li.querySelector("[type=color]").value = "#" + e.target.value.trim().replace("#", "");
+  });
+  lista.addEventListener("click", function (e) {
+    var li = e.target.closest("li"); if (!li) return;
+    if (e.target.closest(".js-subir") && li.previousElementSibling) lista.insertBefore(li, li.previousElementSibling);
+    if (e.target.closest(".js-descer") && li.nextElementSibling) lista.insertBefore(li.nextElementSibling, li);
+    if (e.target.closest(".js-tirar") && lista.children.length > 2) li.remove();
+  });
+  document.querySelector(".js-mais").addEventListener("click", function () {
+    if (lista.children.length >= 12) return;
+    lista.appendChild(document.getElementById("tpl-cor").content.cloneNode(true));
+  });
+})();
+</script>{% endblock %}

@@ -1,0 +1,22 @@
+# nunca vao para o repositorio: dados da producao/homologacao, segredos e ambientes locais
+.env
+.env.*
+!.env.exemplo
+dados/
+*.sqlite3
+*.sqlite3-*
+chave_secreta.txt
+backups/
+.venv/
+venv/
+staticfiles/
+__pycache__/
+*.pyc
+*.log
+*.pid
+# arquivos de trabalho
+relatorio/dados_iniciais/paginas_amostra.json
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

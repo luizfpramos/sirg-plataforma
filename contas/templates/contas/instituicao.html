@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Instituição{% endblock %}
+{% block conteudo %}
+<h1 class="mb-0"><i class="bi bi-building"></i> Instituição</h1>
+<div class="subtitulo mb-3">Nome, cargos e identidade visual usados nas telas e no relatório. Quando a instituição mudar de nome ou de marca, basta atualizar aqui.</div>
+<form method="post" enctype="multipart/form-data" class="card" style="max-width:900px">{% csrf_token %}<div class="card-body">
+  <div class="row">
+    <div class="col-md-9">{% include "contas/_campo.html" with f=form.nome %}</div>
+    <div class="col-md-3">{% include "contas/_campo.html" with f=form.sigla %}</div>
+    <div class="col-md-4">{% include "contas/_campo.html" with f=form.cargo_dirigente %}</div>
+    <div class="col-md-8">{% include "contas/_campo.html" with f=form.nome_dirigente %}</div>
+    <div class="col-md-9">{% include "contas/_campo.html" with f=form.unidade_gestora %}</div>
+    <div class="col-md-3">{% include "contas/_campo.html" with f=form.unidade_gestora_sigla %}</div>
+  </div>
+  <div class="grupo-titulo">Identidade visual</div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label" for="id_logo">Logotipo da instituição</label>
+      <div class="border rounded p-2 mb-2 text-center bg-white"><img src="{% url 'identidade' 'logo' %}?v={{ inst.atualizado_em|date:'U' }}" alt="Logotipo atual" style="max-height:90px;max-width:100%"></div>
+      <input type="file" id="id_logo" name="logo" accept=".png,.jpg,.jpeg" class="form-control form-control-sm {% if form.logo.errors %}is-invalid{% endif %}">
+      {% for e in form.logo.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+      {% if inst.logo %}<button class="btn btn-link btn-sm px-0" name="restaurar" value="logo" formnovalidate>restaurar o padrão</button>{% endif %}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="id_faixa_unidade">Assinatura da unidade (faixa)</label>
+      <div class="border rounded p-2 mb-2 text-center bg-white"><img src="{% url 'identidade' 'faixa' %}?v={{ inst.atualizado_em|date:'U' }}" alt="Assinatura atual" style="max-height:90px;max-width:100%"></div>
+      <input type="file" id="id_faixa_unidade" name="faixa_unidade" accept=".png,.jpg,.jpeg" class="form-control form-control-sm {% if form.faixa_unidade.errors %}is-invalid{% endif %}">
+      {% for e in form.faixa_unidade.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+      {% if inst.faixa_unidade %}<button class="btn btn-link btn-sm px-0" name="restaurar" value="faixa_unidade" formnovalidate>restaurar o padrão</button>{% endif %}
+    </div>
+  </div>
+  <p class="mini text-secondary mt-2 mb-0">Imagens PNG ou JPG de até 2 MB.</p>
+</div>
+<div class="card-footer"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button></div>
+</form>
+{% endblock %}

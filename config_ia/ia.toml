@@ -1,0 +1,56 @@
+# =============================================================================
+#  Configuração do Assistente SiRG (IA)
+# =============================================================================
+#  Lido a cada uso: depois de salvar, a mudança vale na hora, sem reiniciar.
+#  Os usuários da plataforma NÃO alteram nada daqui; só quem tem acesso ao servidor.
+#
+#  A chave da API fica no arquivo .env (GEMINI_API_KEY=...), nunca aqui.
+#  Como obter a chave gratuita: https://aistudio.google.com  >  Get API key.
+#
+#  ATENÇÃO (termos do plano gratuito do Gemini): o Google pode usar o conteúdo
+#  enviado para melhorar os produtos e revisores humanos podem lê-lo. Não envie
+#  dados pessoais ou sigilosos. Para dados sensíveis, use o plano pago.
+# =============================================================================
+
+[assistente]
+ativo = true
+provedor = "gemini"              # gemini | openai | simulado (sem IA, para testes)
+# Nome do modelo: confira os disponíveis para a sua chave em Administração > Assistente SiRG
+# (botão "Testar conexão e listar modelos") e ajuste aqui.
+modelo = "gemini-3.8-flash"
+temperatura = 0.3
+max_tokens_resposta = 8000
+prompt = "prompts/assistente.md"
+# Parâmetros adicionais enviados ao provedor (formato compatível com OpenAI).
+# "reasoning_effort" controla o "raciocínio" dos modelos Gemini: low = mais rápido e econômico.
+parametros_extras = { reasoning_effort = "low" }
+
+[limites]
+# Limite DIÁRIO de tokens por usuário (entrada + saída). Renova à meia-noite. 0 = sem limite.
+# Pode ser ajustado por usuário no perfil (Administração > Usuários).
+# Referência: revisar um texto de 1 página gasta ~3 a 6 mil tokens.
+tokens_dia_padrao = 150000
+# Tamanho máximo do texto enviado de uma vez (em caracteres)
+max_caracteres_texto = 30000
+
+[provedores.gemini]
+# Endpoint do Gemini compatível com o formato OpenAI
+base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
+chave_env = "GEMINI_API_KEY"
+timeout_segundos = 120
+preco_entrada_por_milhao = 0      # plano gratuito
+preco_saida_por_milhao = 0
+moeda = "USD"
+
+[provedores.openai]
+base_url = "https://api.openai.com/v1"
+chave_env = "OPENAI_API_KEY"
+timeout_segundos = 120
+preco_entrada_por_milhao = 0
+preco_saida_por_milhao = 0
+moeda = "USD"
+
+[provedores.simulado]
+# Não chama nenhuma IA: devolve o texto sem mudanças. Útil para testar a plataforma sem chave.
+base_url = ""
+chave_env = ""

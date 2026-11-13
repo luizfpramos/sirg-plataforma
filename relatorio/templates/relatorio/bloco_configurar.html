@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}Configurar {{ b.get_tipo_display|lower }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'secao' ciclo.ano b.secao.chave %}#bloco-{{ b.pk }}"><i class="bi bi-arrow-left"></i> {{ b.secao.titulo }}</a></nav>
+<h1>{{ b.get_tipo_display }}</h1>
+<div class="row g-3">
+<div class="col-xl-5">
+<form method="post" class="card" id="form-bloco">{% csrf_token %}<div class="card-body">
+  <div class="mb-3"><label class="form-label" for="f-titulo">{% if b.tipo == 'texto' %}Título do trecho (opcional){% else %}Título / legenda{% endif %}</label><input class="form-control" id="f-titulo" name="titulo" value="{{ b.titulo }}" placeholder="{% if b.tipo == 'grafico' %}Ex.: Alunos matriculados por nível — 2022 a 2026{% endif %}"></div>
+  {% if b.tipo == 'tabela' or b.tipo == 'grafico' %}
+  <div class="mb-3"><label class="form-label" for="f-quadro">Quadro de dados</label>
+    <select class="form-select" id="f-quadro" name="quadro" onchange="this.form.submit()"><option value="">(escolha)</option>
+    {% for q in quadros %}<option value="{{ q.pk }}" {% if quadro and q.pk == quadro.pk %}selected{% endif %}>{% if q.secao_id == b.secao_id %}★ {% endif %}{{ q.titulo }} — {{ q.secao.titulo }}</option>{% endfor %}</select>
+    <div class="form-text">★ = quadros desta seção. Pode usar quadros de outras seções também.</div></div>
+  {% if quadro %}
+    {% if b.tipo == 'grafico' %}
+    <div class="mb-3"><label class="form-label">Tipo de gráfico</label>
+      {% for v, r in tipos_grafico %}<div class="form-check"><input class="form-check-input" type="radio" name="tipo_grafico" id="tg-{{ v }}" value="{{ v }}" {% if b.config.tipo == v or not b.config.tipo and v == 'barras' %}checked{% endif %}><label class="form-check-label" for="tg-{{ v }}">{{ r }}</label></div>{% endfor %}</div>
+    {% endif %}
+    <div class="mb-3"><label class="form-label">Linhas</label> <span class="mini text-secondary">(nenhuma marcada = todas)</span>
+      {% for li in linhas %}<div class="form-check"><input class="form-check-input" type="checkbox" name="linhas" value="{{ li.chave }}" id="l-{{ li.chave }}" {% if li.chave in b.config.linhas %}checked{% endif %}><label class="form-check-label" for="l-{{ li.chave }}">{{ li.rotulo }}{% if li.calculada %} <span class="formula-sinal">ƒ</span>{% endif %}</label></div>{% endfor %}</div>
+    <div class="mb-3"><label class="form-label">Colunas</label> <span class="mini text-secondary">(nenhuma marcada = todas)</span>
+      <div class="d-flex flex-wrap gap-3">{% for c in colunas %}<div class="form-check"><input class="form-check-input" type="checkbox" name="colunas" value="{{ c.chave }}" id="c-{{ c.chave }}" {% if c.chave in b.config.colunas %}checked{% endif %}><label class="form-check-label" for="c-{{ c.chave }}">{{ c.rotulo }}</label></div>{% endfor %}</div></div>
+    {% if quadro.linha_total %}<div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="total" id="f-total" {% if b.tipo == 'grafico' and b.config.total or b.tipo == 'tabela' and not b.config.sem_total %}checked{% endif %}><label class="form-check-label" for="f-total">Incluir a linha “{{ quadro.rotulo_total }}”</label></div>{% endif %}
+    {% if b.tipo == 'grafico' %}
+    <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="rotulos" id="f-rot" {% if b.config.rotulos is not False %}checked{% endif %}><label class="form-check-label" for="f-rot">Mostrar os valores no gráfico</label></div>
+    <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="inverter" id="f-inv" {% if b.config.inverter %}checked{% endif %}><label class="form-check-label" for="f-inv">Inverter (linhas no eixo e colunas como séries)</label></div>
+    <div class="mb-2 mt-3"><label class="form-label" for="f-linha">Linha sobre as barras <span class="mini text-secondary">(como no RG: barras de alunos + linha de recursos)</span></label>
+      <select class="form-select form-select-sm" id="f-linha" name="linha"><option value="">(nenhuma)</option>
+        <optgroup label="Deste quadro">{% for li in linhas %}<option value="{{ li.chave }}" {% if b.config.linha == li.chave %}selected{% endif %}>{{ li.rotulo }}</option>{% endfor %}</optgroup>
+        {% for o in outras_linhas %}<optgroup label="{{ o.quadro.titulo }}">{% for li in o.linhas %}<option value="{{ o.quadro.chave }}.{{ li.chave }}" {% if b.config.linha == o.quadro.chave|add:'.'|add:li.chave %}selected{% endif %}>{{ li.rotulo }}</option>{% endfor %}{% if o.mesmas %}<option value="{{ o.quadro.chave }}.*" {% if b.config.linha == o.quadro.chave|add:'.*' %}selected{% endif %}>(todas as linhas, uma por categoria)</option>{% endif %}</optgroup>{% endfor %}
+      </select>
+      <div class="form-text">A linha ganha um eixo próprio, à direita. Vale para gráficos de barras verticais ou empilhadas.</div></div>
+    <div class="row g-2 mb-2"><div class="col-sm-6"><input class="form-control form-control-sm" name="linha_rotulo" value="{{ b.config.linha_rotulo|default:'' }}" placeholder="nome da linha na legenda (opcional)" aria-label="Nome da linha na legenda"></div>
+      <div class="col-sm-6"><input class="form-control form-control-sm" name="barras_rotulo" value="{{ b.config.barras_rotulo|default:'' }}" placeholder="nome das barras na legenda (opcional)" aria-label="Nome das barras na legenda"></div></div>
+    <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="recentes_primeiro" id="f-rec" {% if b.config.recentes_primeiro %}checked{% endif %}><label class="form-check-label" for="f-rec">Barras horizontais: ano mais recente em cima</label></div>
+    {% endif %}
+  {% endif %}
+  {% elif b.tipo == 'destaques' %}
+  <p class="mini text-secondary">Até 8 números, como nos painéis do RG (“14.755 matriculados”). Os valores vêm dos quadros e se atualizam sozinhos.</p>
+  {% for it in itens %}
+  <div class="border rounded p-2 mb-2"><div class="row g-2">
+    <div class="col-12"><select class="form-select form-select-sm" name="ref_{{ forloop.counter0 }}" aria-label="Número {{ forloop.counter }}"><option value="">(número {{ forloop.counter }} — vazio)</option>
+      {% for g in numeros %}<optgroup label="{{ g.quadro }}">{% for n in g.itens %}{% with chave=n.ref|add:"|"|add:n.col %}<option value="{{ n.ref }}|{{ n.col }}" {% if it.ref == n.ref and it.col|default:"" == n.col %}selected{% endif %}>{{ n.rotulo }} ({{ n.coluna }}){% if n.valor %} = {{ n.valor }}{% endif %}</option>{% endwith %}{% endfor %}</optgroup>{% endfor %}</select></div>
+    <div class="col-md-6"><input class="form-control form-control-sm" name="rotulo_{{ forloop.counter0 }}" value="{{ it.rotulo|default:'' }}" placeholder="texto abaixo do número (ex.: matriculados)" aria-label="Rótulo"></div>
+    <div class="col-md-6"><input class="form-control form-control-sm" name="legenda_{{ forloop.counter0 }}" value="{{ it.legenda|default:'' }}" placeholder="legenda menor (opcional)" aria-label="Legenda"></div>
+  </div></div>
+  {% endfor %}
+  {% endif %}
+</div>
+<div class="card-footer d-flex gap-2"><button class="btn btn-outline-primary" name="aplicar" value="1">Aplicar e ver prévia</button><button class="btn btn-primary" name="concluir" value="1"><i class="bi bi-check-lg"></i> Concluir</button></div>
+</form>
+</div>
+<div class="col-xl-7"><div class="card"><div class="card-header">Prévia</div><div class="card-body documento-secao">{% with d=previa %}{% include "relatorio/_bloco_conteudo.html" %}{% endwith %}</div></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% load sirg_rel %}<div class="doc-bloco doc-tipo-{{ d.b.tipo }}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}">
+{% if d.b.tipo == 'texto' %}
+  {% if d.b.titulo %}<h4 class="doc-titulo-trecho">{{ d.b.titulo }}</h4>{% endif %}
+  {% if editor %}
+    <div class="doc-trava d-print-none{% if not d.travado_por %} d-none{% endif %}"><i class="bi bi-pencil-fill"></i> <span>{% if d.travado_por %}{{ d.travado_por.get_full_name|default:d.travado_por.username }}{% endif %}</span> está escrevendo aqui agora.</div>
+    <div class="texto-rg doc-texto{% if it.pode %} editavel{% elif it.sugerir %} sugerivel{% endif %}{% if not d.html %} vazio{% endif %}"
+         data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-secao-chave="{{ it.s.chave }}" data-versao="{{ d.versao }}"
+         {% if it.pode %}tabindex="0" role="textbox" aria-multiline="true" aria-label="Texto de {{ it.s.titulo }}"{% endif %}>{{ d.html|safe }}</div>
+    {% for s in d.sugestoes %}
+    <div class="sugestao d-print-none">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span class="fw-semibold"><i class="bi bi-lightbulb"></i> Sugestão de {{ s.autor.get_full_name|default:s.autor.username }}</span><span class="mini text-secondary">{{ s.criada_em|date:"d/m/Y H:i" }}</span></div>
+      {% if s.comentario %}<p class="mini mb-1">“{{ s.comentario }}”</p>{% endif %}
+      <div class="trecho-diff texto-rg mini">{{ s.diff|safe }}</div>
+      <div class="d-flex gap-2 mt-2 flex-wrap">
+        {% if it.responder %}
+        <form method="post" action="{% url 'sugestao_responder' ciclo.ano s.pk 'aceitar' %}">{% csrf_token %}<input type="hidden" name="voltar" value="{% url 'escrever' ciclo.ano %}?secao={{ it.s.chave }}#bloco-{{ d.b.pk }}"><button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Aceitar a sugestão</button></form>
+        <form method="post" action="{% url 'sugestao_responder' ciclo.ano s.pk 'recusar' %}" class="d-flex gap-1">{% csrf_token %}<input type="hidden" name="voltar" value="{% url 'escrever' ciclo.ano %}?secao={{ it.s.chave }}#bloco-{{ d.b.pk }}"><input class="form-control form-control-sm" name="resposta" placeholder="motivo (opcional)" aria-label="Motivo da recusa"><button class="btn btn-sm btn-outline-danger">Recusar</button></form>
+        {% endif %}
+        {% if s.autor == user %}<form method="post" action="{% url 'sugestao_responder' ciclo.ano s.pk 'retirar' %}">{% csrf_token %}<input type="hidden" name="voltar" value="{% url 'escrever' ciclo.ano %}?secao={{ it.s.chave }}#bloco-{{ d.b.pk }}"><button class="btn btn-sm btn-link">retirar sugestão</button></form>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    <div class="doc-acoes-bloco d-print-none">
+      <button type="button" class="btn btn-sm btn-light js-comentar" title="Comentar este trecho de texto (para comentar uma frase, selecione-a e use Comentar, no alto)"><i class="bi bi-chat-left"></i> Comentar</button>
+      {% if d.comentarios %}<button type="button" class="btn btn-sm btn-light js-cont-com-bloco" title="Ver os comentários"><i class="bi bi-chat-left-text-fill text-warning"></i> {{ d.comentarios|length }}</button>{% endif %}
+      <button type="button" class="btn btn-sm btn-light js-hist-bloco" title="Ver versões anteriores deste trecho"><i class="bi bi-clock-history"></i> Versões</button>
+      {% if it.pode and E_MASTER %}<button type="button" class="btn btn-sm btn-light js-excluir-texto" title="Apagar este trecho de texto"><i class="bi bi-trash"></i></button>{% endif %}
+    </div>
+  {% else %}
+    <div class="texto-rg">{{ d.html|safe }}</div>
+  {% endif %}
+{% elif editor and d.metas and d.metas.pode and d.metas.pdi2026 %}
+  <figure class="metas-editar metas-2026" data-quadro="{{ d.b.quadro_id }}">
+    {% if d.b.titulo %}<figcaption class="legenda">{{ d.b.titulo }}</figcaption>{% endif %}
+    <div class="metas-ajuda d-print-none"><span class="js-metas-faltam">{% if d.metas.faltam %}Faltam {{ d.metas.faltam }}{% else %}Tudo preenchido{% endif %}</span><a class="ms-2 mini" href="{% url 'pdi_planilha' ciclo.ano %}"><i class="bi bi-file-earmark-excel"></i> baixar a planilha</a>{% if d.metas.n_minhas != d.metas.linhas|length %} · <button type="button" class="btn btn-link btn-sm p-0 js-metas-todas" aria-pressed="false">mostrar as {{ d.metas.linhas|length }} metas</button>{% endif %}</div>
+    {% for l in d.metas.linhas %}<div class="meta-card{% if not l.minha %} de-outra{% endif %}"{% if not l.minha and d.metas.n_minhas %} hidden{% endif %}>
+      <div class="meta-cab"><span class="meta-n">{{ l.n }}</span><span class="meta-od">{{ l.ref.od }}</span><span class="badge badge-setor ms-auto">{{ l.ref.unidade }}</span></div>
+      <div class="meta-texto">{{ l.rotulo }}</div>
+      {% for c in l.campos %}{% if c.chave == 'situacao' %}
+        <div class="meta-campos">{% if c.pode %}<select class="form-select form-select-sm meta-campo meta-sit" data-l="{{ c.l }}" data-c="{{ c.c }}" aria-label="Situação da meta {{ l.n }}"><option value=""{% if not c.valor %} selected{% endif %}>Situação…</option>{% for op in d.metas.situacoes %}<option{% if c.valor == op %} selected{% endif %}>{{ op }}</option>{% endfor %}</select>{% else %}<strong class="mini">{{ c.valor|default:"—" }}</strong>{% endif %}</div>
+      {% else %}
+        <div class="meta-campo-linha" data-tipo="{{ c.chave }}">{% if c.pode %}<textarea class="form-control form-control-sm meta-campo" rows="2" data-l="{{ c.l }}" data-c="{{ c.c }}" placeholder="{{ c.rotulo }}{% if c.chave == 'justificativa' %} (se não iniciado ou interrompido){% else %} (se em andamento ou concluído){% endif %}" aria-label="{{ c.rotulo }} da meta {{ l.n }}">{{ c.valor }}</textarea>{% elif c.valor %}<div class="mini"><strong>{{ c.rotulo }}:</strong> {{ c.valor }}</div>{% endif %}</div>
+      {% endif %}{% endfor %}
+    </div>{% endfor %}
+  </figure>
+{% elif editor and d.metas and d.metas.pode %}
+  <figure class="metas-editar" data-quadro="{{ d.b.quadro_id }}">
+    {% if d.b.titulo %}<figcaption class="legenda">{{ d.b.titulo }}</figcaption>{% endif %}
+    <div class="metas-ajuda d-print-none"><i class="bi bi-pencil-square"></i> Preencha, para cada meta, o <strong>status</strong> e a <strong>justificativa</strong>. É salvo sozinho quando você sai do campo. <span class="js-metas-faltam">{% if d.metas.faltam %}Faltam {{ d.metas.faltam }} campo{{ d.metas.faltam|pluralize }}.{% else %}Tudo preenchido.{% endif %}</span></div>
+    <div class="table-responsive"><table class="table table-sm metas-tabela mb-0">
+      <thead><tr><th>Meta do PDI</th>{% for c in d.metas.colunas %}<th class="{% if c.chave == 'status' %}col-status{% else %}col-just{% endif %}">{{ c.rotulo }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for l in d.metas.linhas %}<tr>
+        <td class="meta-rot">{{ l.rotulo }}{% if l.ref.oe %} <span class="meta-oe">{{ l.ref.oe }}</span>{% endif %}
+          {% if l.ref.status_ant or l.ref.just_ant %}<div class="meta-ant">Em {{ ciclo.ano|add:"-1" }}: {% if l.ref.status_ant %}<strong>{{ l.ref.status_ant }}</strong>{% endif %}{% if l.ref.just_ant %} — {{ l.ref.just_ant }}{% endif %}</div>{% endif %}</td>
+        {% for c in l.campos %}<td>{% if c.pode %}{% if c.chave == 'status' %}<input class="form-control form-control-sm meta-campo" list="lista-status-pdi" data-l="{{ c.l }}" data-c="{{ c.c }}" value="{{ c.valor }}" aria-label="{{ c.rotulo }} — {{ l.rotulo|truncatechars:60 }}" placeholder="escolha ou digite">{% else %}<textarea class="form-control form-control-sm meta-campo" rows="2" data-l="{{ c.l }}" data-c="{{ c.c }}" aria-label="{{ c.rotulo }} — {{ l.rotulo|truncatechars:60 }}">{{ c.valor }}</textarea>{% endif %}{% else %}<span class="mini">{{ c.valor|default:"—" }}</span>{% endif %}</td>{% endfor %}
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </figure>
+{% else %}
+  <div class="doc-figura{% if editor and d.origens %} com-dados{% endif %}"{% if editor and d.origens %} data-quadros="{% for o in d.origens %}{{ o.quadro.pk }}{% if not forloop.last %},{% endif %}{% endfor %}" data-chaves="{% for o in d.origens %}{{ o.quadro.chave }}{% if not forloop.last %},{% endif %}{% endfor %}"{% endif %}>
+    {% include "relatorio/_bloco_conteudo.html" %}
+    {% if editor and d.origens %}<div class="doc-figura-dados d-print-none">{% for o in d.origens %}<button type="button" class="btn btn-sm btn-primary js-dados" data-quadro="{{ o.quadro.pk }}" title="Dados de “{{ o.quadro.titulo }}” ({% for s in o.setores %}{{ s.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %})"><i class="bi bi-pencil-square"></i> {% if d.origens|length > 1 %}{{ o.quadro.titulo|truncatechars:34 }}{% else %}Dados{% if d.b.tipo == 'grafico' %} do gráfico{% elif d.b.tipo == 'tabela' %} da tabela{% endif %}{% endif %}</button>{% endfor %}<span class="mini text-secondary">{% for o in d.origens %}{% for s in o.setores %}{{ s.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if not forloop.last %} · {% endif %}{% endfor %}</span></div>{% endif %}
+  </div>
+{% endif %}
+</div>

@@ -1,0 +1,6 @@
+<tr>
+  <td>{{ f.id }}<input type="number" class="form-control form-control-sm" name="{{ f.ordem.html_name }}" value="{{ f.ordem.value|default_if_none:'' }}" aria-label="Ordem"></td>
+  <td><input class="form-control form-control-sm" name="{{ f.rotulo.html_name }}" value="{{ f.rotulo.value|default_if_none:'' }}" aria-label="Rótulo">{% for e in f.rotulo.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><input class="form-control form-control-sm font-monospace" name="{{ f.chave.html_name }}" value="{{ f.chave.value|default_if_none:'' }}" placeholder="automática" aria-label="Chave">{% for e in f.chave.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}<input type="hidden" name="{{ f.travada.html_name }}" value=""></td>
+  <td>{% if f.instance.pk %}<input class="form-check-input" type="checkbox" name="{{ f.DELETE.html_name }}" aria-label="Excluir coluna">{% endif %}</td>
+</tr>

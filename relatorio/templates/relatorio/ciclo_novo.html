@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}Novo ciclo{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'ciclos' %}"><i class="bi bi-arrow-left"></i> Ciclos</a></nav>
+<h1>Novo ciclo do relatório</h1>
+<form method="post" class="card" style="max-width:720px">{% csrf_token %}<div class="card-body">
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row">
+    <div class="col-md-3">{% include "contas/_campo.html" with f=form.ano %}</div>
+    <div class="col-md-9">{% include "contas/_campo.html" with f=form.titulo %}</div>
+  </div>
+  <div class="mb-3"><label class="form-label" for="id_origem">{{ form.origem.label }}</label><select class="form-select" id="id_origem" name="origem"><option value="">(começar em branco)</option>{% for c in form.fields.origem.queryset %}<option value="{{ c.pk }}" {% if form.origem.value|stringformat:"s" == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.titulo }}</option>{% endfor %}</select>{% for e in form.origem.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}
+    <div class="form-text">Copia capítulos, seções, setores responsáveis, quadros, fórmulas e regras. Nos quadros por ano, os anos anteriores vêm <strong>preenchidos e travados</strong> e o novo ano-base fica em branco.</div></div>
+  <div class="row">
+    <div class="col-md-4">{% include "contas/_campo.html" with f=form.anos_serie %}</div>
+    <div class="col-md-4"><div class="mb-3"><label class="form-label" for="id_prazo">Prazo da coleta</label><input type="date" class="form-control" id="id_prazo" name="prazo" value="{{ form.prazo.value|default_if_none:'' }}"></div></div>
+  </div>
+  <p class="mini text-secondary mb-0">O ciclo nasce <strong>em preparação</strong>: só administradores e Master mexem nele até você abrir a coleta.</p>
+</div><div class="card-footer"><button class="btn btn-primary">Criar ciclo</button></div></form>
+{% endblock %}

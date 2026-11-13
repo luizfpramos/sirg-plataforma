@@ -1,0 +1,43 @@
+{% load sirg_rel %}{% if seq %}{% include "relatorio/_folha_paginas.html" %}{% else %}<article class="folha" lang="pt-BR">
+  <header class="folha-capa">
+    <div class="folha-inst">{{ INST.nome }}</div>
+    <h1>{{ ciclo.titulo }}</h1>
+    {% if ciclo.situacao != 'encerrado' %}<div class="folha-preliminar">Versão em construção · {% now "d/m/Y" %}</div>{% endif %}
+  </header>
+  {% for cap in caps %}
+  <section class="doc-cap" id="sec-{{ cap.s.chave }}" data-secao="{{ cap.s.pk }}">
+    <h2 class="doc-h-cap">{{ cap.s.titulo }}</h2>
+    {% if cap.blocos %}
+    {% if editor and cap.interessa %}
+    <div class="sec-card{% if cap.pode %} pode{% else %} so-ver{% endif %}" data-secao="{{ cap.s.pk }}">
+      {% include "relatorio/_doc_secao_cab.html" with it=cap %}
+      <div class="sec-card-corpo">
+        {% for d in cap.blocos %}{% include "relatorio/_doc_bloco.html" with it=cap editor=True %}{% endfor %}
+        {% if cap.pode and E_MASTER %}{% include "relatorio/_doc_inserir.html" with it=cap %}{% endif %}
+      </div>
+    </div>
+    {% else %}
+    {% for d in cap.blocos %}{% include "relatorio/_doc_bloco.html" with it=cap editor=False %}{% endfor %}
+    {% endif %}
+    {% endif %}
+    {% for it in cap.secoes %}
+    {% if editor and it.interessa %}
+    <section class="doc-sec sec-card{% if it.s.nivel == 2 %} sub{% endif %}{% if it.pode %} pode{% else %} so-ver{% endif %}{% if it.minha %} minha{% endif %}" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}" data-interessa="1">
+      {% include "relatorio/_doc_secao_cab.html" %}
+      <div class="sec-card-corpo">
+        {% if it.s.nivel == 2 %}<h4 class="doc-h-sub">{{ it.s.titulo }}</h4>{% else %}<h3 class="doc-h-sec">{{ it.s.titulo }}</h3>{% endif %}
+        {% for d in it.blocos %}{% include "relatorio/_doc_bloco.html" with editor=True %}
+        {% empty %}<p class="doc-vazia d-print-none">Esta seção ainda não tem conteúdo.</p>{% endfor %}
+        {% if it.pode and E_MASTER %}{% include "relatorio/_doc_inserir.html" %}{% endif %}
+      </div>
+    </section>
+    {% else %}
+    <section class="doc-sec{% if it.s.nivel == 2 %} sub{% endif %}{% if editor %} de-outros{% endif %}" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}">
+      {% if it.s.nivel == 2 %}<h4 class="doc-h-sub">{{ it.s.titulo }}</h4>{% else %}<h3 class="doc-h-sec">{{ it.s.titulo }}</h3>{% endif %}
+      {% for d in it.blocos %}{% include "relatorio/_doc_bloco.html" with editor=False %}{% endfor %}
+    </section>
+    {% endif %}
+    {% endfor %}
+  </section>
+  {% endfor %}
+</article>{% endif %}

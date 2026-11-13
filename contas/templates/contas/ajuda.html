@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Manual de uso{% endblock %}
+{% block conteudo %}
+<h1 class="mb-0"><i class="bi bi-question-circle"></i> {{ titulo }}</h1>
+<div class="subtitulo mb-3">Como preencher os números, escrever os textos e exportar o relatório.</div>
+<div class="row g-4">
+  <aside class="col-lg-3 order-lg-2">
+    <div class="card sticky-lg-top manual-sumario" style="top:1rem"><div class="card-body py-2">
+      <div class="mini text-secondary text-uppercase fw-semibold mb-1">Nesta página</div>
+      <nav class="nav flex-column">
+        {% for h in sumario %}<a class="nav-link px-0 py-1" href="#{{ h.id }}">{{ h.name }}</a>{% endfor %}
+      </nav>
+    </div></div>
+  </aside>
+  <article class="col-lg-9 order-lg-1 manual">{{ conteudo }}</article>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+# Testes a cada envio de codigo. Se passarem:
+#   - push na main            -> atualiza o ramo implantar/hml  -> o PC da DGDI instala na homologacao
+#   - tag vX.Y (ex.: v2.15)   -> atualiza o ramo implantar/prd  -> o PC da DGDI instala na producao
+# O PC da DGDI so le esses ramos (implantacao/git/implantador.ps1). Nada aqui acessa o servidor.
+name: Testes e implantacao
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: implantacao-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Dependencias
+        run: pip install -r requirements.txt
+      - name: Conferencias
+        env:
+          SIRG_DADOS_DIR: ${{ runner.temp }}/dados
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+      - name: Scripts do Windows em CRLF e ASCII
+        run: |
+          for f in $(git ls-files '*.bat' '*.ps1'); do
+            python - "$f" <<'PY'
+          import sys
+          p = sys.argv[1]; b = open(p, "rb").read()
+          assert b"\n" not in b.replace(b"\r\n", b""), f"{p}: quebra de linha sem CR"
+          if p.endswith(".ps1"):
+              assert b.isascii(), f"{p}: tem caracteres fora do ASCII"
+          PY
+          done
+      - name: Testes automaticos
+        env:
+          SIRG_DADOS_DIR: ${{ runner.temp }}/dados
+        run: python manage.py test
+
+  homologacao:
+    needs: testes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Liberar para a homologacao
+        run: |
+          git push --force origin HEAD:refs/heads/implantar/hml
+          echo "Liberado para a homologacao: $(git rev-parse --short HEAD). O PC da DGDI instala em ate 5 minutos." >> "$GITHUB_STEP_SUMMARY"
+
+  producao:
+    needs: testes
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Conferir a versao e a passagem pela homologacao
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          versao=$(sed -n 's/^SIRG_VERSAO = "\(.*\)"/\1/p' config/settings.py)
+          if [ "$tag" != "$versao" ]; then
+            echo "::error::A tag v$tag nao bate com SIRG_VERSAO = $versao em config/settings.py."; exit 1
+          fi
+          git fetch origin implantar/hml
+          if ! git merge-base --is-ancestor HEAD origin/implantar/hml; then
+            echo "::error::Este codigo ainda nao foi liberado para a homologacao (faca o merge na main antes da tag)."; exit 1
+          fi
+      - name: Liberar para a producao
+        run: |
+          git push --force origin HEAD:refs/heads/implantar/prd
+          echo "Liberado para a producao: v${GITHUB_REF_NAME#v} ($(git rev-parse --short HEAD)). O PC da DGDI instala em ate 5 minutos." >> "$GITHUB_STEP_SUMMARY"

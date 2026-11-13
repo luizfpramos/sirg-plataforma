@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% load humanize %}
+{% block titulo %}Usuários{% endblock %}
+{% block conteudo %}
+<div class="d-flex align-items-start mb-3 flex-wrap gap-2">
+  <div><h1 class="mb-0"><i class="bi bi-people"></i> Usuários</h1><div class="subtitulo">{{ total }} usuário{{ total|pluralize }}</div></div>
+  <div class="ms-auto"><a class="btn btn-primary" href="{% url 'usuario_novo' %}"><i class="bi bi-person-plus"></i> Novo usuário</a></div>
+</div>
+<form class="card card-body mb-3 py-2" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3"><label class="mini text-secondary" for="f-q">Nome, login ou e-mail</label><input id="f-q" class="form-control form-control-sm" name="q" value="{{ q }}"></div>
+    <div class="col-md-3"><label class="mini text-secondary" for="f-setor">Setor</label>
+      <select id="f-setor" name="setor" class="form-select form-select-sm"><option value="">todos</option><option value="sem" {% if setor_sel == 'sem' %}selected{% endif %}>(sem setor)</option>
+      {% for s in setores %}<option value="{{ s.sigla }}" {% if s.sigla == setor_sel %}selected{% endif %}>{{ s.sigla }}{% if not s.ativo %} (inativo){% endif %}</option>{% endfor %}</select></div>
+    <div class="col-md-2"><label class="mini text-secondary" for="f-perfil">Perfil</label>
+      <select id="f-perfil" name="perfil" class="form-select form-select-sm"><option value="">todos</option>
+        <option value="admin" {% if perfil_sel == 'admin' %}selected{% endif %}>Administrador</option>
+        <option value="master" {% if perfil_sel == 'master' %}selected{% endif %}>Master</option></select></div>
+    <div class="col-md-2"><label class="mini text-secondary" for="f-sit">Situação</label>
+      <select id="f-sit" name="situacao" class="form-select form-select-sm">
+        <option value="ativos" {% if situacao_sel == 'ativos' %}selected{% endif %}>ativos</option>
+        <option value="pendentes" {% if situacao_sel == 'pendentes' %}selected{% endif %}>aguardando 1º acesso</option>
+        <option value="inativos" {% if situacao_sel == 'inativos' %}selected{% endif %}>inativos</option>
+        <option value="todos" {% if situacao_sel == 'todos' %}selected{% endif %}>todos</option></select></div>
+    <div class="col-auto"><button class="btn btn-sm btn-primary">Filtrar</button> <a href="?" class="btn btn-sm btn-link">limpar</a></div>
+  </div>
+</form>
+<div class="card"><div class="table-responsive">
+<table class="table table-sm table-hover mb-0">
+  <thead><tr><th>Nome</th><th>Login</th><th>Setores</th><th>Perfis</th><th>Situação</th><th>Último acesso</th></tr></thead>
+  <tbody>
+  {% for u, sit in linhas %}
+  <tr>
+    <td><a href="{% url 'usuario' u.pk %}">{{ u.get_full_name|default:"(sem nome)" }}</a></td>
+    <td class="codigo">{{ u.username }}</td>
+    <td>{% for v in u.vinculos_ativos %}<span class="badge badge-setor me-1" title="{{ v.setor.nome }}">{{ v.setor.sigla }}</span>{% empty %}<span class="text-secondary mini">—</span>{% endfor %}</td>
+    <td>{% if u.is_superuser or u.perfil_sirg.e_admin %}<span class="badge badge-perfil-admin me-1">Administrador</span>{% endif %}{% if u.perfil_sirg.e_master %}<span class="badge badge-perfil-master me-1">Master</span>{% endif %}{% if u.perfil_sirg.e_diagramacao %}<span class="badge text-bg-info me-1">Diagramação</span>{% endif %}{% if not u.vinculos_ativos and not u.perfil_sirg.e_master and not u.perfil_sirg.e_admin and not u.is_superuser %}<span class="badge badge-perfil-leitor">Leitor</span>{% endif %}</td>
+    <td><span class="badge text-bg-{{ sit.1 }}">{{ sit.0 }}</span></td>
+    <td class="mini text-secondary">{{ u.last_login|naturaltime|default:"nunca" }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="6" class="text-center text-secondary py-4">Nenhum usuário encontrado.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% include "contas/_paginacao.html" %}
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}O que falta — {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<div class="d-flex align-items-start mb-3 flex-wrap gap-2">
+  <div class="me-auto"><h1 class="mb-0"><i class="bi bi-list-check"></i> O que falta</h1>
+  <div class="subtitulo">{{ ciclo.titulo }} · {% if minhas %}somente as seções do seu setor{% else %}relatório inteiro{% endif %}</div></div>
+  <a class="btn btn-sm btn-outline-secondary " href="{% url 'conferencia_conexoes' ciclo.ano %}" title="Planilha com todas as ligações entre os números e o relatório, para conferir contra o RG publicado"><i class="bi bi-diagram-3"></i> Conferir as conexões (Excel)</a>
+  {% if tem_setor %}<div class="btn-group btn-group-sm" role="group" aria-label="Filtro">
+    <a class="btn {% if minhas %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?minhas=1">Só o meu setor</a>
+    <a class="btn {% if not minhas %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?minhas=0">Relatório inteiro</a>
+  </div>{% endif %}
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-md-6 col-xl-3"><a class="text-reset text-decoration-none" href="#" data-filtrar="sev=falta"><div class="card card-body h-100 resumo-pend"><div class="d-flex align-items-center gap-3"><i class="bi bi-pencil-square fs-2 text-secondary"></i><div><div class="cartao-num">{{ geral.faltam }}</div><strong>campos a preencher</strong><div class="mini text-secondary">números e metas do PDI em branco (a lista abaixo junta os de cada tabela)</div></div></div></div></a></div>
+  <div class="col-md-6 col-xl-3"><a class="text-reset text-decoration-none" href="#" data-filtrar="sev=erro"><div class="card card-body h-100 resumo-pend"><div class="d-flex align-items-center gap-3"><i class="bi bi-x-circle fs-2 text-danger"></i><div><div class="cartao-num text-danger">{{ geral.erros }}</div><strong>para corrigir</strong><div class="mini text-secondary">números que não batem entre si ou fora do esperado</div></div></div></div></a></div>
+  <div class="col-md-6 col-xl-3"><a class="text-reset text-decoration-none" href="#" data-filtrar="sev=aviso"><div class="card card-body h-100 resumo-pend"><div class="d-flex align-items-center gap-3"><i class="bi bi-exclamation-circle fs-2 text-warning"></i><div><div class="cartao-num text-warning-emphasis">{{ geral.avisos }}</div><strong>para conferir</strong><div class="mini text-secondary">variações grandes e valores digitados diferentes do automático</div></div></div></div></a></div>
+  <div class="col-md-6 col-xl-3"><a class="text-reset text-decoration-none" href="#" data-filtrar="tipo=texto"><div class="card card-body h-100 resumo-pend"><div class="d-flex align-items-center gap-3"><i class="bi bi-highlighter fs-2" style="color:#c9a227"></i><div><div class="cartao-num" style="color:#8a6d00">{{ n_atualizar }}</div><strong>no texto</strong><div class="mini text-secondary">trechos marcados, avisos de figura e números sem valor</div></div></div></div></a></div>
+</div>
+<div class="filtros" data-alvo="#lista-pend" role="search" aria-label="Filtrar o que falta">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-2"><label for="ff-busca">Procurar</label><input id="ff-busca" class="form-control form-control-sm" data-campo="busca" type="search" placeholder="palavra, tabela, linha…"></div>
+    <div class="col-6 col-md-2"><label for="ff-setor">Setor</label><select id="ff-setor" class="form-select form-select-sm" data-campo="setor" data-ordenar="1"><option value="">todos</option></select></div>
+    <div class="col-6 col-md-2"><label for="ff-cap">Capítulo</label><select id="ff-cap" class="form-select form-select-sm" data-campo="cap"><option value="">todos</option></select></div>
+    <div class="col-6 col-md-2"><label for="ff-secao">Seção</label><select id="ff-secao" class="form-select form-select-sm" data-campo="secao"><option value="">todas</option></select></div>
+    <div class="col-6 col-md-2"><label for="ff-sev">Situação</label><select id="ff-sev" class="form-select form-select-sm" data-campo="sev" data-fixo="1"><option value="">todas</option><option value="falta">a preencher</option><option value="erro">para corrigir</option><option value="aviso">para conferir</option><option value="atualizar">trechos marcados ou avisos de figura</option></select></div>
+    <div class="col-6 col-md-2"><label for="ff-tipo">Tipo</label><select id="ff-tipo" class="form-select form-select-sm" data-campo="tipo" data-fixo="1"><option value="">todos</option>
+      <option value="vazio">Número não preenchido</option><option value="regra">Números que não batem</option><option value="divergencia">Digitado ≠ automático</option><option value="variacao">Variação sem justificativa</option><option value="faixa">Fora do esperado</option><option value="formula">Erro de fórmula</option><option value="texto">No texto</option></select></div>
+  </div>
+  <div class="d-flex align-items-center gap-2 mt-1"><span class="mini text-secondary js-filtro-n"></span><button type="button" class="btn btn-sm btn-link py-0 js-filtro-limpar" hidden>limpar filtros</button></div>
+</div>
+<div id="lista-pend">
+<p class="text-secondary js-filtro-vazio" hidden><i class="bi bi-funnel"></i> Nada com estes filtros.</p>
+<div class="card" data-grupo><div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+  <thead><tr><th></th><th>Onde</th><th>O que fazer</th><th>Setor</th><th></th></tr></thead>
+  <tbody>
+  {% for p in pendencias %}
+  {% with s=p.quadro.secao %}
+  <tr data-item data-f-sev="{{ p.severidade }}" data-f-tipo="{{ p.tipo }}" data-f-setor="{% for x in p.setores %}{{ x.sigla }} {% endfor %}" data-f-cap="{{ s.pai_id|default:s.pk }}" data-f-cap-nome="{% if s.pai %}{{ s.pai.titulo }}{% else %}{{ s.titulo }}{% endif %}" data-f-secao="{{ s.pk }}" data-f-secao-nome="{{ s.titulo }}" data-f-secao-pai="{{ s.pai_id|default:s.pk }}">
+    <td>{% if p.severidade == 'erro' %}<i class="bi bi-x-circle-fill text-danger" title="Para corrigir"></i>{% elif p.severidade == 'aviso' %}<i class="bi bi-exclamation-circle-fill text-warning" title="Para conferir"></i>{% else %}<i class="bi bi-pencil-square text-secondary" title="A preencher"></i>{% endif %}</td>
+    <td class="mini">{{ s.titulo }}<div class="text-secondary">{{ p.quadro.titulo }}</div></td>
+    <td>{{ p.mensagem }}{% if p.detalhe %}<div class="mini text-secondary">{{ p.detalhe }}</div>{% endif %}</td>
+    <td>{% for x in p.setores %}<span class="badge badge-setor me-1">{{ x.sigla }}</span>{% endfor %}</td>
+    <td class="text-end">{% if p.quadro.tipo_valor == 'texto' %}<a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'escrever' ciclo.ano %}?secao={{ s.chave }}" title="Preenchido no próprio texto, em Escrever o relatório">Abrir</a>{% else %}<a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'escrever' ciclo.ano %}?secao={{ p.quadro.secao.chave }}&amp;dados={{ p.quadro.pk }}">Abrir</a>{% endif %}</td>
+  </tr>
+  {% endwith %}
+  {% empty %}<tr data-item data-f-sev="nada"><td colspan="5" class="text-center py-4 text-success"><i class="bi bi-check2-circle"></i> Nada pendente nos números.</td></tr>{% endfor %}
+  </tbody>
+</table></div></div>
+{% if textos %}
+<div data-grupo>
+<h2 class="h5 mt-4" id="no-texto"><i class="bi bi-file-text"></i> No texto</h2>
+<div class="card"><div class="table-responsive"><table class="table table-sm mb-0 align-middle"><tbody>
+{% for t in textos %}{% with s=t.bloco.secao %}<tr data-item data-f-sev="{{ t.severidade }}" data-f-tipo="texto" data-f-setor="{% for x in s.setores.all %}{{ x.sigla }} {% endfor %}" data-f-cap="{{ s.pai_id|default:s.pk }}" data-f-cap-nome="{% if s.pai %}{{ s.pai.titulo }}{% else %}{{ s.titulo }}{% endif %}" data-f-secao="{{ s.pk }}" data-f-secao-nome="{{ s.titulo }}" data-f-secao-pai="{{ s.pai_id|default:s.pk }}"><td style="width:28px">{% if t.severidade == 'atualizar' %}<i class="bi bi-highlighter" style="color:#c9a227"></i>{% elif t.severidade == 'erro' %}<i class="bi bi-x-circle-fill text-danger"></i>{% elif t.severidade == 'aviso' %}<i class="bi bi-exclamation-circle-fill text-warning"></i>{% else %}<i class="bi bi-pencil-square text-secondary"></i>{% endif %}</td>
+<td class="mini">{{ s.titulo }}</td><td>{{ t.mensagem }}</td>
+<td class="text-end"><a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'escrever' ciclo.ano %}?secao={{ s.chave }}#bloco-{{ t.bloco.pk }}">Abrir</a></td></tr>{% endwith %}{% endfor %}
+</tbody></table></div></div>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/filtros.js' %}?v={{ VERSAO }}"></script>{% endblock %}

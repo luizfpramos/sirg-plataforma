@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}{% if novo %}Novo usuário{% else %}{{ alvo.get_full_name|default:alvo.username }}{% endif %}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'usuarios' %}"><i class="bi bi-arrow-left"></i> Usuários</a></nav>
+<div class="d-flex align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="mb-0">{% if novo %}Novo usuário{% else %}{{ alvo.get_full_name|default:alvo.username }}{% endif %}</h1>
+    {% if not novo %}<div class="subtitulo"><span class="codigo">{{ alvo.username }}</span> · <span class="badge text-bg-{{ situacao.1 }}">{{ situacao.0 }}</span>{% if e_voce %} · <em>este é você</em>{% endif %}</div>{% endif %}
+  </div>
+  {% if not novo %}
+  <div class="ms-auto d-flex flex-wrap gap-2">
+    <form method="post" action="{% url 'usuario_acao' alvo.pk 'senha' %}" onsubmit="return confirm('Gerar uma nova senha provisória para {{ alvo.get_full_name|default:alvo.username|escapejs }}? A senha atual deixa de valer.')">{% csrf_token %}<button class="btn btn-outline-primary btn-sm"><i class="bi bi-key"></i> Redefinir senha</button></form>
+    {% if perfil.bloqueado %}<form method="post" action="{% url 'usuario_acao' alvo.pk 'desbloquear' %}">{% csrf_token %}<button class="btn btn-outline-warning btn-sm"><i class="bi bi-unlock"></i> Desbloquear</button></form>{% endif %}
+    {% if alvo.is_active %}{% if not e_voce %}<form method="post" action="{% url 'usuario_acao' alvo.pk 'desativar' %}" onsubmit="return confirm('Desativar este usuário? Ele não conseguirá mais entrar e os vínculos com setores serão encerrados. O histórico é mantido.')">{% csrf_token %}<button class="btn btn-outline-danger btn-sm"><i class="bi bi-person-x"></i> Desativar</button></form>{% endif %}
+    {% else %}<form method="post" action="{% url 'usuario_acao' alvo.pk 'reativar' %}">{% csrf_token %}<button class="btn btn-outline-success btn-sm"><i class="bi bi-person-check"></i> Reativar</button></form>{% endif %}
+  </div>
+  {% endif %}
+</div>
+<div class="row g-3">
+  <div class="col-xl-7">
+    <form method="post" class="card"><div class="card-body">{% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="row">
+        <div class="col-md-7">{% include "contas/_campo.html" with f=form.nome %}</div>
+        <div class="col-md-5">{% include "contas/_campo.html" with f=form.login %}</div>
+      </div>
+      {% include "contas/_campo.html" with f=form.email %}
+      <div class="grupo-titulo">Perfis</div>
+      {% include "contas/_check.html" with f=form.e_admin %}
+      {% include "contas/_check.html" with f=form.e_master %}
+      {% include "contas/_check.html" with f=form.e_diagramacao %}
+      {% if alvo.is_superuser %}<div class="mini text-secondary mb-2"><i class="bi bi-info-circle"></i> Superusuário técnico: é sempre administrador.</div>{% endif %}
+      <div class="grupo-titulo">Setores</div>
+      <p class="mini text-secondary mb-2">{{ form.setores.help_text }} Ao desmarcar um setor, o vínculo é <strong>encerrado</strong> com a data de hoje (o histórico é mantido).</p>
+      <div class="form-check-setores mb-2">
+        {% for c in form.setores %}<div class="form-check"><input class="form-check-input" type="checkbox" name="{{ c.data.name }}" value="{{ c.data.value }}" id="{{ c.id_for_label }}" {% if c.data.selected %}checked{% endif %}><label class="form-check-label" for="{{ c.id_for_label }}">{{ c.choice_label }}</label></div>{% endfor %}
+      </div>
+      {% for e in form.setores.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}
+      {% include "contas/_campo.html" with f=form.observacao %}
+      {% if novo %}<div class="alert alert-light border mini mb-3"><i class="bi bi-key"></i> Ao salvar, a plataforma gera uma <strong>senha provisória</strong> para você entregar à pessoa. No primeiro acesso ela é obrigada a criar a própria senha.</div>{% endif %}
+    </div>
+    <div class="card-footer"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> {% if novo %}Criar usuário{% else %}Salvar alterações{% endif %}</button> <a class="btn btn-link" href="{% url 'usuarios' %}">cancelar</a></div>
+    </form>
+  </div>
+  {% if not novo %}
+  <div class="col-xl-5">
+    <div class="card mb-3"><div class="card-header">Histórico de setores</div><div class="card-body">{% include "contas/_vinculos.html" with vinculos=vinculos mostrar="setor" %}</div></div>
+    <div class="card"><div class="card-header">Atividade</div>
+      <div class="list-group list-group-flush">{% for e in eventos %}<div class="list-group-item mini">{% include "contas/_evento.html" %}</div>{% empty %}<div class="list-group-item mini text-secondary">Nenhum registro.</div>{% endfor %}</div>
+      <div class="card-footer mini"><a href="{% url 'auditoria' %}?usuario={{ alvo.username }}">ver toda a atividade</a></div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}Enviar planilha — {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'ciclo' ciclo.ano %}"><i class="bi bi-arrow-left"></i> {{ ciclo.titulo }}</a></nav>
+<h1 class="mb-0"><i class="bi bi-file-earmark-excel"></i> Preencher pelo Excel</h1>
+<div class="subtitulo mb-3">Baixe a planilha, preencha as células amarelas e envie de volta. Antes de gravar, você confere tudo o que vai mudar.</div>
+{% if previa is None %}
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+    <h2 class="h6">1. Baixar a planilha</h2>
+    <div class="d-flex flex-wrap gap-2">
+      {% for s in meus_setores %}<a class="btn btn-outline-primary btn-sm" href="{% url 'excel_exportar' ciclo.ano %}?setor={{ s.sigla }}"><i class="bi bi-download"></i> Quadros da {{ s.sigla }}</a>{% endfor %}
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'excel_exportar' ciclo.ano %}"><i class="bi bi-download"></i> Todos os quadros</a>
+    </div>
+    <p class="mini text-secondary mt-2 mb-0">Também dá para baixar uma seção específica pelo botão da própria seção.</p>
+  </div></div></div>
+  <div class="col-lg-6"><form method="post" enctype="multipart/form-data" class="card h-100">{% csrf_token %}<div class="card-body">
+    <h2 class="h6">2. Enviar a planilha preenchida</h2>
+    <input type="file" class="form-control" name="arquivo" accept=".xlsx" required aria-label="Planilha preenchida">
+    <p class="mini text-secondary mt-2 mb-0">Nada é gravado agora: primeiro aparece a prévia.</p>
+  </div><div class="card-footer"><button class="btn btn-primary"><i class="bi bi-upload"></i> Ver prévia</button></div></form></div>
+</div>
+{% else %}
+<form method="post">{% csrf_token %}<input type="hidden" name="acao" value="confirmar">
+<div class="card mb-3">
+  <div class="card-header d-flex align-items-center">Alterações encontradas: {{ validas|length }}
+    {% if validas %}<div class="form-check ms-auto mini"><input class="form-check-input" type="checkbox" id="todas" checked onclick="document.querySelectorAll('.js-aplicar').forEach(c=>c.checked=this.checked)"><label class="form-check-label" for="todas">marcar todas</label></div>{% endif %}</div>
+  <div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+    <thead><tr><th></th><th>Quadro</th><th>Linha</th><th>Coluna</th><th class="text-end">Hoje</th><th class="text-end">Planilha</th></tr></thead>
+    <tbody>
+    {% for a in validas %}<tr><td><input class="form-check-input js-aplicar" type="checkbox" name="aplicar" value="{{ a.linha }}-{{ a.coluna }}" checked aria-label="Aplicar"></td><td class="mini">{{ a.quadro }}</td><td>{{ a.rotulo }}</td><td>{{ a.coluna_rotulo }}</td><td class="text-end"><span class="diff-antes">{{ a.antes|default:"(vazio)" }}</span></td><td class="text-end"><span class="diff-depois">{{ a.depois|default:"(vazio)" }}</span></td></tr>
+    {% empty %}<tr><td colspan="6" class="text-secondary text-center py-3">Nenhuma alteração válida.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% if invalidas %}
+<div class="card mb-3 border-danger"><div class="card-header text-danger">Não serão gravadas ({{ invalidas|length }})</div>
+  <div class="table-responsive"><table class="table table-sm mb-0 mini"><thead><tr><th>Quadro</th><th>Linha</th><th>Coluna</th><th>Valor</th><th>Motivo</th></tr></thead><tbody>
+  {% for a in invalidas %}<tr><td>{{ a.quadro }}</td><td>{{ a.rotulo }}</td><td>{{ a.coluna_rotulo }}</td><td>{{ a.depois }}</td><td class="text-danger">{{ a.erro }}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endif %}
+<div class="d-flex gap-2">{% if validas %}<button class="btn btn-primary"><i class="bi bi-check-lg"></i> Gravar as alterações marcadas</button>{% endif %}<a class="btn btn-link" href="{% url 'excel_importar' ciclo.ano %}">cancelar</a></div>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Cores dos gráficos{% endblock %}
+{% block conteudo %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="mb-0 me-auto"><i class="bi bi-palette"></i> Cores dos gráficos</h1>
+  <a class="btn btn-primary" href="{% url 'paleta_nova' %}"><i class="bi bi-plus-lg"></i> Nova paleta</a>
+</div>
+<p class="text-secondary mb-3">A paleta em uso vale para todos os gráficos: na tela, no Word e no pacote da diagramação.</p>
+<div class="row g-3">
+{% for p in opcoes %}
+  <div class="col-xl-6">
+    <div class="card h-100 paleta-card{% if p.atual %} atual{% endif %}">
+      <div class="card-body">
+        <div class="d-flex align-items-start gap-2 mb-1">
+          <div><h2 class="h6 mb-0">{{ p.nome }}</h2>{% if p.descricao %}<div class="mini text-secondary">{{ p.descricao }}</div>{% endif %}</div>
+          {% if p.atual %}<span class="badge text-bg-success ms-auto"><i class="bi bi-check2"></i> Em uso</span>{% endif %}
+        </div>
+        <div class="paleta-cores my-2" aria-label="Cores da paleta">{% for c in p.cores %}<span style="background:{{ c }}" title="{{ forloop.counter }}ª cor: {{ c }}"></span>{% endfor %}</div>
+        <div class="row g-2 align-items-center">
+          <div class="col-sm-7"><div class="grafico">{{ p.barras|safe }}</div></div>
+          <div class="col-sm-5"><div class="grafico">{{ p.pizza|safe }}</div></div>
+        </div>
+      </div>
+      <form method="post" class="card-footer bg-transparent border-0 pt-0 pb-3 px-3 d-flex flex-wrap gap-2">{% csrf_token %}<input type="hidden" name="paleta" value="{{ p.chave }}">
+        {% if not p.atual %}<button class="btn btn-sm btn-primary" name="acao" value="usar"><i class="bi bi-check2"></i> Usar esta paleta</button>{% endif %}
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'paleta_editar' p.chave %}"><i class="bi bi-pencil"></i> Editar</a>
+        <button class="btn btn-sm btn-outline-secondary" name="acao" value="duplicar"><i class="bi bi-files"></i> Duplicar</button>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'paleta_ase' p.chave %}" title="Para carregar nas Amostras do InDesign ou do Illustrator"><i class="bi bi-download"></i> .ase</a>
+        {% if p.sistema %}<button class="btn btn-sm btn-link" name="acao" value="restaurar" onclick="return confirm('Voltar às cores originais desta paleta?')">Restaurar original</button>
+        {% elif not p.atual %}<button class="btn btn-sm btn-link text-danger" name="acao" value="excluir" onclick="return confirm('Excluir a paleta “{{ p.nome|escapejs }}”?')">Excluir</button>{% endif %}
+      </form>
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

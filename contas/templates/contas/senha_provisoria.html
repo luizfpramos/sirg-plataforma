@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Senha provisória{% endblock %}
+{% block conteudo %}
+<div class="card" style="max-width:640px"><div class="card-body">
+  <h1 class="h4">{% if novo %}Usuário criado{% else %}Senha redefinida{% endif %}</h1>
+  <p>Entregue estes dados a <strong>{{ alvo.get_full_name|default:alvo.username }}</strong>. A senha aparece <strong>só agora</strong>: depois de sair desta tela, não será possível vê-la de novo.</p>
+  <dl class="row mb-2">
+    <dt class="col-sm-3">Endereço</dt><dd class="col-sm-9"><span class="codigo">{{ request.scheme }}://{{ request.get_host }}/</span></dd>
+    <dt class="col-sm-3">Usuário</dt><dd class="col-sm-9"><span class="codigo">{{ alvo.username }}</span></dd>
+    <dt class="col-sm-3">Senha provisória</dt><dd class="col-sm-9"><span class="senha-provisoria" id="senha">{{ senha }}</span>
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="navigator.clipboard.writeText('Plataforma SiRG\nEndereço: {{ request.scheme }}://{{ request.get_host }}/\nUsuário: {{ alvo.username }}\nSenha provisória: {{ senha }}\nNo primeiro acesso você vai criar a sua senha pessoal.');this.innerText='Copiado!'"><i class="bi bi-clipboard"></i> Copiar mensagem</button></dd>
+  </dl>
+  <p class="mini text-secondary">No primeiro acesso a pessoa será obrigada a criar uma senha pessoal, que ninguém mais conhece.</p>
+  <a class="btn btn-primary" href="{% url 'usuario' alvo.pk %}">Concluir</a>
+  {% if novo %}<a class="btn btn-outline-primary" href="{% url 'usuario_novo' %}"><i class="bi bi-person-plus"></i> Criar outro usuário</a>{% endif %}
+</div></div>
+{% endblock %}

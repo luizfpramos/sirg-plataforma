@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}Entrar{% endblock %}
+{% block publico %}
+<div class="login-dividido">
+  <section class="login-marca" aria-label="UFCIMG">
+    <img class="login-logo" src="{% static 'img/ufcimg-vertical-branca.png' %}" alt="UFCIMG – Universidade Federal de Ciência e Inovação de Minas Gerais">
+    <div class="login-chamada">
+      <h1>Relatório de Gestão</h1>
+      <p>Números, textos, tabelas e gráficos do Relatório de Gestão preenchidos pelos setores, conferidos e montados num só lugar.</p>
+    </div>
+    <img class="login-marca-dagua" src="{% static 'img/ufcimg-simbolo-branco.png' %}" alt="" aria-hidden="true">
+    <div class="login-rodape">SiRG · Sistema do Relatório de Gestão · DGDI — Diretoria de Governança e Desenvolvimento Institucional</div>
+  </section>
+  <section class="login-form">
+    <div class="login-caixa">
+      <h2>Entrar</h2>
+      <p class="login-sub">Use o usuário e a senha que o administrador da plataforma criou para você.</p>
+      {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+      <form method="post">{% csrf_token %}
+        <div class="mb-3"><label class="form-label" for="id_username">Usuário</label><input class="form-control form-control-lg" id="id_username" name="username" value="{{ form.username.value|default:'' }}" autocomplete="username" autofocus required></div>
+        <div class="mb-4"><label class="form-label" for="id_password">Senha</label>
+          <div class="input-group input-group-lg"><input class="form-control" id="id_password" type="password" name="password" autocomplete="current-password" required>
+            <button class="btn btn-outline-secondary" type="button" id="ver-senha" aria-label="Mostrar a senha" title="Mostrar a senha"><i class="bi bi-eye"></i></button></div></div>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="btn btn-primary btn-lg w-100">Entrar</button>
+      </form>
+      <p class="login-ajuda">Esqueceu a senha ou não tem acesso? Fale com {% if CONTATO %}<strong>{{ CONTATO }}</strong>{% else %}a <strong>DGDI</strong> (Diretoria de Governança e Desenvolvimento Institucional){% endif %}, que redefine a senha.</p>
+    </div>
+  </section>
+</div>
+<script>
+document.getElementById("ver-senha").addEventListener("click", function () {
+  var c = document.getElementById("id_password"), ver = c.type === "password";
+  c.type = ver ? "text" : "password";
+  this.innerHTML = ver ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+  this.setAttribute("aria-label", ver ? "Esconder a senha" : "Mostrar a senha");
+});
+</script>
+{% endblock %}

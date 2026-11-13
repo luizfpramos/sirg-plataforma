@@ -1,0 +1,11 @@
+<tr class="{% if f.errors %}table-danger{% endif %}">
+  <td>{{ f.id }}<input type="number" class="form-control form-control-sm" name="{{ f.ordem.html_name }}" value="{{ f.ordem.value|default_if_none:'' }}" aria-label="Ordem"></td>
+  <td><input class="form-control form-control-sm" name="{{ f.rotulo.html_name }}" value="{{ f.rotulo.value|default_if_none:'' }}" aria-label="Rótulo">{% for e in f.rotulo.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><input class="form-control form-control-sm font-monospace" name="{{ f.chave.html_name }}" value="{{ f.chave.value|default_if_none:'' }}" placeholder="automática" aria-label="Chave">{% for e in f.chave.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><input class="form-control form-control-sm font-monospace" name="{{ f.formula.html_name }}" value="{{ f.formula.value|default_if_none:'' }}" aria-label="Fórmula">{% for e in f.formula.errors %}<div class="text-danger mini">{{ e }}</div>{% endfor %}</td>
+  <td><select class="form-select form-select-sm" name="{{ f.tipo_valor.html_name }}" aria-label="Tipo">{% for v, r in f.fields.tipo_valor.choices %}<option value="{{ v }}" {% if f.tipo_valor.value == v %}selected{% endif %}>{% if v %}{{ r }}{% else %}(do quadro){% endif %}</option>{% endfor %}</select></td>
+  <td><input class="form-control form-control-sm" name="{{ f.minimo.html_name }}" value="{{ f.minimo.value|default_if_none:'' }}" aria-label="Mínimo"></td>
+  <td><input class="form-control form-control-sm" name="{{ f.maximo.html_name }}" value="{{ f.maximo.value|default_if_none:'' }}" aria-label="Máximo"></td>
+  <td><input class="form-check-input" type="checkbox" name="{{ f.soma_no_total.html_name }}" {% if f.soma_no_total.value %}checked{% endif %} aria-label="Entra no total"></td>
+  <td>{% if f.instance.pk %}<input class="form-check-input" type="checkbox" name="{{ f.DELETE.html_name }}" aria-label="Excluir linha">{% endif %}</td>
+</tr>

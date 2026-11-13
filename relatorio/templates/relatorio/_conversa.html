@@ -1,0 +1,20 @@
+<div class="row g-3" id="comentarios">
+  <div class="col-lg-7">
+    <div class="card"><div class="card-header">Comentários da seção</div>
+      <div class="list-group list-group-flush">
+        {% for c in comentarios_secao %}<div class="list-group-item"><strong>{{ c.autor.get_full_name|default:c.autor.username }}</strong> <span class="mini text-secondary">{{ c.criado_em|date:"d/m/Y H:i" }}</span><div>{{ c.texto|linebreaksbr }}</div>
+          <form method="post" action="{% url 'comentario_resolver' ciclo.ano c.pk %}">{% csrf_token %}<button class="btn btn-link btn-sm p-0 mini">marcar como resolvido</button></form></div>
+        {% empty %}<div class="list-group-item text-secondary mini">Nenhum comentário em aberto.</div>{% endfor %}
+      </div>
+      {% if ciclo.situacao != 'encerrado' %}<form method="post" action="{% url 'comentario_novo' ciclo.ano secao.chave %}" class="card-footer">{% csrf_token %}
+        <textarea class="form-control mb-2" name="texto" rows="2" placeholder="Escreva um comentário para quem trabalha nesta seção" aria-label="Comentário" required></textarea>
+        <button class="btn btn-sm btn-primary">Comentar</button></form>{% endif %}
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card"><div class="card-header">Andamento da seção</div><div class="card-body">
+      {% if movimentos %}<ul class="linha-tempo">{% for m in movimentos %}<li><strong>{{ m.get_para_display }}</strong><div class="mini text-secondary">{{ m.quando|date:"d/m/Y H:i" }}{% if m.por %} · {{ m.por.get_full_name|default:m.por.username }}{% endif %}</div>{% if m.comentario %}<div class="mini">{{ m.comentario }}</div>{% endif %}</li>{% endfor %}</ul>
+      {% else %}<p class="mini text-secondary mb-0">Ainda não houve movimentação.</p>{% endif %}
+    </div></div>
+  </div>
+</div>

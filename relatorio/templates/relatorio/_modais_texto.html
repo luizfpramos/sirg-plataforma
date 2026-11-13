@@ -1,0 +1,15 @@
+{% include "relatorio/_modais_ferramentas.html" %}
+<div class="modal fade" id="modal-comentar" tabindex="-1" aria-labelledby="modal-comentar-titulo" aria-hidden="true">
+  <div class="modal-dialog"><form class="modal-content" method="post" action="{% url 'comentario_novo' ciclo.ano secao.chave %}">{% csrf_token %}
+    <div class="modal-header"><h2 class="modal-title h6" id="modal-comentar-titulo">Comentar este trecho</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+    <div class="modal-body"><input type="hidden" name="bloco" id="comentar-bloco"><textarea class="form-control" name="texto" rows="4" required aria-label="Comentário"></textarea></div>
+    <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary">Comentar</button></div>
+  </form></div>
+</div>
+<div class="modal fade" id="modal-devolver" tabindex="-1" aria-labelledby="modal-devolver-titulo" aria-hidden="true">
+  <div class="modal-dialog"><form class="modal-content" method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}">{% csrf_token %}<input type="hidden" name="acao" value="devolver">
+    <div class="modal-header"><h2 class="modal-title h6" id="modal-devolver-titulo">Devolver a seção ao setor</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+    <div class="modal-body"><label class="form-label" for="devolver-texto">O que precisa ser ajustado?</label><textarea class="form-control" id="devolver-texto" name="comentario" rows="4" required></textarea></div>
+    <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-warning">Devolver</button></div>
+  </form></div>
+</div>

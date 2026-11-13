@@ -1,0 +1,15 @@
+{% if d.b.tipo == 'texto' %}<div class="texto-rg">{{ d.html|safe }}</div>
+{% elif d.b.tipo == 'tabela' and d.tabela %}
+<figure class="mb-0">{% if d.b.titulo %}<figcaption class="legenda">{{ d.b.titulo }}</figcaption>{% endif %}
+<div class="table-responsive"><table class="table table-sm tabela-rg">
+  <thead><tr><th></th>{% for h in d.tabela.cabecalho %}<th class="{% if not d.tabela.texto %}text-end{% endif %}">{{ h }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for l in d.tabela.linhas %}<tr class="{% if l.total %}total{% endif %}"><th scope="row">{{ l.rotulo }}</th>{% for v in l.valores %}<td class="{% if not d.tabela.texto %}text-end{% endif %}">{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>{% if d.tabela.fonte %}<div class="fonte">Fonte: {{ d.tabela.fonte }}</div>{% endif %}</figure>
+{% elif d.b.tipo == 'grafico' and d.grafico %}
+<figure class="mb-0">{% if d.b.titulo %}<figcaption class="legenda">{{ d.b.titulo }}</figcaption>{% endif %}<div class="grafico">{{ d.grafico|safe }}</div>{% if d.quadro.fonte %}<div class="fonte">Fonte: {{ d.quadro.fonte }}</div>{% endif %}</figure>
+{% elif d.b.tipo == 'destaques' and d.destaques %}
+{% if d.b.titulo %}<div class="legenda">{{ d.b.titulo }}</div>{% endif %}
+<div class="destaques">{% for x in d.destaques %}<div class="destaque{% if x.erro %} erro{% endif %}{% if x.vazio %} vazio{% endif %}" title="{{ x.descricao }}"{% if x.quadro_id %} data-quadro="{{ x.quadro_id }}"{% endif %}><div class="num">{{ x.valor }}</div><div class="rot">{{ x.rotulo }}</div>{% if x.legenda %}<div class="leg">{{ x.legenda }}</div>{% endif %}</div>{% endfor %}</div>
+{% endif %}
+{% for a in d.avisos %}<div class="mini text-warning-emphasis"><i class="bi bi-exclamation-circle"></i> {{ a }}</div>{% endfor %}
+{% for p in d.problemas %}{% if p.erro != "valor ainda não preenchido" %}<div class="mini text-danger"><i class="bi bi-exclamation-triangle"></i> Número no texto: {{ p.descricao }} — {{ p.erro }}</div>{% endif %}{% endfor %}

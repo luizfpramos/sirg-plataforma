@@ -1,0 +1,36 @@
+{% load static sirg_rel %}<article class="folha folha-paginas" lang="pt-BR">
+{% for x in seq %}{% if x.tipo == "pagina" %}
+  {% for it in x.secoes %}{% if editor and it.interessa %}
+  <div class="sec-card pg-secao{% if it.pode %} pode{% else %} so-ver{% endif %}{% if it.minha %} minha{% endif %}" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}" data-titulo="{{ it.s.titulo }}" data-interessa="1">
+    <div class="pg-secao-nome doc-sec" data-secao="{{ it.s.pk }}"><span class="doc-h-sec">{{ it.s.titulo }}</span></div>
+    {% include "relatorio/_doc_secao_cab.html" %}
+  </div>
+  {% else %}<span class="pg-ancora doc-sec" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}"></span>{% endif %}{% endfor %}
+  <div class="pg-moldura" id="pg-{{ x.p.numero }}">
+    <div class="pg" style="width:{{ x.p.largura|stringformat:'.1f' }}px;height:{{ x.p.altura|stringformat:'.1f' }}px;background-image:url('{% static x.p.fundo %}')" data-pagina="{{ x.p.numero }}" data-largura="{{ x.p.largura|stringformat:'.1f' }}">
+      {{ x.p.fixos|safe }}
+      {% for c in x.caixas %}{% with d=c.d it=c.it %}
+      <div class="doc-bloco pg-cx{% if editor and it.pode %} pode{% endif %}{% if d.caixa.quebra %} q{% endif %}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-titulo="{{ it.s.titulo }}" style="{{ d.caixa_css }}">
+        {% if editor %}<div class="doc-trava pg-trava d-print-none{% if not d.travado_por %} d-none{% endif %}"><i class="bi bi-pencil-fill"></i> <span>{% if d.travado_por %}{{ d.travado_por.get_full_name|default:d.travado_por.username }}{% endif %}</span></div>
+        <div class="texto-rg doc-texto pg-texto{% if it.pode %} editavel{% endif %}" data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-secao-chave="{{ it.s.chave }}" data-versao="{{ d.versao }}"{% if it.pode %} tabindex="0" role="textbox" aria-multiline="true" aria-label="Texto da página {{ x.p.numero }} ({{ it.s.titulo }})"{% endif %}>{{ d.html|safe }}</div>
+        {% else %}<div class="texto-rg pg-texto">{{ d.html|safe }}</div>{% endif %}
+      </div>{% endwith %}{% endfor %}
+      {% for c in x.objetos %}{% include "relatorio/_pg_objeto.html" with d=c.d it=c.it %}{% endfor %}
+    </div>
+  </div>
+{% else %}{% with it=x.it %}
+  {% if editor and it.interessa %}
+  <section class="doc-sec sec-card pg-legado{% if it.pode %} pode{% else %} so-ver{% endif %}{% if it.minha %} minha{% endif %}" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}" data-titulo="{{ it.s.titulo }}" data-interessa="1">
+    {% include "relatorio/_doc_secao_cab.html" %}
+    <div class="sec-card-corpo"><h3 class="doc-h-sec">{{ it.s.titulo }}</h3>
+      {% for d in x.blocos %}{% include "relatorio/_doc_bloco.html" with editor=True %}{% endfor %}
+      {% if it.pode and E_MASTER %}{% include "relatorio/_doc_inserir.html" %}{% endif %}
+    </div>
+  </section>
+  {% else %}
+  <section class="doc-sec pg-legado" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}"><div class="sec-card-corpo"><h3 class="doc-h-sec">{{ it.s.titulo }}</h3>
+    {% for d in x.blocos %}{% include "relatorio/_doc_bloco.html" with editor=False %}{% endfor %}</div>
+  </section>
+  {% endif %}
+{% endwith %}{% endif %}{% endfor %}
+</article>
