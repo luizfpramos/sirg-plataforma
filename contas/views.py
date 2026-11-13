@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 
 from django.conf import settings
@@ -5,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.http import FileResponse, Http404
@@ -472,16 +474,87 @@ def implantacoes(limite=8):
     return [x for x in lista if isinstance(x, dict)][-limite:][::-1]
 
 
+def _ler_json(nome):
+    import json
+    try:
+        d = json.loads((settings.DADOS_DIR / nome).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return None
+    return d if isinstance(d, dict) else None
+
+
+def envio_para_producao():
+    """Na homologação: o que está instalado aqui, o que está na produção e se dá para enviar.
+
+    O botão "Enviar para a produção" só grava dados/pedido_prd.json. Quem instala é o implantador do PC
+    (implantacao/git/implantador.ps1), que confere de novo tudo o que está aqui antes de mexer na produção.
+    """
+    if settings.SIRG_AMBIENTE != "hml":
+        return None
+    hml = next((i for i in implantacoes(30) if i.get("alvo") == "hml" and i.get("ok") and i.get("commit")), None)
+    prd = _ler_json("producao.json") or {}
+    pedido = _ler_json("pedido_prd.json")
+    motivo = ""
+    if pedido:
+        motivo = "Já existe um pedido aguardando o implantador (em até 5 minutos)."
+    elif not hml:
+        motivo = "Ainda não há instalação automática registrada nesta homologação."
+    elif settings.SIRG_VERSAO != (hml.get("versao") or settings.SIRG_VERSAO):
+        motivo = "A homologação está sendo atualizada. Recarregue a página em alguns minutos."
+    elif prd.get("commit") and prd.get("commit") == hml.get("commit"):
+        motivo = "A produção já está com este código."
+    elif prd.get("versao") and prd.get("versao") == settings.SIRG_VERSAO:
+        motivo = (f"A versão {settings.SIRG_VERSAO} já está na produção. Antes de enviar, suba a SIRG_VERSAO "
+                  "(config/settings.py) e acrescente a versão em VERSOES.")
+    return {"hml": hml, "prd": prd, "pedido": pedido, "motivo": motivo, "pode": not motivo}
+
+
 @login_required
 def sobre(request):
     """Informações sobre o sistema: o que é, quem desenvolveu, versão atual e histórico de versões."""
     ver_implantacao = P.e_master(request.user) or P.e_admin(request.user)
-    return render(request, "contas/sobre.html", {"versoes": VERSOES,
-                                                 "implantacoes": implantacoes() if ver_implantacao else []})
+    return render(request, "contas/sobre.html", {
+        "versoes": VERSOES, "implantacoes": implantacoes() if ver_implantacao else [],
+        "codigo": next((i.get("commit") for i in implantacoes(30) if i.get("alvo") == settings.SIRG_AMBIENTE
+                        and i.get("ok")), "") if ver_implantacao else "",
+        "envio": envio_para_producao() if ver_implantacao else None})
+
+
+@login_required
+@require_POST
+def enviar_producao(request):
+    """Homologação: pede ao implantador do PC que instale na produção o código que está aqui."""
+    import json
+
+    from django.utils import timezone
+    if not (P.e_master(request.user) or P.e_admin(request.user)):
+        raise PermissionDenied
+    envio = envio_para_producao()
+    if envio is None:
+        raise Http404
+    if not envio["pode"]:
+        messages.error(request, envio["motivo"])
+    elif request.POST.get("confirmacao", "").strip() != settings.SIRG_VERSAO:
+        messages.error(request, f"Para confirmar, digite a versão ({settings.SIRG_VERSAO}).")
+    else:
+        quem = request.user.get_full_name() or request.user.username
+        (settings.DADOS_DIR / "pedido_prd.json").write_text(json.dumps({
+            "commit": envio["hml"]["commit"], "versao": settings.SIRG_VERSAO, "quem": quem,
+            "usuario": request.user.username, "quando": timezone.localtime().strftime("%d/%m/%Y %H:%M")},
+            ensure_ascii=False), encoding="utf-8")
+        logging.getLogger("sirg").warning("Pedido de envio para a produção: versão %s, código %s, por %s",
+                                          settings.SIRG_VERSAO, envio["hml"]["commit"][:8], request.user.username)
+        messages.success(request, f"Pedido enviado: a versão {settings.SIRG_VERSAO} vai para a produção em até "
+                                  "5 minutos, com backup antes. O resultado aparece aqui, nas instalações.")
+    return redirect("sobre")
 
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.15", "novembro de 2026", [
+        "Enviar para a produção pela homologação: na tela Sobre da homologação, o Master ou o administrador confere a versão e clica em “Enviar para a produção”. Em até 5 minutos o PC instala na produção exatamente o código testado na homologação, com backup antes, e o resultado aparece na própria tela.",
+        "Tela Sobre: mostra a versão que está na produção e quem pediu cada envio.",
+    ]),
     ("2.14.1", "novembro de 2026", [
         "Implantação pelo Git: o código fica num repositório; a homologação se atualiza sozinha quando há código novo aprovado nos testes, e a produção quando sai uma versão marcada (tag), depois de passar pela homologação.",
         "Tela Sobre: para o Master e o administrador, mostra o código instalado (commit) e o resultado das últimas instalações automáticas.",

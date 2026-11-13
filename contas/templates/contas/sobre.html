@@ -21,19 +21,43 @@
     <h2 class="h6 text-uppercase text-secondary">Desenvolvimento</h2>
     <dl class="row mb-0">
       <dt class="col-sm-3">Responsável</dt><dd class="col-sm-9">{% if INST %}{{ INST.unidade_gestora }} ({{ INST.unidade_gestora_sigla }}) — {{ INST.nome }}{% else %}Diretoria de Governança e Desenvolvimento Institucional (DGDI){% endif %}</dd>
-      <dt class="col-sm-3">Versão atual</dt><dd class="col-sm-9">{{ VERSAO }}{% if implantacoes %} <span class="mini text-secondary">· código {{ implantacoes.0.commit|slice:":8" }}</span>{% endif %}</dd>
+      <dt class="col-sm-3">Versão atual</dt><dd class="col-sm-9">{{ VERSAO }}{% if codigo %} <span class="mini text-secondary">· código {{ codigo|slice:":8" }}</span>{% endif %}</dd>
       <dt class="col-sm-3">Tecnologia</dt><dd class="col-sm-9">Python e Django, banco SQLite, Bootstrap. Funciona no navegador, na rede interna.</dd>
       <dt class="col-sm-3">Dúvidas</dt><dd class="col-sm-9">Consulte o <a href="{% url 'ajuda' %}">Manual de uso</a> ou fale com a {% if INST %}{{ INST.unidade_gestora_sigla }}{% else %}DGDI{% endif %}.</dd>
     </dl>
   </div></div>
 
+  {% if envio %}
+  <div class="card mb-3 border-warning"><div class="card-body">
+    <h2 class="h6 text-uppercase text-secondary">Enviar para a produção</h2>
+    <dl class="row mini mb-2">
+      <dt class="col-sm-3">Nesta homologação</dt>
+      <dd class="col-sm-9">versão {{ VERSAO }}{% if envio.hml %} · código <code>{{ envio.hml.commit|slice:":8" }}</code> · instalada em {{ envio.hml.quando }}{% endif %}</dd>
+      <dt class="col-sm-3">Na produção</dt>
+      <dd class="col-sm-9">{% if envio.prd.versao %}versão {{ envio.prd.versao }}{% if envio.prd.commit %} · código <code>{{ envio.prd.commit|slice:":8" }}</code>{% endif %} <span class="text-secondary">(conferido em {{ envio.prd.quando }})</span>{% else %}<span class="text-secondary">ainda não informada pelo implantador</span>{% endif %}</dd>
+    </dl>
+    {% if envio.pedido %}
+      <p class="mini mb-0"><strong>Pedido enviado</strong> por {{ envio.pedido.quem }} em {{ envio.pedido.quando }} (versão {{ envio.pedido.versao }}). O implantador instala em até 5 minutos; recarregue a página para ver o resultado.</p>
+    {% elif envio.pode %}
+      <form method="post" action="{% url 'enviar_producao' %}" class="row g-2 align-items-end">{% csrf_token %}
+        <div class="col-auto"><label class="form-label mini mb-1" for="conf-prd">Para confirmar, digite a versão <strong>{{ VERSAO }}</strong></label>
+          <input id="conf-prd" name="confirmacao" class="form-control form-control-sm" autocomplete="off" required style="width:9rem"></div>
+        <div class="col-auto"><button class="btn btn-warning btn-sm">Enviar a versão {{ VERSAO }} para a produção</button></div>
+        <p class="mini text-secondary mb-0">Vai exatamente o código desta homologação. Antes de instalar, o PC faz o backup da produção e guarda a versão anterior. A produção fica fora do ar por 1 a 2 minutos.</p>
+      </form>
+    {% else %}
+      <p class="mini text-secondary mb-0">{{ envio.motivo }}</p>
+    {% endif %}
+  </div></div>
+  {% endif %}
+
   {% if implantacoes %}
   <div class="card mb-3"><div class="card-body">
     <h2 class="h6 text-uppercase text-secondary">Últimas instalações automáticas</h2>
     <table class="table table-sm mini mb-0">
-      <thead><tr><th>Quando</th><th>Versão</th><th>Código</th><th>Resultado</th></tr></thead>
+      <thead><tr><th>Quando</th><th>Onde</th><th>Versão</th><th>Código</th><th>Resultado</th></tr></thead>
       <tbody>{% for i in implantacoes %}
-        <tr><td>{{ i.quando }}</td><td>{{ i.versao }}</td><td><code>{{ i.commit|slice:":8" }}</code></td>
+        <tr><td>{{ i.quando }}</td><td>{% if i.alvo == "prd" %}produção{% else %}homologação{% endif %}{% if i.quem %}<br><span class="text-secondary">por {{ i.quem }}</span>{% endif %}</td><td>{{ i.versao }}</td><td><code>{{ i.commit|slice:":8" }}</code></td>
           <td>{% if i.ok %}<span class="text-success">instalada</span>{% else %}<span class="text-danger">falhou</span>{% if i.erro %}<pre class="mb-0 mt-1 small text-wrap">{{ i.erro }}</pre>{% endif %}{% endif %}</td></tr>
       {% endfor %}</tbody>
     </table>

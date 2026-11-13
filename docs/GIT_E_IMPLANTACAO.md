@@ -5,7 +5,8 @@ O código do SiRG fica num repositório privado no GitHub. O SiRG continua rodan
 | Quando | O que acontece | Onde aparece |
 |---|---|---|
 | Código entra na `main` e os testes passam | A **homologação** é atualizada em até 5 min | https://hml-sirg.softwares.net.br |
-| Uma tag `vX.Y` é criada e os testes passam | A **produção** é atualizada em até 5 min, com backup antes | https://sirg.softwares.net.br |
+| Na homologação, o Master ou o admin clica em **Sobre › Enviar para a produção** (2.15) | A **produção** recebe exatamente o código da homologação em até 5 min, com backup antes | https://sirg.softwares.net.br |
+| Ou: uma tag `vX.Y` é criada e os testes passam | A **produção** é atualizada em até 5 min, com backup antes | https://sirg.softwares.net.br |
 
 - Ninguém precisa acessar o PC da DGDI. O PC só **lê** o GitHub, com uma chave só de leitura.
 - Os dados (banco, arquivos enviados, `.env`) nunca vão para o GitHub.
@@ -89,7 +90,14 @@ No GitHub, abra um **pull request** para a `main`. Os testes rodam sozinhos. Com
 Se usar o Claude Code, ele lê o `CLAUDE.md` do repositório com as regras do projeto.
 
 ### Levar para a produção
-Depois de testar na homologação:
+**Caminho principal (2.15): pelo botão na homologação.**
+1. Num ramo, suba a versão (`SIRG_VERSAO` em `config/settings.py` e `VERSOES` em `contas/views.py`) e faça o merge, como qualquer alteração.
+2. Espere a homologação mostrar a versão nova em **Sobre** e teste.
+3. Na homologação, em **Sobre › Enviar para a produção**, digite a versão e clique no botão. Em até 5 minutos o PC instala na produção o mesmo código, com backup antes. O resultado aparece na mesma tela.
+
+O implantador recusa o pedido se o código não for o que está instalado na homologação ou se a versão já estiver na produção.
+
+**Caminho alternativo: pela tag.**
 1. Na `main`, suba a versão em `config/settings.py` (`SIRG_VERSAO = "2.15"`) e acrescente o que mudou em `VERSOES`, em `contas/views.py`. Faça o merge disso como qualquer alteração (passa pela homologação).
 2. Crie a tag: no GitHub, **Releases › Draft a new release › Choose a tag › `v2.15`**, com alvo `main`, e clique em **Publish**. Pelo terminal:
    ```
