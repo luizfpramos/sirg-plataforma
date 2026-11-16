@@ -45,6 +45,33 @@
     if (ativo) ativo.area.classList.toggle("rastreando", !!ativo.rastrear);
   }
 
+  // ---- tamanho do texto: contador e orientação do bloco ---------------------------------------
+  function textoContado(area) {
+    var c = area.cloneNode(true);
+    Array.prototype.forEach.call(c.querySelectorAll("del"), function (e) { e.remove(); });   // o que foi apagado não conta
+    return c.textContent.replace(/[\s\u00a0]+/g, " ").trim();
+  }
+  function atualizarTamanho() {
+    if (!ativo) return;
+    var area = ativo.area, bloco = area.closest(".doc-bloco");
+    var n = textoContado(area).length;
+    bloco.classList.toggle("tem-texto", n > 0 || !!area.querySelector(".sirg-num, .sirg-campo"));
+    var el = bloco.querySelector(".bloco-contador");
+    if (!el) return;
+    var min = parseInt(area.dataset.min, 10) || 0, max = parseInt(area.dataset.max, 10) || 0;
+    var estado = "ok", txt = n + " caracteres";
+    if (min && n < min) { estado = "pouco"; txt = n + " caracteres — faltam " + (min - n) + " para o mínimo de " + min; }
+    else if (max && n > max) { estado = "muito"; txt = n + " caracteres — " + (n - max) + " acima do máximo de " + max; }
+    else if (min || max) txt = n + " caracteres (" + (min && max ? "entre " + min + " e " + max : min ? "mínimo " + min : "máximo " + max) + ")";
+    el.dataset.estado = estado;
+    el.textContent = txt;
+    el.hidden = false;
+  }
+  function esconderContador(area) {
+    var el = area.closest(".doc-bloco").querySelector(".bloco-contador");
+    if (el) el.hidden = true;
+  }
+
   // ---- abrir um trecho -----------------------------------------------------------------
   function podeAbrir(area) { return area.classList.contains("editavel"); }
   function abrir(area) {
@@ -82,6 +109,7 @@
         ligarBarra(true);
         T.desfazerIniciar(id, area);
         status("ok", "Tudo salvo");
+        atualizarTamanho();
         ativo.mexeu = Date.now();
         if (m === "editar") ativo.pulso = setInterval(function () {
           if (!ativo) return;
@@ -125,6 +153,7 @@
                                           tipoEntrada !== "insertParagraph");
     ativo.sujo = true;
     ativo.mexeu = Date.now();
+    atualizarTamanho();
     status("pendente", "Alterações ainda não salvas…");
     try {
       localStorage.setItem("sirg-rascunho-" + ativo.id, JSON.stringify({ html: ativo.area.innerHTML, versao: ativo.versao, quando: new Date().toLocaleString("pt-BR") }));
@@ -196,7 +225,8 @@
     a.area.contentEditable = "false";
     a.area.classList.remove("ativo", "rastreando");
     a.area.closest(".doc-bloco").classList.remove("ativo");
-    if (!a.area.textContent.trim() && !a.area.querySelector(".sirg-num")) { a.area.innerHTML = ""; a.area.classList.add("vazio"); }
+    esconderContador(a.area);
+    if (!a.area.textContent.trim() && !a.area.querySelector(".sirg-num")) { a.area.innerHTML = ""; a.area.classList.add("vazio"); a.area.closest(".doc-bloco").classList.remove("tem-texto"); }
     if (ativo === a) ativo = null;
     ligarBarra(false);
   }
@@ -225,7 +255,7 @@
     }
     if (e.target.closest(".doc-barra button, .doc-barra .dropdown-menu")) { e.preventDefault(); return; }
     if (!ativo) return;
-    if (e.target.closest(".doc-ferramentas, .modal, .dropdown-menu, .toast, .chip-destaque, .doc-revisao, .pop-campo, .doc-gaveta")) return;
+    if (e.target.closest(".doc-ferramentas, .modal, .dropdown-menu, .toast, .chip-destaque, .doc-revisao, .pop-campo, .doc-gaveta, .bloco-barra")) return;
     fechar();
   });
   document.addEventListener("focusin", function (e) {
@@ -602,6 +632,9 @@
     var folga = (parseInt(css.getPropertyValue("--topo-h"), 10) || 53) + (parseInt(css.getPropertyValue("--ferr-h"), 10) || 90) + 12;
     window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - folga), behavior: instantaneo ? "instant" : "smooth" });
   }
+  // a barra flutuante dos blocos (escrever_barra.js) pede para fechar o trecho aberto antes de concluir
+  window.SIRGEscrever = { fechar: fechar, ativo: function () { return ativo; }, abrir: function (area) { return abrir(area); },
+    rolarPara: rolarPara, urlVolta: urlVolta };
   var alvoInicial = location.hash ? document.getElementById(location.hash.slice(1)) : (CFG.inicio && document.getElementById("sec-" + CFG.inicio));
   if (alvoInicial) setTimeout(function () { rolarPara(alvoInicial, true); }, 60);
   document.querySelectorAll(".doc-sumario a").forEach(function (a) {

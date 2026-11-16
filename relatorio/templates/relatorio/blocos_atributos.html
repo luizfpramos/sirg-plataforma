@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Atributos dos blocos — {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'escrever' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Escrever o relatório</a></nav>
+<h1 class="mb-1"><i class="bi bi-sliders"></i> Atributos dos blocos de texto</h1>
+<p class="text-secondary">Para cada bloco, defina o setor que escreve, o que se espera no texto e o tamanho. Deixe o setor em branco para valer o da seção. Os limites de caracteres só avisam, não impedem de salvar.</p>
+<form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  {% if numero %}<div class="btn-group btn-group-sm" role="group" aria-label="Páginas">{% if anterior %}<a class="btn btn-outline-secondary" href="?pagina={{ anterior }}"><i class="bi bi-chevron-left"></i> p. {{ anterior }}</a>{% endif %}{% if proxima %}<a class="btn btn-outline-secondary" href="?pagina={{ proxima }}">p. {{ proxima }} <i class="bi bi-chevron-right"></i></a>{% endif %}</div>{% endif %}
+  <div><label class="form-label mini mb-0" for="f-secao">Seção</label>
+    <select class="form-select form-select-sm" id="f-secao" name="secao"><option value="">(todas)</option>
+    {% for s in secoes %}<option value="{{ s.chave }}" {% if s.chave == chave %}selected{% endif %}>{% if s.pai_id %}— {% endif %}{{ s.titulo|truncatechars:70 }}</option>{% endfor %}</select></div>
+  <div><label class="form-label mini mb-0" for="f-pagina">Página</label>
+    <input class="form-control form-control-sm" id="f-pagina" name="pagina" value="{{ numero }}" size="4" inputmode="numeric"></div>
+  <button class="btn btn-sm btn-outline-primary">Filtrar</button>
+  <span class="mini text-secondary ms-2">{{ linhas|length }} bloco{{ linhas|length|pluralize }}</span>
+</form>
+<form method="post">{% csrf_token %}{{ fs.management_form }}
+  {% if fs.non_form_errors %}<div class="alert alert-danger">{{ fs.non_form_errors }}</div>{% endif %}
+  <div class="table-responsive"><table class="table table-sm align-top">
+    <thead><tr><th>Bloco</th><th style="min-width:160px">Setor</th><th style="min-width:240px">Conteúdo esperado</th><th style="width:90px">Mín.</th><th style="width:90px">Máx.</th></tr></thead>
+    <tbody>{% for l in linhas %}{% with f=l.f %}
+      <tr>
+        <td class="mini">{% if l.b.pagina %}<strong>p. {{ l.b.pagina.numero }}</strong> · {% endif %}{{ l.b.secao.titulo|truncatechars:40 }}<div class="text-secondary">{{ l.previa|default:"(vazio)" }}</div>{{ f.id }}
+          {% if f.non_field_errors %}<div class="text-danger">{{ f.non_field_errors }}</div>{% endif %}</td>
+        <td>{{ f.setor }}{{ f.setor.errors }}</td>
+        <td>{{ f.descricao }}</td>
+        <td>{{ f.min_caracteres }}{{ f.min_caracteres.errors }}</td>
+        <td>{{ f.max_caracteres }}{{ f.max_caracteres.errors }}</td>
+      </tr>{% endwith %}{% empty %}<tr><td colspan="5" class="text-secondary">Nenhum bloco de texto neste filtro.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar atributos</button>
+</form>
+{% endblock %}

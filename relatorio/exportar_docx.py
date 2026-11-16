@@ -581,6 +581,20 @@ def _blocos(doc, calc, blocos, cont, coletar, nivel=1):
                 coletar(cont.grafico, b.titulo or q.titulo, q, b, png)
         elif b.tipo == Bloco.DESTAQUES:
             _destaques(doc, A.destaques(calc, b.config), b.titulo)
+        elif b.tipo == Bloco.IMAGEM:
+            png = _bytes_da_imagem(b)
+            if png:
+                doc.add_picture(io.BytesIO(png), width=Cm(15.5))
+                doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if b.titulo:
+                    _fonte(doc, b.titulo)
+
+
+def _bytes_da_imagem(b):
+    """Bytes (PNG ou JPG) da imagem de um bloco de imagem, ou None se ainda não foi inserida."""
+    d = A.dados_da_imagem(b)
+    r = imagem_png_ou_jpg(d["url"]) if d["url"] else None
+    return r[0] if r else None
 
 
 IMAGEM_SRC = re.compile(r"^/ciclos/\d{4}/imagens/(\d+)/$")

@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 from contas import permissoes as P
 
 from . import apresentacao as A
+from . import atributos as AT
 from . import consistencia
 from . import fluxo as F
 from . import graficos
@@ -125,8 +126,8 @@ def bloco_travar(request, ano, pk):
         calc = Calculadora(b.secao.ciclo)
         html, _ = renderizar(b.conteudo, calc)
         return JsonResponse({"ok": True, "html": html, "versao": b.atualizado_em.isoformat()})
-    if not F.pode_editar_texto(request.user, b.secao):
-        return JsonResponse({"ok": False, "erro": F.motivo_texto_bloqueado(request.user, b.secao)}, status=403)
+    if not F.pode_editar_bloco(request.user, b):
+        return JsonResponse({"ok": False, "erro": F.motivo_bloco_bloqueado(request.user, b)}, status=403)
     ok, quem = F.travar(request.user, b)
     if not ok:
         return JsonResponse({"ok": False, "erro": f"{quem.get_full_name() or quem.username} está editando este "
@@ -160,8 +161,10 @@ def bloco_texto(request, ano, pk):
         F.destravar(request.user, b)
     calc = Calculadora(b.secao.ciclo)
     html, problemas = _render_editor(b, calc, request.user)
+    n = AT.contar_caracteres(b.conteudo)
     return JsonResponse({"ok": True, "html": html, "versao": b.atualizado_em.isoformat(), "problemas": problemas,
-                         "palavras": len(texto_puro(b.conteudo).split())})
+                         "palavras": len(texto_puro(b.conteudo).split()), "caracteres": n,
+                         "tamanho": AT.situacao_do_tamanho(n, b.min_caracteres, b.max_caracteres)[0]})
 
 
 @login_required
@@ -260,7 +263,7 @@ def bloco_historico(request, ano, pk):
                       "quem": (v.history_user.get_full_name() or v.history_user.username) if v.history_user else "sistema",
                       "motivo": v.history_change_reason or "", "diff": diff_palavras(anterior, revisao.aplicar(v.conteudo), calc),
                       "palavras": len(texto_puro(v.conteudo).split())})
-    return JsonResponse({"itens": itens, "pode_restaurar": F.pode_editar_texto(request.user, b.secao)})
+    return JsonResponse({"itens": itens, "pode_restaurar": F.pode_editar_bloco(request.user, b)})
 
 
 @login_required
@@ -382,6 +385,28 @@ FORMATOS_IMAGEM = {"PNG": ("image/png", "png"), "JPEG": ("image/jpeg", "jpg"), "
 TAMANHO_MAX_IMAGEM = 10 * 1024 * 1024
 
 
+def _ler_imagem(arq):
+    """Confere a imagem enviada. Devolve (bytes, formato, largura, altura) ou levanta Recusado."""
+    import io
+
+    from PIL import Image, UnidentifiedImageError
+    if arq is None:
+        raise F.Recusado("Nenhuma imagem recebida.")
+    if arq.size > TAMANHO_MAX_IMAGEM:
+        raise F.Recusado("A imagem tem mais de 10 MB. Diminua o tamanho e tente de novo.")
+    dados = arq.read()
+    try:
+        with Image.open(io.BytesIO(dados)) as im:
+            im.verify()
+        with Image.open(io.BytesIO(dados)) as im:
+            formato, (larg, alt) = im.format, im.size
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
+        raise F.Recusado("O arquivo não é uma imagem válida (use PNG, JPG, GIF ou WEBP).")
+    if formato not in FORMATOS_IMAGEM:
+        raise F.Recusado("Use uma imagem PNG, JPG, GIF ou WEBP.")
+    return dados, formato, larg, alt
+
+
 @login_required
 @require_POST
 def imagem_enviar(request, ano):
@@ -389,8 +414,6 @@ def imagem_enviar(request, ano):
     import os
 
     from django.core.files.base import ContentFile
-    from PIL import Image, UnidentifiedImageError
-
     from .models import Imagem
     c = get_object_or_404(Ciclo, ano=ano)
     secao = None
@@ -404,23 +427,10 @@ def imagem_enviar(request, ano):
     elif not (P.e_master(request.user) or P.setores_ativos(request.user).exists()):
         return JsonResponse({"ok": False, "erro": "Você não pode enviar imagens."}, status=403)
     arq = request.FILES.get("arquivo")
-    if arq is None:
-        return JsonResponse({"ok": False, "erro": "Nenhuma imagem recebida."}, status=400)
-    if arq.size > TAMANHO_MAX_IMAGEM:
-        return JsonResponse({"ok": False, "erro": "A imagem tem mais de 10 MB. Diminua o tamanho e tente de novo."},
-                            status=400)
-    dados = arq.read()
     try:
-        import io
-        with Image.open(io.BytesIO(dados)) as im:
-            im.verify()
-        with Image.open(io.BytesIO(dados)) as im:
-            formato, (larg, alt) = im.format, im.size
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
-        return JsonResponse({"ok": False, "erro": "O arquivo não é uma imagem válida (use PNG, JPG, GIF ou WEBP)."},
-                            status=400)
-    if formato not in FORMATOS_IMAGEM:
-        return JsonResponse({"ok": False, "erro": "Use uma imagem PNG, JPG, GIF ou WEBP."}, status=400)
+        dados, formato, larg, alt = _ler_imagem(arq)
+    except F.Recusado as e:
+        return JsonResponse({"ok": False, "erro": str(e)}, status=400)
     tipo, ext = FORMATOS_IMAGEM[formato]
     nome = os.path.splitext(os.path.basename(arq.name or ""))[0][:150] or "imagem"
     img = Imagem(ciclo=c, secao=secao, nome=nome, largura=larg, altura=alt, tipo=tipo, enviada_por=request.user)
@@ -441,6 +451,77 @@ def imagem_ver(request, ano, pk):
         raise Http404("Imagem não encontrada.")
     r["Cache-Control"] = "private, max-age=86400"
     return r
+
+
+@login_required
+@require_POST
+def bloco_concluir(request, ano, pk, acao):
+    """Concluí / Desfazer: o setor marca o trecho como pronto (e reabre, se precisar)."""
+    b = _bloco(ano, pk)
+    try:
+        if acao == "concluir":
+            F.concluir_bloco(request.user, b, confirmar=bool(_json(request).get("confirmar")))
+        elif acao == "desfazer":
+            F.desfazer_conclusao(request.user, b)
+        else:
+            return JsonResponse({"ok": False, "erro": "Ação desconhecida."}, status=400)
+    except F.Confirmar as e:
+        return JsonResponse({"ok": False, "confirmar": str(e)}, status=409)
+    except F.SemPermissao as e:
+        return JsonResponse({"ok": False, "erro": str(e)}, status=403)
+    except F.Recusado as e:
+        return JsonResponse({"ok": False, "erro": str(e)}, status=400)
+    return JsonResponse({"ok": True, "concluido": bool(b.concluido_em),
+                         "quem": (b.concluido_por.get_full_name() or b.concluido_por.username) if b.concluido_por else "",
+                         "versao": b.atualizado_em.isoformat()})
+
+
+AJUSTES_IMAGEM = {"contain": "Mostrar inteira (pode sobrar espaço)", "cover": "Preencher a área (pode cortar)"}
+
+
+@login_required
+@require_POST
+def bloco_imagem(request, ano, pk):
+    """Insere, troca ou tira a imagem de um bloco de imagem; define o texto alternativo e o enquadramento.
+    Quem escreve no bloco (o setor responsável ou o Master) pode fazê-lo."""
+    from django.core.files.base import ContentFile
+
+    from .models import Imagem
+    b = _bloco(ano, pk)
+    if b.tipo != Bloco.IMAGEM:
+        return JsonResponse({"ok": False, "erro": "Este bloco não é de imagem."}, status=400)
+    if not F.pode_editar_bloco(request.user, b):
+        return JsonResponse({"ok": False, "erro": F.motivo_bloco_bloqueado(request.user, b)}, status=403)
+    cfg = dict(b.config or {})
+    atual = dict(cfg.get("imagem") or {})
+    if request.POST.get("remover"):
+        atual.pop("id", None)
+    arq = request.FILES.get("arquivo")
+    if "alt" in request.POST:
+        atual["alt"] = request.POST["alt"].strip()[:300]
+    if (arq is not None or atual.get("id")) and len(atual.get("alt", "")) < 3:
+        return JsonResponse({"ok": False, "erro": "Descreva a imagem em poucas palavras (texto alternativo), "
+                                                  "para quem não consegue vê-la."}, status=400)
+    if arq is not None:
+        try:
+            dados, formato, larg, alt = _ler_imagem(arq)
+        except F.Recusado as e:
+            return JsonResponse({"ok": False, "erro": str(e)}, status=400)
+        tipo, ext = FORMATOS_IMAGEM[formato]
+        img = Imagem(ciclo=b.secao.ciclo, secao=b.secao, nome=(arq.name or "imagem")[:150], largura=larg, altura=alt,
+                     tipo=tipo, enviada_por=request.user)
+        img.arquivo.save(f"{ano}-{timezone.now():%Y%m%d%H%M%S}.{ext}", ContentFile(dados), save=False)
+        img.save()
+        atual["id"] = img.pk
+    if request.POST.get("ajuste") in AJUSTES_IMAGEM:
+        atual["ajuste"] = request.POST["ajuste"]
+    atual.setdefault("ajuste", "contain")
+    cfg["imagem"] = atual
+    b.config = cfg
+    b.atualizado_por = request.user
+    b.save()
+    F._marcar_preenchimento(b.secao, request.user)
+    return JsonResponse({"ok": True, "imagem": A.dados_da_imagem(b)})
 
 
 # --- controle de alterações e comentários por trecho (painel de revisão do editor) -----------------

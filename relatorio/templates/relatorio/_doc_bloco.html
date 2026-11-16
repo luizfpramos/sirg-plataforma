@@ -1,11 +1,13 @@
-{% load sirg_rel %}<div class="doc-bloco doc-tipo-{{ d.b.tipo }}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}">
+{% load sirg_rel %}<div class="doc-bloco doc-tipo-{{ d.b.tipo }}{% if editor and d.atr %} com-setor{% endif %}{% if d.html %} tem-texto{% endif %}{% if d.concluido %} concluido{% endif %}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}"{% include "relatorio/_bloco_marcas.html" %}{% if editor and d.atr %} style="--cor-setor:{{ d.atr.cor }}"{% endif %}>
 {% if d.b.tipo == 'texto' %}
   {% if d.b.titulo %}<h4 class="doc-titulo-trecho">{{ d.b.titulo }}</h4>{% endif %}
   {% if editor %}
     <div class="doc-trava d-print-none{% if not d.travado_por %} d-none{% endif %}"><i class="bi bi-pencil-fill"></i> <span>{% if d.travado_por %}{{ d.travado_por.get_full_name|default:d.travado_por.username }}{% endif %}</span> está escrevendo aqui agora.</div>
-    <div class="texto-rg doc-texto{% if it.pode %} editavel{% elif it.sugerir %} sugerivel{% endif %}{% if not d.html %} vazio{% endif %}"
-         data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-secao-chave="{{ it.s.chave }}" data-versao="{{ d.versao }}"
-         {% if it.pode %}tabindex="0" role="textbox" aria-multiline="true" aria-label="Texto de {{ it.s.titulo }}"{% endif %}>{{ d.html|safe }}</div>
+    <div class="texto-rg doc-texto{% if d.pode_bloco %} editavel{% elif it.sugerir %} sugerivel{% endif %}{% if not d.html %} vazio{% endif %}"
+         data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-secao-chave="{{ it.s.chave }}" data-versao="{{ d.versao }}"{% if d.atr.min %} data-min="{{ d.atr.min }}"{% endif %}{% if d.atr.max %} data-max="{{ d.atr.max }}"{% endif %}
+         {% if d.pode_bloco %}tabindex="0" role="textbox" aria-multiline="true" aria-label="Texto de {{ it.s.titulo }}"{% endif %}>{{ d.html|safe }}</div>
+    {% include "relatorio/_guia_bloco.html" %}
+    {% if d.concluido %}<span class="bloco-selo d-print-none"><i class="bi bi-check2-circle"></i> Concluído</span>{% endif %}
     {% for s in d.sugestoes %}
     <div class="sugestao d-print-none">
       <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span class="fw-semibold"><i class="bi bi-lightbulb"></i> Sugestão de {{ s.autor.get_full_name|default:s.autor.username }}</span><span class="mini text-secondary">{{ s.criada_em|date:"d/m/Y H:i" }}</span></div>

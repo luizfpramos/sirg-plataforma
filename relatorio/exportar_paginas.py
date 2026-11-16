@@ -9,9 +9,7 @@ import io
 import re
 from html import escape, unescape
 from html.parser import HTMLParser
-from pathlib import Path
 
-from django.conf import settings
 from docx import Document
 from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.text import WD_BREAK
@@ -270,7 +268,7 @@ def _html_final(b, calc):
 def _pagina(doc, p, caixas, objetos, calc, coletar, cont):
     par = doc.add_paragraph()
     frags = []
-    fundo = Path(settings.BASE_DIR) / "static" / p.fundo
+    fundo = p.fundo_caminho
     if fundo.exists():
         rid, _ = doc.part.get_or_add_image(str(fundo))
         frags.append(_ancora(_figura(rid, p.largura, p.altura, fundo.name), 0, 0, p.largura, p.altura, atras=True,
@@ -318,6 +316,16 @@ def _pagina(doc, p, caixas, objetos, calc, coletar, cont):
                          'valores preenchidos para desenhar o gráfico.</w:t></w:r></w:p>')
         elif q is not None and b.tipo == Bloco.TABELA:
             corpo = _tabela_xml(tabela_quadro(calc, q, b.config), cx["w"])
+        elif b.tipo == Bloco.IMAGEM:
+            from .exportar_docx import _bytes_da_imagem
+            dados = _bytes_da_imagem(b)
+            if dados:
+                from PIL import Image
+                im = Image.open(io.BytesIO(dados))
+                k = min(cx["w"] / im.size[0], cx["h"] / im.size[1])
+                rid, _ = doc.part.get_or_add_image(io.BytesIO(dados))
+                corpo = (f'<w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr>'
+                         f'{_inline(rid, im.size[0] * k, im.size[1] * k)}</w:p>')
         frags.append(_ancora(_caixa_texto(titulo + (corpo or "<w:p/>"), cx["w"], cx["h"], cx.get("fundo") or "#FFFFFF",
                                           crescer=False), cx["x"], cx["y"], cx["w"], cx["h"], z=z))
         z += 1

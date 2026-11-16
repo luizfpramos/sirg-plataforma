@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block titulo %}{{ imp.nome }} — Importar o PDF{% endblock %}
+{% block head %}{% if imp.situacao == "processando" and not imp.interrompida %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'importar_pdf' ciclo.ano %}"><i class="bi bi-arrow-left"></i> PDFs enviados</a></nav>
+<h1 class="mb-1 h3"><i class="bi bi-file-earmark-pdf"></i> {{ imp.nome }}</h1>
+<p class="mb-3">{% include "relatorio/_importacao_situacao.html" %} <span class="mini text-secondary ms-2">enviado em {{ imp.enviado_em|date:"d/m/Y H:i" }}</span></p>
+
+{% if imp.situacao == "processando" and not imp.interrompida %}
+  <div class="card card-body" style="max-width:640px">
+    <p class="mb-2">{{ imp.etapa|default:"Lendo o PDF" }}…</p>
+    <div class="progress" role="progressbar" aria-label="Leitura do PDF" aria-valuenow="{{ imp.progresso }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar progress-bar-striped progress-bar-animated" style="width:{{ imp.progresso }}%">{{ imp.progresso }}%</div></div>
+    <p class="mini text-secondary mt-2 mb-0">A tela se atualiza sozinha. Você pode sair e voltar depois.</p>
+  </div>
+{% elif imp.situacao == "erro" or imp.interrompida %}
+  <div class="alert alert-danger" style="max-width:720px">{% if imp.interrompida %}A leitura parou no meio (o servidor pode ter sido reiniciado).{% else %}{{ imp.mensagem }}{% endif %}</div>
+  <form method="post" action="{% url 'importacao_ler_de_novo' ciclo.ano imp.pk %}">{% csrf_token %}<button class="btn btn-outline-primary"><i class="bi bi-arrow-repeat"></i> Ler de novo</button></form>
+{% else %}
+  <div class="row g-3 mb-3">
+    <div class="col-md-7"><div class="card card-body h-100">
+      <div class="d-flex flex-wrap gap-4">
+        <div><div class="mini text-secondary">Páginas</div><div class="fs-4 fw-semibold">{{ imp.resumo.paginas }}</div></div>
+        <div><div class="mini text-secondary">Caixas de texto</div><div class="fs-4 fw-semibold">{{ imp.resumo.caixas }}</div></div>
+        <div><div class="mini text-secondary">Tamanho da página</div><div class="fs-6 fw-semibold mt-2">{{ imp.resumo.largura|floatformat:0 }} × {{ imp.resumo.altura|floatformat:0 }} pt</div></div>
+      </div>
+      {% if imp.resumo.fontes %}<p class="mini mb-0 mt-2">Fontes do texto: {{ imp.resumo.fontes|join:", " }}. Se alguma não estiver instalada no computador de quem abre o sistema, o navegador usa uma parecida.</p>{% endif %}
+      {% if imp.resumo.reimportado %}<p class="mini mb-0 mt-2"><strong>Reimportado</strong> em {{ imp.aplicada_em|date:"d/m/Y H:i" }}: {{ imp.resumo.reimportado.pareados }} trechos reposicionados, {{ imp.resumo.reimportado.novos }} novos, {{ imp.resumo.reimportado.sem_par }} sem caixa no PDF novo (marcados para conferir no editor de blocos). Posições antigas guardadas em {{ imp.resumo.reimportado.copia }}.</p>{% endif %}
+      {% if imp.resumo.aplicado %}<p class="mini mb-0 mt-2"><strong>Aplicado</strong> em {{ imp.aplicada_em|date:"d/m/Y H:i" }}: {{ imp.resumo.aplicado.paginas }} páginas, {{ imp.resumo.aplicado.caixas }} trechos de texto. Títulos de seção achados no PDF: {{ imp.resumo.secoes_achadas }}.{% if imp.resumo.secoes_faltando %} Não achadas (os trechos foram para a seção anterior): {{ imp.resumo.secoes_faltando|join:"; " }}.{% endif %}</p>{% endif %}
+    </div></div>
+    <div class="col-md-5"><div class="card card-body h-100">
+      {% if motivo %}<p class="mini mb-0"><i class="bi bi-info-circle"></i> {{ motivo }}</p>
+      {% elif reimportar %}
+      <p class="mini mb-2"><strong>Reimportação.</strong> O ciclo já tem páginas. Ao aplicar, o fundo das páginas é trocado e os trechos são reposicionados conforme o PDF novo. <strong>Nenhum texto escrito é alterado.</strong> As páginas são pareadas pelo número.</p>
+      <ul class="mini mb-2 ps-3">
+        <li>{{ plano.total.pareados }} trechos acompanham a nova posição</li>
+        <li>{{ plano.total.novos }} caixas novas viram trechos novos</li>
+        <li>{{ plano.total.sem_par }} trechos sem caixa no PDF novo ficam onde estão{% if plano.total.com_texto_sem_par %} ({{ plano.total.com_texto_sem_par }} com texto){% endif %}</li>
+        {% if plano.total.paginas_novas %}<li>{{ plano.total.paginas_novas }} páginas novas</li>{% endif %}
+        {% if plano.total.so_no_ciclo %}<li>{{ plano.total.so_no_ciclo|length }} páginas só no ciclo, mantidas como estão ({{ plano.total.so_no_ciclo|slice:":8"|join:", " }}{% if plano.total.so_no_ciclo|length > 8 %}…{% endif %})</li>{% endif %}
+      </ul>
+      <form method="post" action="{% url 'importacao_reimportar' ciclo.ano imp.pk %}" onsubmit="return confirm('Trocar o fundo e reposicionar os trechos? Os textos escritos não mudam; as posições antigas ficam guardadas numa cópia.')">{% csrf_token %}<button class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Reimportar no ciclo</button></form>
+      {% else %}
+      <p class="mini">Confira as páginas abaixo. Ao aplicar, o ciclo passa a ter estas páginas: cada caixa de texto vira um trecho que os setores editam, na seção cujo título vem antes dela no PDF.</p>
+      <form method="post" action="{% url 'importacao_aplicar' ciclo.ano imp.pk %}">{% csrf_token %}<button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Aplicar ao ciclo</button></form>
+      {% endif %}
+    </div></div>
+  </div>
+  {% if pagina %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    {% if anterior %}<a class="btn btn-sm btn-outline-secondary" href="?p={{ anterior }}"><i class="bi bi-chevron-left"></i> p. {{ anterior }}</a>{% endif %}
+    <form method="get" class="d-flex align-items-center gap-1"><label class="mini" for="ir-p">Página</label>
+      <select class="form-select form-select-sm" id="ir-p" name="p" onchange="this.form.submit()" style="width:auto">{% for n in numeros %}<option value="{{ n }}" {% if n == pagina.n %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></form>
+    {% if proxima %}<a class="btn btn-sm btn-outline-secondary" href="?p={{ proxima }}">p. {{ proxima }} <i class="bi bi-chevron-right"></i></a>{% endif %}
+    <span class="mini text-secondary ms-2"><span class="imp-leg imp-leg-texto"></span> caixa de texto <span class="imp-leg imp-leg-fixo ms-2"></span> texto fixo (cabeçalho, rodapé, número da página)</span>
+  </div>
+  <div class="imp-rolagem">
+    <div class="pg-moldura" style="width:{{ pagina.w|stringformat:'.1f' }}px">
+      <div class="pg imp-pg" style="width:{{ pagina.w|stringformat:'.1f' }}px;height:{{ pagina.h|stringformat:'.1f' }}px;background-image:url('{{ fundo_url }}')">
+        {% for c in caixas %}<div class="{% if c.fixo %}pg-fixo imp-fixo{% else %}pg-cx imp-cx{% if c.quebra %} q{% endif %}{% endif %}" style="{{ c.css }}"><div class="texto-rg pg-texto">{{ c.html|safe }}</div></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

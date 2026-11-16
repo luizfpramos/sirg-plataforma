@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from contas import permissoes as P
 
 from . import apresentacao as A
+from . import atributos as AT
 from . import consistencia
 from . import fluxo as F
 from .calculo import Calculadora
@@ -33,11 +34,13 @@ def estrutura(ciclo, calc, user=None, editor=False):
     No modo editor, cada seção traz também o que o usuário pode fazer nela."""
     secoes = list(ciclo.secoes.select_related("pai").prefetch_related("setores").order_by("ordem", "id"))
     blocos = {}
-    for b in Bloco.objects.filter(secao__ciclo=ciclo).select_related("quadro", "editando_por").prefetch_related(
+    for b in Bloco.objects.filter(secao__ciclo=ciclo).select_related("quadro", "editando_por", "setor").prefetch_related(
             "campos").order_by("ordem", "id"):
         blocos.setdefault(b.secao_id, []).append(b)
     sugestoes, comentarios = {}, {}
     minhas = set()
+    e_master = bool(editor and P.e_master(user))
+    meus_setores = set(P.setores_ativos(user).values_list("pk", flat=True)) if editor else set()
     if editor:
         for s in Sugestao.objects.filter(bloco__secao__ciclo=ciclo, situacao=Sugestao.PENDENTE).select_related("autor"):
             s.diff = diff_palavras(s.original, s.proposto, calc)
@@ -58,6 +61,15 @@ def estrutura(ciclo, calc, user=None, editor=False):
             m = A.montar_bloco(calc, b, revisao=editor, user=user if editor else None, pode_campos=pode,
                                **A.tamanho_na_pagina(b))
             A.caixa_na_pagina(b, m)
+            if b.tipo in (Bloco.TEXTO, Bloco.IMAGEM):
+                m["atr"] = AT.anotar(b, s.setores.all(), m.get("caixa"))
+                dele = pode if not b.setor_id else (
+                    F.pode_responder_pelo_bloco(user, b) if (e_master or b.setor_id in meus_setores) else False)
+                m["pode_concluir"] = bool(editor and dele)                 # quem escreve também conclui e desfaz
+                m["pode_bloco"] = bool(editor and dele and not b.concluido_em)
+                m["concluido"] = bool(b.concluido_em)
+                if b.concluido_em:
+                    m["concluido_por"] = b.concluido_por
             d["campos_vazios"] += m.get("campos_vazios", 0)
             d["tem_campos"] = d.get("tem_campos") or "sirg-campo" in (b.conteudo or "")
             if b.tipo == Bloco.TEXTO:
@@ -97,7 +109,7 @@ def estrutura(ciclo, calc, user=None, editor=False):
             d["quadros"] = [{"q": q, "faltam": faltas_q.get(q.pk, 0)} for q in proprios]
             d["vazia"] = not any(m["b"].tipo != Bloco.TEXTO or m.get("html") for m in d["blocos"])
             # Seções que não interessam a esta pessoa aparecem como texto corrido, sem ferramentas.
-            d["interessa"] = bool(d["pode"] or d["minha"] or d["responder"] or d["acoes"] or d["comentarios"] or d["n_alt"])
+            d["interessa"] = bool(d["pode"] or any(m.get("pode_bloco") for m in d["blocos"]) or d["minha"] or d["responder"] or d["acoes"] or d["comentarios"] or d["n_alt"])
         return d
 
     caps = []
@@ -213,7 +225,8 @@ def inserir_texto(request, ano):
         return JsonResponse({"ok": False, "erro": str(ex)}, status=403)
     calc = Calculadora(secao.ciclo)
     m = A.montar_bloco(calc, b, revisao=True, user=request.user)
-    m.update({"sugestoes": [], "comentarios": [], "travado_por": None, "versao": b.atualizado_em.isoformat()})
+    m.update({"sugestoes": [], "comentarios": [], "travado_por": None, "versao": b.atualizado_em.isoformat(),
+              "pode_bloco": True, "atr": AT.anotar(b, secao.setores.all(), None)})
     html = render_to_string("relatorio/_doc_bloco.html", {
         "d": m, "it": {"s": secao, "pode": True, "sugerir": F.pode_sugerir(request.user, secao)},
         "editor": True, "ciclo": secao.ciclo}, request=request)

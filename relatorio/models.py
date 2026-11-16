@@ -289,13 +289,68 @@ class Pagina(models.Model):
     def __str__(self):
         return f"Página {self.numero} de {self.ciclo}"
 
+    @property
+    def fundo_url(self):
+        from .paginas import url_do_fundo
+        return url_do_fundo(self.fundo)
+
+    @property
+    def fundo_caminho(self):
+        from .paginas import caminho_do_fundo
+        return caminho_do_fundo(self.fundo)
+
+
+class ImportacaoPDF(models.Model):
+    """Um PDF diagramado do Relatório de Gestão enviado pelo administrador. O sistema lê o PDF em segundo plano
+    (fundo de cada página sem texto + caixas de texto) e guarda o resultado em dados/arquivos/importacoes/<id>/;
+    depois o administrador confere e aplica ao ciclo, que passa a ter as páginas do PDF."""
+    PROCESSANDO, PRONTA, ERRO, APLICADA = "processando", "pronta", "erro", "aplicada"
+    SITUACOES = [(PROCESSANDO, "Lendo o PDF"), (PRONTA, "Pronta para aplicar"), (ERRO, "Erro na leitura"),
+                 (APLICADA, "Aplicada ao ciclo")]
+    ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE, related_name="importacoes")
+    nome = models.CharField("arquivo", max_length=255)
+    tamanho = models.PositiveIntegerField("tamanho (bytes)", default=0)
+    enviado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name="+")
+    enviado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    situacao = models.CharField("situação", max_length=12, choices=SITUACOES, default=PROCESSANDO)
+    progresso = models.PositiveSmallIntegerField("progresso (%)", default=0)
+    etapa = models.CharField(max_length=120, blank=True, default="")
+    mensagem = models.TextField(blank=True, default="")
+    resumo = models.JSONField(default=dict, blank=True)
+    aplicada_em = models.DateTimeField(null=True, blank=True)
+    aplicada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name="+")
+
+    class Meta:
+        ordering = ["-enviado_em", "-id"]
+        verbose_name = "importação de PDF"
+        verbose_name_plural = "importações de PDF"
+
+    def __str__(self):
+        return f"{self.nome} ({self.ciclo})"
+
+    @property
+    def pasta(self):
+        from pathlib import Path
+        return Path(settings.MEDIA_ROOT) / "importacoes" / str(self.pk)
+
+    @property
+    def interrompida(self):
+        """Ficou "lendo" sem avançar por muito tempo (o servidor foi reiniciado no meio da leitura)."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+        return self.situacao == self.PROCESSANDO and self.atualizado_em < timezone.now() - timedelta(minutes=15)
+
 
 class Bloco(models.Model):
     """Um pedaço do texto do relatório, dentro de uma seção, na ordem em que aparece no documento.
     Com `pagina`, é uma caixa de texto (ou gráfico/tabela) daquela página, na posição de config["caixa"]."""
-    TEXTO, TABELA, GRAFICO, DESTAQUES = "texto", "tabela", "grafico", "destaques"
+    TEXTO, TABELA, GRAFICO, DESTAQUES, IMAGEM = "texto", "tabela", "grafico", "destaques", "imagem"
     TIPOS = [(TEXTO, "Texto"), (TABELA, "Tabela de um quadro"), (GRAFICO, "Gráfico de um quadro"),
-             (DESTAQUES, "Números em destaque")]
+             (DESTAQUES, "Números em destaque"), (IMAGEM, "Imagem")]
     secao = models.ForeignKey(Secao, on_delete=models.CASCADE, related_name="blocos")
     ordem = models.PositiveIntegerField(default=0)
     tipo = models.CharField(max_length=10, choices=TIPOS, default=TEXTO)
@@ -304,13 +359,26 @@ class Bloco(models.Model):
     quadro = models.ForeignKey(Quadro, on_delete=models.SET_NULL, null=True, blank=True, related_name="blocos")
     config = models.JSONField(default=dict, blank=True)
     pagina = models.ForeignKey(Pagina, on_delete=models.SET_NULL, null=True, blank=True, related_name="caixas")
+    # Atributos do bloco (preenchidos pelo administrador): quem escreve, o que se espera e o tamanho do texto.
+    setor = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True, related_name="blocos",
+                              verbose_name="setor responsável pelo bloco",
+                              help_text="Vazio = os setores responsáveis pela seção.")
+    descricao = models.TextField("conteúdo esperado", blank=True, default="",
+                                 help_text="O que o setor deve escrever neste bloco (aparece como orientação).")
+    min_caracteres = models.PositiveIntegerField("mínimo de caracteres", null=True, blank=True)
+    max_caracteres = models.PositiveIntegerField("máximo de caracteres", null=True, blank=True)
     atualizado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                        related_name="+")
     atualizado_em = models.DateTimeField(auto_now=True)
+    # "Concluí": o setor marca o trecho como pronto; enquanto estiver marcado, ninguém altera (Desfazer reabre).
+    concluido_em = models.DateTimeField(null=True, blank=True)
+    concluido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name="+")
     editando_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name="+")
     editando_desde = models.DateTimeField(null=True, blank=True)
-    history = HistoricalRecords(excluded_fields=["editando_por", "editando_desde", "atualizado_em"])
+    history = HistoricalRecords(excluded_fields=["editando_por", "editando_desde", "atualizado_em", "concluido_em",
+                                                 "concluido_por"])
 
     class Meta:
         ordering = ["ordem", "id"]

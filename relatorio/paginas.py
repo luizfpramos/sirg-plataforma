@@ -168,12 +168,34 @@ def _coluna(c, W):
     return 0 if c["x"] + c["w"] / 2 < W / 2 else 1
 
 
+PREFIXO_ARQUIVOS = "arquivos/"
+FUNDO_IMPORTADO = re.compile(r"^arquivos/importacoes/(\d+)/(p\d{3,4}\.jpg)$")
+
+
+def caminho_do_fundo(fundo):
+    """Arquivo da imagem de fundo: as do RG 2025 ficam em static/; as de um PDF importado, na pasta de dados."""
+    from django.conf import settings
+    if fundo.startswith(PREFIXO_ARQUIVOS):
+        return Path(settings.MEDIA_ROOT) / fundo[len(PREFIXO_ARQUIVOS):]
+    return Path(settings.BASE_DIR) / "static" / fundo
+
+
+def url_do_fundo(fundo):
+    if not fundo:
+        return ""
+    m = FUNDO_IMPORTADO.match(fundo)
+    if m:
+        from django.urls import reverse
+        return reverse("importacao_arquivo", args=[int(m.group(1)), m.group(2)])
+    from django.templatetags.static import static
+    return static(fundo)
+
+
 def _cor_de_fundo(fundo, regiao, larg):
     """Cor do fundo da página em volta da área (para cobrir o gráfico antigo com a mesma cor)."""
     try:
-        from django.conf import settings
         from PIL import Image
-        im = Image.open(Path(settings.BASE_DIR) / "static" / fundo).convert("RGB")
+        im = Image.open(caminho_do_fundo(fundo)).convert("RGB")
     except Exception:  # pragma: no cover - imagem ausente
         return "#ffffff"
     k = im.size[0] / larg

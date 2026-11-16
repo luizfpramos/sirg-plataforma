@@ -303,8 +303,19 @@ def montar_bloco(calc, b, formato_grafico="svg", largura=7.0, revisao=False, use
         d["destaques"] = destaques(calc, b.config)
         if not d["destaques"]:
             d["avisos"].append("Escolha os números em destaque.")
+    elif b.tipo == Bloco.IMAGEM:
+        d["imagem"] = dados_da_imagem(b)
     d["origens"] = origens_do_bloco(calc, b)
     return d
+
+
+def dados_da_imagem(b):
+    """{"url", "alt", "ajuste"} da imagem de um bloco de imagem (url vazia = ainda sem imagem)."""
+    from .models import Imagem
+    c = (b.config or {}).get("imagem") or {}
+    img = Imagem.objects.filter(pk=c["id"]).select_related("ciclo").first() if c.get("id") else None
+    return {"url": img.url if img else "", "alt": c.get("alt", ""), "ajuste": c.get("ajuste", "contain"),
+            "largura": img.largura if img else 0, "altura": img.altura if img else 0}
 
 
 def origens_do_bloco(calc, b):

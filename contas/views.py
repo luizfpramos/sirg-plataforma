@@ -551,6 +551,13 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.16", "novembro de 2026", [
+        "Editor de blocos: o administrador importa o PDF diagramado do ano dentro do sistema (fundo das páginas e caixas de texto) e, na própria página, desenha, move, redimensiona, junta e apaga blocos (texto, gráfico, tabela e imagem), sem depender de desenvolvedor.",
+        "Atributos do bloco: setor responsável, descrição do conteúdo esperado, mínimo e máximo de caracteres, com contador e aviso; a cor do bloco segue o setor e as orientações aparecem dentro dos blocos vazios.",
+        "Reimportação: se o PDF mudar depois que os setores começaram a escrever, o sistema troca o fundo e reposiciona os blocos sem alterar o texto já escrito.",
+        "Em cada trecho: Concluí/Desfazer, navegação entre os trechos pendentes, versões anteriores com opção de voltar, e bloco de imagem inserido pelo setor responsável (com texto alternativo).",
+        "Padrão de design: fonte, tamanho e espaçamentos do texto, escolhidos pelo Master ou pela diagramação.",
+    ]),
     ("2.15", "novembro de 2026", [
         "Enviar para a produção pela homologação: na tela Sobre da homologação, o Master ou o administrador confere a versão e clica em “Enviar para a produção”. Em até 5 minutos o PC instala na produção exatamente o código testado na homologação, com backup antes, e o resultado aparece na própria tela.",
         "Tela Sobre: mostra a versão que está na produção e quem pediu cada envio.",
@@ -677,6 +684,42 @@ VERSOES = [
         "Primeira versão: setores, perfis, preenchimento dos quadros, textos, auditoria, backup e exportação para Word.",
     ]),
 ]
+
+
+@login_required
+def padrao_design(request):
+    """Padrão de design do texto: fonte, tamanho e espaçamentos (as paletas dos gráficos ficam em "Cores")."""
+    from decimal import Decimal, InvalidOperation
+
+    from django.core.exceptions import PermissionDenied
+
+    from . import design
+    if not P.cuida_das_cores(request.user):
+        raise PermissionDenied
+    inst = Instituicao.atual()
+    if request.method == "POST":
+        try:
+            fonte = request.POST.get("fonte_texto", "")
+            tam = int(request.POST.get("tamanho_texto") or 0)
+            lin = Decimal(request.POST.get("espaco_linhas") or "0")
+            par = int(request.POST.get("espaco_paragrafos") or 0)
+        except (ValueError, InvalidOperation):
+            fonte, tam, lin, par = None, -1, Decimal("-1"), -1
+        if request.POST.get("acao") == "restaurar":
+            fonte, tam, lin, par = "", 0, Decimal("0"), 0
+        if fonte not in design.FONTES or tam not in design.TAMANHOS or lin not in design.LINHAS \
+                or par not in design.PARAGRAFOS:
+            messages.error(request, "Valor fora das opções. Escolha nas listas.")
+        else:
+            inst.fonte_texto, inst.tamanho_texto, inst.espaco_linhas, inst.espaco_paragrafos = fonte, tam, lin, par
+            inst.save(update_fields=["fonte_texto", "tamanho_texto", "espaco_linhas", "espaco_paragrafos",
+                                     "atualizado_em"])
+            S.registrar("instituicao_alterada", request.user, descricao="padrão de design do texto", request=request)
+            messages.success(request, "Padrão de design salvo.")
+        return redirect("padrao_design")
+    return render(request, "contas/padrao_design.html", {
+        "inst": inst, "fontes": [(k, v[0]) for k, v in design.FONTES.items()], "tamanhos": design.TAMANHOS,
+        "linhas": design.LINHAS, "paragrafos": design.PARAGRAFOS})
 
 
 @login_required

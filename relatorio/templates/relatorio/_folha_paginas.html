@@ -7,12 +7,14 @@
   </div>
   {% else %}<span class="pg-ancora doc-sec" id="sec-{{ it.s.chave }}" data-secao="{{ it.s.pk }}"></span>{% endif %}{% endfor %}
   <div class="pg-moldura" id="pg-{{ x.p.numero }}">
-    <div class="pg" style="width:{{ x.p.largura|stringformat:'.1f' }}px;height:{{ x.p.altura|stringformat:'.1f' }}px;background-image:url('{% static x.p.fundo %}')" data-pagina="{{ x.p.numero }}" data-largura="{{ x.p.largura|stringformat:'.1f' }}">
+    <div class="pg" style="width:{{ x.p.largura|stringformat:'.1f' }}px;height:{{ x.p.altura|stringformat:'.1f' }}px;background-image:url('{{ x.p.fundo_url }}')" data-pagina="{{ x.p.numero }}" data-largura="{{ x.p.largura|stringformat:'.1f' }}">
       {{ x.p.fixos|safe }}
       {% for c in x.caixas %}{% with d=c.d it=c.it %}
-      <div class="doc-bloco pg-cx{% if editor and it.pode %} pode{% endif %}{% if d.caixa.quebra %} q{% endif %}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-titulo="{{ it.s.titulo }}" style="{{ d.caixa_css }}">
+      <div class="doc-bloco pg-cx{% if editor and d.pode_bloco %} pode{% endif %}{% if editor and d.atr %} com-setor{% endif %}{% if d.html %} tem-texto{% endif %}{% if d.concluido %} concluido{% endif %}{% if d.caixa.quebra %} q{% endif %}" id="bloco-{{ d.b.pk }}" data-bloco="{{ d.b.pk }}"{% include "relatorio/_bloco_marcas.html" %} data-secao="{{ it.s.pk }}" data-titulo="{{ it.s.titulo }}" style="{{ d.caixa_css }}{% if editor and d.atr %};--cor-setor:{{ d.atr.cor }};--caixa-h:{{ d.caixa.h|stringformat:'.1f' }}px{% endif %}"{% if editor and d.atr.dica and not d.atr.grande or editor and d.atr.dica and d.html %} title="{{ d.atr.dica }}"{% endif %}>
         {% if editor %}<div class="doc-trava pg-trava d-print-none{% if not d.travado_por %} d-none{% endif %}"><i class="bi bi-pencil-fill"></i> <span>{% if d.travado_por %}{{ d.travado_por.get_full_name|default:d.travado_por.username }}{% endif %}</span></div>
-        <div class="texto-rg doc-texto pg-texto{% if it.pode %} editavel{% endif %}" data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-secao-chave="{{ it.s.chave }}" data-versao="{{ d.versao }}"{% if it.pode %} tabindex="0" role="textbox" aria-multiline="true" aria-label="Texto da página {{ x.p.numero }} ({{ it.s.titulo }})"{% endif %}>{{ d.html|safe }}</div>
+        <div class="texto-rg doc-texto pg-texto{% if d.pode_bloco %} editavel{% endif %}" data-bloco="{{ d.b.pk }}" data-secao="{{ it.s.pk }}" data-secao-chave="{{ it.s.chave }}" data-versao="{{ d.versao }}"{% if d.atr.min %} data-min="{{ d.atr.min }}"{% endif %}{% if d.atr.max %} data-max="{{ d.atr.max }}"{% endif %}{% if d.pode_bloco %} tabindex="0" role="textbox" aria-multiline="true" aria-label="Texto da página {{ x.p.numero }} ({{ it.s.titulo }})"{% endif %}>{{ d.html|safe }}</div>
+        {% include "relatorio/_guia_bloco.html" %}
+        {% if d.concluido %}<span class="bloco-selo d-print-none" title="Concluído por {{ d.concluido_por.get_full_name|default:d.concluido_por.username }}"><i class="bi bi-check2-circle"></i> Concluído</span>{% endif %}
         {% else %}<div class="texto-rg pg-texto">{{ d.html|safe }}</div>{% endif %}
       </div>{% endwith %}{% endfor %}
       {% for c in x.objetos %}{% include "relatorio/_pg_objeto.html" with d=c.d it=c.it %}{% endfor %}
