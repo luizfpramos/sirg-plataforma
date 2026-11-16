@@ -4,7 +4,7 @@
 <nav class="mini mb-2"><a href="{% url 'escrever' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Escrever o relatório</a></nav>
 <h1 class="mb-1"><i class="bi bi-file-earmark-arrow-up"></i> Importar o PDF do relatório</h1>
 <p class="text-secondary">Envie o PDF diagramado do Relatório de Gestão. O sistema gera o fundo de cada página, sem o texto, e as caixas de texto, cada uma no seu lugar, com a fonte, o tamanho e a cor do PDF. A leitura leva alguns minutos; você pode sair da tela e voltar depois.</p>
-{% if tem_paginas %}<div class="alert alert-info py-2 mini"><i class="bi bi-info-circle"></i> Este ciclo já tem páginas. Você pode enviar o PDF para conferir como ficou a leitura; aplicar num ciclo que já tem páginas, sem perder o que os setores escreveram, é a próxima fase.</div>{% endif %}
+{% if tem_paginas %}<div class="alert alert-info py-2 mini"><i class="bi bi-info-circle"></i> Este ciclo já tem páginas. Se a diagramação mudou, envie o PDF revisado: o sistema troca o fundo e reposiciona os trechos sem alterar o que os setores escreveram.</div>{% endif %}
 <form method="post" enctype="multipart/form-data" class="card card-body mb-4" style="max-width:640px">{% csrf_token %}
   <label class="form-label" for="pdf">Arquivo PDF (até {{ maximo_mb }} MB)</label>
   <input class="form-control mb-3" type="file" id="pdf" name="pdf" accept="application/pdf,.pdf" required>

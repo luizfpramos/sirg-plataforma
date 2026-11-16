@@ -5,8 +5,8 @@ fundo das páginas e as caixas de texto — sem depender de desenvolvedor.
 2. `iniciar()` lê o PDF em segundo plano (relatorio/pdf_paginas.py): pNNN.jpg (fundo sem texto) e paginas.json;
 3. o administrador confere as páginas e `aplicar()` cria as páginas e os trechos de texto no ciclo.
 
-Por enquanto só se aplica a um ciclo que ainda não tem páginas. Reimportar um PDF revisado num ciclo que já tem
-páginas, sem perder o que os setores escreveram, é a etapa 4 do plano do editor de blocos.
+`aplicar()` só vale para um ciclo que ainda não tem páginas. Num ciclo que já tem páginas, o PDF revisado entra por
+relatorio/reimportador.py, que não altera o que os setores escreveram.
 """
 import json
 import logging
@@ -191,8 +191,7 @@ def motivo_para_nao_aplicar(imp):
     if imp.ciclo.situacao == Ciclo.ENCERRADO:
         return "O ciclo está encerrado."
     if imp.ciclo.paginas.exists():
-        return ("Este ciclo já tem páginas. Trocar as páginas sem perder o que os setores escreveram "
-                "(reimportação) é a próxima fase; por enquanto, use esta tela para conferir o PDF.")
+        return "Este ciclo já tem páginas. Use a reimportação, que não altera o que os setores escreveram."
     if not imp.ciclo.secoes.exists():
         return "O ciclo ainda não tem seções."
     return ""

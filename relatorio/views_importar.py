@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from . import importador as I
 from . import permissoes as RP
+from . import reimportador as RI
 from .html_seguro import limpar
 from .models import Ciclo, ImportacaoPDF
 from .paginas import _caixa_css, url_do_fundo
@@ -41,7 +42,11 @@ def importar_pdf(request, ano):
 def importacao_ver(request, ano, pk):
     imp = get_object_or_404(ImportacaoPDF, pk=pk, ciclo__ano=ano)
     _exigir_admin(request.user)
-    ctx = {"ciclo": imp.ciclo, "imp": imp, "motivo": I.motivo_para_nao_aplicar(imp)}
+    reimportar = imp.ciclo.paginas.exists()
+    ctx = {"ciclo": imp.ciclo, "imp": imp, "reimportar": reimportar,
+           "motivo": RI.motivo_para_nao_reimportar(imp) if reimportar else I.motivo_para_nao_aplicar(imp)}
+    if reimportar and not ctx["motivo"]:
+        ctx["plano"] = RI.plano(imp)
     if imp.situacao in (ImportacaoPDF.PRONTA, ImportacaoPDF.APLICADA):
         paginas = I.paginas_lidas(imp)
         numeros = [p["n"] for p in paginas]
@@ -73,6 +78,21 @@ def importacao_aplicar(request, ano, pk):
         messages.error(request, str(e))
         return redirect("importacao_ver", ano=ano, pk=pk)
     messages.success(request, f"{feito['paginas']} páginas e {feito['caixas']} trechos de texto criados no ciclo.")
+    return redirect("importacao_ver", ano=ano, pk=pk)
+
+
+@login_required
+@require_POST
+def importacao_reimportar(request, ano, pk):
+    imp = get_object_or_404(ImportacaoPDF, pk=pk, ciclo__ano=ano)
+    _exigir_admin(request.user)
+    try:
+        f = RI.reimportar(imp, request.user)
+    except I.Recusado as e:
+        messages.error(request, str(e))
+        return redirect("importacao_ver", ano=ano, pk=pk)
+    messages.success(request, f"Fundo trocado em todas as páginas do PDF. {f['pareados']} trechos reposicionados, "
+                              f"{f['novos']} novos, {f['sem_par']} sem caixa no PDF novo. Nenhum texto foi alterado.")
     return redirect("importacao_ver", ano=ano, pk=pk)
 
 

@@ -52,6 +52,8 @@ urlpatterns = [
     path("ciclos/<int:ano>/importar-pdf/", IM.importar_pdf, name="importar_pdf"),
     path("ciclos/<int:ano>/importar-pdf/<int:pk>/", IM.importacao_ver, name="importacao_ver"),
     path("ciclos/<int:ano>/importar-pdf/<int:pk>/aplicar/", IM.importacao_aplicar, name="importacao_aplicar"),
+    path("ciclos/<int:ano>/importar-pdf/<int:pk>/reimportar/", IM.importacao_reimportar,
+         name="importacao_reimportar"),
     path("ciclos/<int:ano>/importar-pdf/<int:pk>/ler-de-novo/", IM.importacao_ler_de_novo,
          name="importacao_ler_de_novo"),
     path("arquivos/importacoes/<int:pk>/<str:nome>", IM.importacao_arquivo, name="importacao_arquivo"),
