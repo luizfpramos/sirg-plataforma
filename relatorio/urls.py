@@ -2,6 +2,7 @@ from django.urls import path
 
 from . import views as V
 from . import views_doc as D
+from . import views_atributos as AT
 from . import views_texto as T
 
 urlpatterns = [
@@ -42,6 +43,7 @@ urlpatterns = [
     path("ciclos/<int:ano>/numeros/", T.numeros, name="numeros"),
     path("ciclos/<int:ano>/imagens/enviar/", T.imagem_enviar, name="imagem_enviar"),
     path("ciclos/<int:ano>/imagens/<int:pk>/", T.imagem_ver, name="imagem_ver"),
+    path("ciclos/<int:ano>/blocos/atributos/", AT.blocos_atributos, name="blocos_atributos"),
     path("ciclos/<int:ano>/blocos/novo/", T.bloco_novo, name="bloco_novo"),
     path("ciclos/<int:ano>/blocos/<int:pk>/travar/", T.bloco_travar, name="bloco_travar"),
     path("ciclos/<int:ano>/blocos/<int:pk>/texto/", T.bloco_texto, name="bloco_texto"),

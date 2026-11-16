@@ -209,7 +209,9 @@ def copiar_ciclo(origem, ano, titulo, anos_serie=None):
             cfg["herdado_de"] = origem.ano      # texto do ano anterior, como ponto de partida
         Bloco.objects.create(secao=mapa_secao[b.secao_id], ordem=b.ordem, tipo=b.tipo, titulo=b.titulo,
                              conteudo=b.conteudo, quadro=mapa_quadro.get(b.quadro.chave) if b.quadro else None,
-                             config=cfg, pagina=mapa_pagina.get(b.pagina_id))
+                             config=cfg, pagina=mapa_pagina.get(b.pagina_id), setor_id=b.setor_id,
+                             descricao=b.descricao, min_caracteres=b.min_caracteres,
+                             max_caracteres=b.max_caracteres)
     for r in origem.regras.select_related("quadro"):
         Regra.objects.create(ciclo=novo, quadro=mapa_quadro[r.quadro.chave], descricao=r.descricao,
                              esquerda=r.esquerda, operador=r.operador, direita=r.direita, tolerancia=r.tolerancia,

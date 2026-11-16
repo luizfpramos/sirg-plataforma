@@ -304,6 +304,14 @@ class Bloco(models.Model):
     quadro = models.ForeignKey(Quadro, on_delete=models.SET_NULL, null=True, blank=True, related_name="blocos")
     config = models.JSONField(default=dict, blank=True)
     pagina = models.ForeignKey(Pagina, on_delete=models.SET_NULL, null=True, blank=True, related_name="caixas")
+    # Atributos do bloco (preenchidos pelo administrador): quem escreve, o que se espera e o tamanho do texto.
+    setor = models.ForeignKey(Setor, on_delete=models.SET_NULL, null=True, blank=True, related_name="blocos",
+                              verbose_name="setor responsável pelo bloco",
+                              help_text="Vazio = os setores responsáveis pela seção.")
+    descricao = models.TextField("conteúdo esperado", blank=True, default="",
+                                 help_text="O que o setor deve escrever neste bloco (aparece como orientação).")
+    min_caracteres = models.PositiveIntegerField("mínimo de caracteres", null=True, blank=True)
+    max_caracteres = models.PositiveIntegerField("máximo de caracteres", null=True, blank=True)
     atualizado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                        related_name="+")
     atualizado_em = models.DateTimeField(auto_now=True)

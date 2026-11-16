@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 from contas import permissoes as P
 
 from . import apresentacao as A
+from . import atributos as AT
 from . import consistencia
 from . import fluxo as F
 from . import graficos
@@ -125,8 +126,8 @@ def bloco_travar(request, ano, pk):
         calc = Calculadora(b.secao.ciclo)
         html, _ = renderizar(b.conteudo, calc)
         return JsonResponse({"ok": True, "html": html, "versao": b.atualizado_em.isoformat()})
-    if not F.pode_editar_texto(request.user, b.secao):
-        return JsonResponse({"ok": False, "erro": F.motivo_texto_bloqueado(request.user, b.secao)}, status=403)
+    if not F.pode_editar_bloco(request.user, b):
+        return JsonResponse({"ok": False, "erro": F.motivo_bloco_bloqueado(request.user, b)}, status=403)
     ok, quem = F.travar(request.user, b)
     if not ok:
         return JsonResponse({"ok": False, "erro": f"{quem.get_full_name() or quem.username} está editando este "
@@ -160,8 +161,10 @@ def bloco_texto(request, ano, pk):
         F.destravar(request.user, b)
     calc = Calculadora(b.secao.ciclo)
     html, problemas = _render_editor(b, calc, request.user)
+    n = AT.contar_caracteres(b.conteudo)
     return JsonResponse({"ok": True, "html": html, "versao": b.atualizado_em.isoformat(), "problemas": problemas,
-                         "palavras": len(texto_puro(b.conteudo).split())})
+                         "palavras": len(texto_puro(b.conteudo).split()), "caracteres": n,
+                         "tamanho": AT.situacao_do_tamanho(n, b.min_caracteres, b.max_caracteres)[0]})
 
 
 @login_required

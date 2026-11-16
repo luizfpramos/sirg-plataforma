@@ -50,6 +50,32 @@ def pode_editar_texto(user, secao):
     return e_do_setor(user, secao)
 
 
+def pode_editar_bloco(user, bloco):
+    """Pode escrever neste trecho? Sem setor no bloco, vale o que vale para a seção. Com setor no bloco (definido pelo
+    administrador), quem escreve é o pessoal desse setor — mesmo que não seja um dos setores da seção — e o Master;
+    a situação do ciclo e da seção continuam valendo."""
+    if not bloco.setor_id:
+        return pode_editar_texto(user, bloco.secao)
+    secao = bloco.secao
+    if secao.ciclo.situacao == Ciclo.ENCERRADO:
+        return False
+    if P.e_master(user):
+        return True
+    if secao.ciclo.situacao != Ciclo.COLETA or secao.situacao in (Secao.ENVIADA, Secao.APROVADA):
+        return False
+    return P.pode_editar_algum(user, [bloco.setor])
+
+
+def motivo_bloco_bloqueado(user, bloco):
+    """Por que a pessoa não escreve neste bloco ("" se pode)."""
+    if pode_editar_bloco(user, bloco):
+        return ""
+    secao = bloco.secao
+    if bloco.setor_id and secao.ciclo.situacao == Ciclo.COLETA and secao.situacao not in (Secao.ENVIADA, Secao.APROVADA):
+        return f"Este trecho é de responsabilidade de: {bloco.setor.sigla}."
+    return motivo_texto_bloqueado(user, secao) or "Você não pode alterar este texto."
+
+
 def pode_sugerir(user, secao):
     return P.e_master(user) and secao.ciclo.situacao != Ciclo.ENCERRADO
 
@@ -111,8 +137,8 @@ def _marcar_preenchimento(secao, user):
 @transaction.atomic
 def salvar_texto(user, bloco, html, titulo=None, versao=None):
     """Grava o texto do bloco. `versao` = atualizado_em que o editor recebeu (para detectar conflito)."""
-    if not pode_editar_texto(user, bloco.secao):
-        raise Recusado(motivo_texto_bloqueado(user, bloco.secao) or "Você não pode alterar este texto.")
+    if not pode_editar_bloco(user, bloco):
+        raise Recusado(motivo_bloco_bloqueado(user, bloco) or "Você não pode alterar este texto.")
     b = Bloco.objects.select_for_update().get(pk=bloco.pk)
     if trava_ativa(b) and b.editando_por_id not in (None, user.pk):
         raise Recusado(f"{b.editando_por.get_full_name() or b.editando_por.username} está editando este trecho agora.")
