@@ -23,7 +23,9 @@ Não há menu lateral. Tudo fica no botão com o seu nome, no **alto, à direita
 | **O que falta** | A lista de tudo o que ainda está em branco ou para corrigir |
 | **Baixar em Word** | (Master, diagramação) O Word e o pacote para a diagramação |
 | **Cores dos gráficos** | (Master, diagramação) As paletas de cores dos gráficos |
+| **Padrão de design** | (Master, diagramação) Fonte, tamanho e espaçamentos do texto |
 | **Quadros de números** | (Master) Todas as tabelas, em tela cheia, com Excel |
+| **Importar o PDF do relatório**, **Editar blocos nas páginas**, **Atributos dos blocos** | (administrador) Montar o relatório de um novo ano a partir do PDF diagramado |
 | **Manual de uso**, **Sobre**, **Minha conta**, **Trocar senha**, **Sair** | |
 
 No ambiente de **homologação** (testes), a barra do alto fica **laranja** com o selo **HOMOLOGAÇÃO**. O que se faz lá não vale para o relatório oficial.
@@ -97,6 +99,17 @@ O apêndice é a planilha **Acompanhamento das metas do PDI 2023-2027** (41 meta
 
 Salva sozinho ao sair do campo. **baixar a planilha** gera o Excel no formato original, já preenchido.
 
+### Cada trecho: Concluí, Versões e imagens
+
+Ao passar o mouse sobre um trecho que você escreve (ou clicar nele), aparece uma barra pequena:
+
+- **‹ 3 de 12 ›**: vai ao trecho pendente anterior ou ao próximo, entre os seus;
+- **Concluí**: marca o trecho como pronto. Ele fica com o selo verde **Concluído** e ninguém o altera até alguém clicar em **Desfazer**. Se o texto tiver menos caracteres que o mínimo, o sistema pergunta antes. Texto vazio e imagem não inserida não podem ser concluídos;
+- **Versões**: mostra as versões anteriores do trecho e permite voltar a uma delas (o texto atual continua guardado no histórico);
+- **Imagem** (nos blocos de imagem): escolha o arquivo (PNG, JPG, GIF ou WEBP, até 10 MB), escreva o **texto alternativo** (uma frase que descreve a imagem, obrigatória) e o enquadramento: *mostrar inteira* ou *preencher a área*. Só o setor responsável pelo bloco (e o Master) insere ou troca a imagem.
+
+Cada bloco tem a cor do setor responsável e, quando está vazio, mostra a orientação do que escrever, com o mínimo e o máximo de caracteres.
+
 ## Enviar ao Master
 
 1. Quando o cabeçalho da seção mostrar **Números completos**, clique em **Enviar ao Master**. O envio só é liberado sem xxxxx nem números em branco ou para corrigir.
@@ -114,6 +127,10 @@ Lista o que está **a preencher** (xxxxx, células de 2026, metas), **para corri
 - **Quadros de números:** a tela antiga de tabelas, com Excel (baixar e enviar) e a correção de anos publicados.
 - **Conferência dos números:** planilha com todas as ligações entre números e relatório, para conferir com o PDF.
 - **Baixar em Word:** o .docx com as páginas do RG (mesmo tamanho e diagramação; cada texto é uma caixa de texto editável, sobre o fundo da página) e o pacote .zip da diagramação (Word, gráficos em PNG e SVG, dados em Excel). Os números ainda em branco saem como xxxxx.
+
+## Padrão de design (Master e diagramação)
+
+Em **Padrão de design** escolhem-se a fonte, o tamanho, o espaço entre linhas e o espaço entre parágrafos do texto. Vale para o texto corrido na tela e para os blocos de texto novos criados no editor de páginas. Os blocos que vieram do PDF mantêm a fonte do PDF. **Voltar ao padrão do sistema** desfaz a escolha.
 
 ## Cores dos gráficos (Master e diagramação)
 
@@ -144,6 +161,13 @@ Em **Cores dos gráficos** ficam as paletas, cada uma com um exemplo. Quem tem o
 - **Tabelas** (ícone ⚙ na tabela): linhas digitadas ou calculadas por fórmula, colunas por ano ou por categoria, regras de consistência e alerta de variação. Fórmulas aceitam as quatro operações e referências a outras tabelas, como `ga_matriculados.total`.
 - **Gráficos e destaques:** na seção, aba **Texto, tabelas e gráficos**, inclua, mova ou configure tabelas, gráficos e números em destaque.
 - **Relatórios (anos):** quando chegar a hora do RG 2027, crie o novo relatório a partir do 2026. Os números de 2026 viram histórico travado.
+
+### Montar o relatório de um novo ano a partir do PDF
+
+1. **Importar o PDF do relatório:** crie o relatório do ano (ele precisa ter as seções), envie o PDF diagramado e aguarde a leitura (alguns minutos; a tela se atualiza sozinha). Confira as páginas e clique em **Aplicar ao ciclo**: o sistema cria as páginas, o fundo e uma caixa de texto para cada trecho do PDF.
+2. **Editar blocos nas páginas:** em cada página, arraste sobre o fundo para **desenhar um bloco novo** (texto, gráfico, tabela ou imagem). Clique num bloco para **mover** (setas, ou arrastando) e **redimensionar** (alças); com **Shift** selecione vários e **Juntar** num só; **Delete** apaga. No painel lateral definem-se o tipo, a seção, o setor responsável, a descrição do que escrever e o mínimo e o máximo de caracteres. O sistema recusa juntar ou apagar blocos com comentários, sugestões pendentes ou em edição por outra pessoa, e pede confirmação (guardando uma cópia) quando um setor já escreveu no bloco.
+3. **Atributos dos blocos:** a mesma definição de setor, descrição e limites, em tabela, por página ou seção.
+4. **Se o PDF mudar depois que os setores começaram a escrever:** envie o PDF revisado em **Importar o PDF do relatório**. A tela mostra o plano (quantos trechos acompanham a nova posição, quantos são novos, quantos ficam sem par) e **Reimportar no ciclo** troca o fundo e reposiciona os trechos **sem alterar nenhum texto escrito**. As páginas são pareadas pelo número; se uma página foi inserida no meio, confira o plano. Trechos sem caixa no PDF novo ficam onde estavam e são marcados. A posição antiga fica guardada num arquivo na pasta de dados.
 
 ### Instituição e auditoria
 

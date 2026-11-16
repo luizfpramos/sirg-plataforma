@@ -551,6 +551,13 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.16", "novembro de 2026", [
+        "Editor de blocos: o administrador importa o PDF diagramado do ano dentro do sistema (fundo das páginas e caixas de texto) e, na própria página, desenha, move, redimensiona, junta e apaga blocos (texto, gráfico, tabela e imagem), sem depender de desenvolvedor.",
+        "Atributos do bloco: setor responsável, descrição do conteúdo esperado, mínimo e máximo de caracteres, com contador e aviso; a cor do bloco segue o setor e as orientações aparecem dentro dos blocos vazios.",
+        "Reimportação: se o PDF mudar depois que os setores começaram a escrever, o sistema troca o fundo e reposiciona os blocos sem alterar o texto já escrito.",
+        "Em cada trecho: Concluí/Desfazer, navegação entre os trechos pendentes, versões anteriores com opção de voltar, e bloco de imagem inserido pelo setor responsável (com texto alternativo).",
+        "Padrão de design: fonte, tamanho e espaçamentos do texto, escolhidos pelo Master ou pela diagramação.",
+    ]),
     ("2.15", "novembro de 2026", [
         "Enviar para a produção pela homologação: na tela Sobre da homologação, o Master ou o administrador confere a versão e clica em “Enviar para a produção”. Em até 5 minutos o PC instala na produção exatamente o código testado na homologação, com backup antes, e o resultado aparece na própria tela.",
         "Tela Sobre: mostra a versão que está na produção e quem pediu cada envio.",
