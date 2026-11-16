@@ -787,3 +787,25 @@ main#conteudo:focus { outline: none; }
 .ed-legenda { list-style: none; }
 .ed-leg { display: inline-block; width: 14px; height: 10px; border: 2px solid var(--cor); vertical-align: -1px; }
 @media (max-width: 991px) { .ed-corpo { flex-direction: column; } .ed-painel { flex-basis: auto; width: 100%; height: auto; border-left: 0; border-top: 1px solid #dee2e6; } .ed-area { height: 70vh; } }
+
+/* Etapa 5: concluir/desfazer, barra flutuante do bloco e bloco de imagem */
+.bloco-barra { position: fixed; z-index: 1040; display: flex; align-items: center; gap: .25rem; padding: .25rem; background: #fff; border: 1px solid var(--bs-border-color, #dee2e6); border-radius: .5rem; box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
+.bloco-barra[hidden] { display: none; }
+.bloco-barra .bb-n { font-size: .75rem; color: #6c757d; min-width: 5.2rem; text-align: center; }
+.bloco-barra .bb-sep { width: 1px; align-self: stretch; background: #dee2e6; margin: 0 .15rem; }
+.bloco-barra .btn { white-space: nowrap; }
+.bloco-selo { position: absolute; right: 4px; bottom: 4px; z-index: 3; padding: 1px 7px; font: 600 11px/1.5 system-ui, sans-serif; color: #146c43; background: #d1e7dd; border-radius: 99px; pointer-events: none; }
+.doc-bloco:not(.pg-cx):not(.pg-obj) .bloco-selo { position: static; display: inline-block; margin-top: .3rem; }
+.doc-bloco.concluido.com-setor { --cor-setor: #198754; }
+.doc-bloco.concluido .doc-texto { cursor: default; }
+.doc-bloco.bloco-destaque { outline: 3px solid #ffc107; outline-offset: 2px; transition: outline-color 1s; }
+.bloco-imagem { width: 100%; height: 100%; margin: 0; }
+.bloco-imagem img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.bloco-imagem-vazio { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem; width: 100%; height: 100%; min-height: 90px; padding: .5rem; text-align: center; color: #6c757d; background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 8px, #f1f3f5 8px, #f1f3f5 16px); border: 1px dashed #adb5bd; cursor: pointer; }
+.doc-bloco[data-pode-concluir][data-tipo=imagem] .bloco-imagem { cursor: pointer; }
+.doc-bloco:not(.pg-obj) .bloco-imagem img { height: auto; max-height: 70vh; }
+.pg-obj.doc-tipo-imagem .doc-figura { height: 100%; }
+@media print { .bloco-barra, .bloco-selo { display: none !important; } }
+/* Padrão de design (tela "Padrão de design"): só o texto corrido; as caixas das páginas seguem o PDF */
+.texto-rg:not(.pg-texto) { font-family: var(--rg-fonte, Calibri, Carlito, "Segoe UI", Arial, sans-serif); font-size: var(--rg-tamanho, 1rem); line-height: var(--rg-linhas, 1.55); }
+.texto-rg:not(.pg-texto) p { margin-bottom: var(--rg-paragrafo, .7rem); }

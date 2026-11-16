@@ -53,7 +53,7 @@
       e.style.cssText = "left:" + b.x + "px;top:" + b.y + "px;width:" + b.w + "px;height:" + b.h + "px;--cor:" + b.cor;
       var h = '<div class="ed-conteudo"' + (b.tipo === "texto" ? ' style="' + esc(b.css) + '"' : "") + ">";
       if (b.tipo === "texto") h += b.html || '<span class="ed-vazio">(vazio)</span>';
-      else h += '<span class="ed-rotulo-obj"><i class="bi bi-' + (b.tipo === "grafico" ? "bar-chart" : "table") + '"></i> ' + esc(b.tipo_nome) + (b.titulo ? ": " + esc(b.titulo) : "") + "</span>";
+      else h += '<span class="ed-rotulo-obj"><i class="bi bi-' + (b.tipo === "grafico" ? "bar-chart" : b.tipo === "imagem" ? "image" : "table") + '"></i> ' + esc(b.tipo_nome) + (b.titulo ? ": " + esc(b.titulo) : "") + "</span>";
       h += "</div>";
       if (b.siglas || b.travado_por) h += '<span class="ed-chip">' + (b.travado_por ? '<i class="bi bi-pencil-fill"></i> ' + esc(b.travado_por) + " · " : "") + esc(b.siglas) + "</span>";
       e.innerHTML = h;
@@ -89,7 +89,7 @@
     var g = b || rascunho;
     var h = "";
     if (novo) {
-      h += '<label class="form-label mini mb-0" for="f-tipo">Tipo</label><select class="form-select form-select-sm mb-2" id="f-tipo"><option value="texto">Texto</option><option value="grafico">Gráfico de um quadro</option><option value="tabela">Tabela de um quadro</option></select>';
+      h += '<label class="form-label mini mb-0" for="f-tipo">Tipo</label><select class="form-select form-select-sm mb-2" id="f-tipo"><option value="texto">Texto</option><option value="grafico">Gráfico de um quadro</option><option value="tabela">Tabela de um quadro</option><option value="imagem">Imagem</option></select>';
       h += '<div id="f-quadro-box" class="d-none"><label class="form-label mini mb-0" for="f-quadro">Quadro de números</label><select class="form-select form-select-sm mb-2" id="f-quadro">' + opcoes(D.opcoes.quadros, "", "(escolha)", "titulo") + "</select></div>";
     } else {
       h += '<p class="mini mb-2"><strong>' + esc(b.tipo_nome) + "</strong>" + (b.tipo === "texto" ? " · " + b.caracteres + " caracteres" : "") + (b.editado ? " · <span class=\"text-primary\">tem texto escrito pelos setores</span>" : "") + "</p>";
@@ -130,7 +130,7 @@
       h = '<h2 class="h6">Novo bloco</h2>' + camposComuns(null, true) +
         '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" id="b-criar"><i class="bi bi-plus-lg"></i> Criar bloco</button><button class="btn btn-sm btn-outline-secondary" id="b-cancelar">Cancelar</button></div>';
       painel.innerHTML = h;
-      $("#f-tipo").onchange = function () { $("#f-quadro-box").classList.toggle("d-none", this.value === "texto"); };
+      $("#f-tipo").onchange = function () { $("#f-quadro-box").classList.toggle("d-none", this.value === "texto" || this.value === "imagem"); };
       ["x", "y", "w", "h"].forEach(function (k) {
         $("#f-" + k).oninput = function () { rascunho[k] = parseFloat(this.value) || 0; desenhar(); };
       });

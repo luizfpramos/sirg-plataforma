@@ -75,6 +75,32 @@
   </div>
 </div>
 
+<div class="bloco-barra d-print-none" id="bloco-barra" role="toolbar" aria-label="Ações deste trecho" hidden>
+  <button type="button" class="btn btn-sm btn-light js-bb-ant" title="Ir ao trecho pendente anterior" aria-label="Trecho pendente anterior"><i class="bi bi-chevron-left"></i></button>
+  <span class="bb-n js-bb-n" aria-live="polite"></span>
+  <button type="button" class="btn btn-sm btn-light js-bb-prox" title="Ir ao próximo trecho pendente" aria-label="Próximo trecho pendente"><i class="bi bi-chevron-right"></i></button>
+  <span class="bb-sep"></span>
+  <button type="button" class="btn btn-sm btn-light js-bb-versoes" title="Ver as versões anteriores e voltar a uma delas"><i class="bi bi-clock-history"></i> Versões</button>
+  <button type="button" class="btn btn-sm btn-light js-bb-imagem" title="Inserir ou trocar a imagem"><i class="bi bi-image"></i> Imagem</button>
+  <button type="button" class="btn btn-sm btn-success js-bb-concluir" title="Marcar este trecho como pronto"><i class="bi bi-check2-circle"></i> Concluí</button>
+  <button type="button" class="btn btn-sm btn-outline-secondary js-bb-desfazer" title="Reabrir este trecho para editar"><i class="bi bi-arrow-counterclockwise"></i> Desfazer</button>
+</div>
+<div class="modal fade" id="modal-imagem-bloco" tabindex="-1" aria-labelledby="modal-imagem-bloco-titulo" aria-hidden="true">
+  <div class="modal-dialog"><form class="modal-content js-imagem-form" enctype="multipart/form-data">
+    <div class="modal-header"><h2 class="modal-title h6" id="modal-imagem-bloco-titulo">Imagem do trecho</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+    <div class="modal-body">
+      <div class="js-imagem-atual mb-3"></div>
+      <label class="form-label" for="imagem-arquivo">Arquivo (PNG, JPG, GIF ou WEBP, até 10 MB)</label>
+      <input class="form-control mb-3" type="file" id="imagem-arquivo" name="arquivo" accept="image/png,image/jpeg,image/gif,image/webp">
+      <label class="form-label" for="imagem-alt">Texto alternativo <span class="text-secondary">(descreva a imagem para quem não consegue vê-la)</span></label>
+      <input class="form-control mb-3" id="imagem-alt" name="alt" maxlength="300" required>
+      <label class="form-label" for="imagem-ajuste">Enquadramento</label>
+      <select class="form-select" id="imagem-ajuste" name="ajuste"><option value="contain">Mostrar inteira (pode sobrar espaço)</option><option value="cover">Preencher a área (pode cortar)</option></select>
+      <div class="text-danger mini mt-2 js-imagem-erro" role="alert"></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto js-imagem-remover">Tirar a imagem</button><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary">Salvar</button></div>
+  </form></div>
+</div>
 <aside class="doc-gaveta d-print-none" id="doc-gaveta" aria-label="Dados da tabela ou do gráfico" hidden>
   <div class="doc-gaveta-cab"><strong class="js-gaveta-titulo">Dados</strong><button type="button" class="btn-close js-gaveta-fechar" aria-label="Fechar"></button></div>
   <div class="doc-gaveta-corpo js-gaveta-corpo"></div>
@@ -101,5 +127,5 @@
   usuario: {id: {{ user.pk }}, nome: "{{ user.get_full_name|default:user.username|escapejs }}"}, rastreioPadrao: false,
   rastreioObrigatorio: {{ e_master|yesno:'false,true' }}, preencher: true};</script>
 <script src="{% static 'vendor/dompurify/purify.min.js' %}"></script>
-<script src="{% static 'js/texto_comum.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/revisao.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/escrever.js' %}?v={{ VERSAO }}"></script>
+<script src="{% static 'js/texto_comum.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/revisao.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/escrever.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/escrever_barra.js' %}?v={{ VERSAO }}"></script>
 <script src="{% static 'js/quadros.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/preencher.js' %}?v={{ VERSAO }}"></script>{% endblock %}

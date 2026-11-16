@@ -207,6 +207,8 @@ def copiar_ciclo(origem, ano, titulo, anos_serie=None):
         cfg = dict(b.config or {})
         if b.tipo == Bloco.TEXTO:
             cfg["herdado_de"] = origem.ano      # texto do ano anterior, como ponto de partida
+        elif b.tipo == Bloco.IMAGEM:             # a imagem do ano passado não vale para este: o setor insere a nova
+            cfg["imagem"] = {"ajuste": (cfg.get("imagem") or {}).get("ajuste", "contain")}
         Bloco.objects.create(secao=mapa_secao[b.secao_id], ordem=b.ordem, tipo=b.tipo, titulo=b.titulo,
                              conteudo=b.conteudo, quadro=mapa_quadro.get(b.quadro.chave) if b.quadro else None,
                              config=cfg, pagina=mapa_pagina.get(b.pagina_id), setor_id=b.setor_id,

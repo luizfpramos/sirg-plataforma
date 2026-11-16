@@ -348,9 +348,9 @@ class ImportacaoPDF(models.Model):
 class Bloco(models.Model):
     """Um pedaço do texto do relatório, dentro de uma seção, na ordem em que aparece no documento.
     Com `pagina`, é uma caixa de texto (ou gráfico/tabela) daquela página, na posição de config["caixa"]."""
-    TEXTO, TABELA, GRAFICO, DESTAQUES = "texto", "tabela", "grafico", "destaques"
+    TEXTO, TABELA, GRAFICO, DESTAQUES, IMAGEM = "texto", "tabela", "grafico", "destaques", "imagem"
     TIPOS = [(TEXTO, "Texto"), (TABELA, "Tabela de um quadro"), (GRAFICO, "Gráfico de um quadro"),
-             (DESTAQUES, "Números em destaque")]
+             (DESTAQUES, "Números em destaque"), (IMAGEM, "Imagem")]
     secao = models.ForeignKey(Secao, on_delete=models.CASCADE, related_name="blocos")
     ordem = models.PositiveIntegerField(default=0)
     tipo = models.CharField(max_length=10, choices=TIPOS, default=TEXTO)
@@ -370,10 +370,15 @@ class Bloco(models.Model):
     atualizado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                        related_name="+")
     atualizado_em = models.DateTimeField(auto_now=True)
+    # "Concluí": o setor marca o trecho como pronto; enquanto estiver marcado, ninguém altera (Desfazer reabre).
+    concluido_em = models.DateTimeField(null=True, blank=True)
+    concluido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name="+")
     editando_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name="+")
     editando_desde = models.DateTimeField(null=True, blank=True)
-    history = HistoricalRecords(excluded_fields=["editando_por", "editando_desde", "atualizado_em"])
+    history = HistoricalRecords(excluded_fields=["editando_por", "editando_desde", "atualizado_em", "concluido_em",
+                                                 "concluido_por"])
 
     class Meta:
         ordering = ["ordem", "id"]

@@ -7,6 +7,8 @@
 </table></div>{% if d.tabela.fonte %}<div class="fonte">Fonte: {{ d.tabela.fonte }}</div>{% endif %}</figure>
 {% elif d.b.tipo == 'grafico' and d.grafico %}
 <figure class="mb-0">{% if d.b.titulo %}<figcaption class="legenda">{{ d.b.titulo }}</figcaption>{% endif %}<div class="grafico">{{ d.grafico|safe }}</div>{% if d.quadro.fonte %}<div class="fonte">Fonte: {{ d.quadro.fonte }}</div>{% endif %}</figure>
+{% elif d.b.tipo == 'imagem' %}
+<figure class="bloco-imagem mb-0" data-ajuste="{{ d.imagem.ajuste }}">{% if d.imagem.url %}<img src="{{ d.imagem.url }}" alt="{{ d.imagem.alt }}" style="object-fit:{{ d.imagem.ajuste }}">{% if d.b.titulo %}<figcaption class="legenda">{{ d.b.titulo }}</figcaption>{% endif %}{% elif editor %}<div class="bloco-imagem-vazio d-print-none"><i class="bi bi-image"></i> {% if d.pode_bloco %}Clique para inserir a imagem{% else %}Imagem ainda não inserida{% endif %}{% if d.atr.descricao %}<span class="mini">{{ d.atr.descricao }}</span>{% endif %}</div>{% endif %}</figure>
 {% elif d.b.tipo == 'destaques' and d.destaques %}
 {% if d.b.titulo %}<div class="legenda">{{ d.b.titulo }}</div>{% endif %}
 <div class="destaques">{% for x in d.destaques %}<div class="destaque{% if x.erro %} erro{% endif %}{% if x.vazio %} vazio{% endif %}" title="{{ x.descricao }}"{% if x.quadro_id %} data-quadro="{{ x.quadro_id }}"{% endif %}><div class="num">{{ x.valor }}</div><div class="rot">{{ x.rotulo }}</div>{% if x.legenda %}<div class="leg">{{ x.legenda }}</div>{% endif %}</div>{% endfor %}</div>

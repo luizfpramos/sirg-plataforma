@@ -255,7 +255,7 @@
     }
     if (e.target.closest(".doc-barra button, .doc-barra .dropdown-menu")) { e.preventDefault(); return; }
     if (!ativo) return;
-    if (e.target.closest(".doc-ferramentas, .modal, .dropdown-menu, .toast, .chip-destaque, .doc-revisao, .pop-campo, .doc-gaveta")) return;
+    if (e.target.closest(".doc-ferramentas, .modal, .dropdown-menu, .toast, .chip-destaque, .doc-revisao, .pop-campo, .doc-gaveta, .bloco-barra")) return;
     fechar();
   });
   document.addEventListener("focusin", function (e) {
@@ -632,6 +632,9 @@
     var folga = (parseInt(css.getPropertyValue("--topo-h"), 10) || 53) + (parseInt(css.getPropertyValue("--ferr-h"), 10) || 90) + 12;
     window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - folga), behavior: instantaneo ? "instant" : "smooth" });
   }
+  // a barra flutuante dos blocos (escrever_barra.js) pede para fechar o trecho aberto antes de concluir
+  window.SIRGEscrever = { fechar: fechar, ativo: function () { return ativo; }, abrir: function (area) { return abrir(area); },
+    rolarPara: rolarPara, urlVolta: urlVolta };
   var alvoInicial = location.hash ? document.getElementById(location.hash.slice(1)) : (CFG.inicio && document.getElementById("sec-" + CFG.inicio));
   if (alvoInicial) setTimeout(function () { rolarPara(alvoInicial, true); }, 60);
   document.querySelectorAll(".doc-sumario a").forEach(function (a) {

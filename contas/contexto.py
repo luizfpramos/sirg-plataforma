@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from . import design
 from . import permissoes as P
 from .models import Instituicao
 
@@ -12,6 +13,7 @@ def global_sirg(request):
     base = {"NOME_SISTEMA": "SiRG", "NOME_SISTEMA_LONGO": "Sistema do Relatório de Gestão",
             "INST": inst, "DEBUG": settings.DEBUG, "VERSAO": settings.SIRG_VERSAO,
             "CONTATO": getattr(settings, "SIRG_CONTATO", ""),
+            "DESIGN_CSS": design.css_variaveis(inst),
             "HOMOLOGACAO": getattr(settings, "SIRG_AMBIENTE", "prd") == "hml"}
     u = getattr(request, "user", None)
     if not u or not u.is_authenticated:

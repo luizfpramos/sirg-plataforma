@@ -61,10 +61,15 @@ def estrutura(ciclo, calc, user=None, editor=False):
             m = A.montar_bloco(calc, b, revisao=editor, user=user if editor else None, pode_campos=pode,
                                **A.tamanho_na_pagina(b))
             A.caixa_na_pagina(b, m)
-            if b.tipo == Bloco.TEXTO:
+            if b.tipo in (Bloco.TEXTO, Bloco.IMAGEM):
                 m["atr"] = AT.anotar(b, s.setores.all(), m.get("caixa"))
-                m["pode_bloco"] = bool(editor and (pode if not b.setor_id else (
-                    F.pode_editar_bloco(user, b) if (e_master or b.setor_id in meus_setores) else False)))
+                dele = pode if not b.setor_id else (
+                    F.pode_responder_pelo_bloco(user, b) if (e_master or b.setor_id in meus_setores) else False)
+                m["pode_concluir"] = bool(editor and dele)                 # quem escreve também conclui e desfaz
+                m["pode_bloco"] = bool(editor and dele and not b.concluido_em)
+                m["concluido"] = bool(b.concluido_em)
+                if b.concluido_em:
+                    m["concluido_por"] = b.concluido_por
             d["campos_vazios"] += m.get("campos_vazios", 0)
             d["tem_campos"] = d.get("tem_campos") or "sirg-campo" in (b.conteudo or "")
             if b.tipo == Bloco.TEXTO:

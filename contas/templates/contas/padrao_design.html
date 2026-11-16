@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Padrão de design{% endblock %}
+{% block conteudo %}
+<h1 class="mb-0"><i class="bi bi-fonts"></i> Padrão de design</h1>
+<div class="subtitulo mb-3">Fonte, tamanho e espaçamentos do texto do relatório. As cores dos gráficos ficam em <a href="{% url 'cores_graficos' %}">Cores dos gráficos</a>.</div>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <form method="post" class="card"><div class="card-body">{% csrf_token %}
+      <label class="form-label" for="fonte_texto">Fonte do texto</label>
+      <select class="form-select mb-3" id="fonte_texto" name="fonte_texto">{% for k, n in fontes %}<option value="{{ k }}"{% if inst.fonte_texto == k %} selected{% endif %}>{{ n }}</option>{% endfor %}</select>
+      <label class="form-label" for="tamanho_texto">Tamanho do texto</label>
+      <select class="form-select mb-3" id="tamanho_texto" name="tamanho_texto">{% for t in tamanhos %}<option value="{{ t }}"{% if inst.tamanho_texto == t %} selected{% endif %}>{% if t %}{{ t }} px{% else %}Padrão do sistema{% endif %}</option>{% endfor %}</select>
+      <label class="form-label" for="espaco_linhas">Espaço entre linhas</label>
+      <select class="form-select mb-3" id="espaco_linhas" name="espaco_linhas">{% for l in linhas %}<option value="{{ l }}"{% if inst.espaco_linhas == l %} selected{% endif %}>{% if l %}{{ l }}×{% else %}Padrão do sistema{% endif %}</option>{% endfor %}</select>
+      <label class="form-label" for="espaco_paragrafos">Espaço entre parágrafos</label>
+      <select class="form-select mb-3" id="espaco_paragrafos" name="espaco_paragrafos">{% for p in paragrafos %}<option value="{{ p }}"{% if inst.espaco_paragrafos == p %} selected{% endif %}>{% if p %}{{ p }} px{% else %}Padrão do sistema{% endif %}</option>{% endfor %}</select>
+      <div class="d-flex gap-2"><button class="btn btn-primary">Salvar</button><button class="btn btn-outline-secondary" name="acao" value="restaurar">Voltar ao padrão do sistema</button></div>
+    </div></form>
+  </div>
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body">
+      <h2 class="h6">Como fica</h2>
+      <div class="texto-rg border rounded p-3 bg-white"><h3>Título de exemplo</h3><p>O relatório apresenta os resultados do ano. Os setores escrevem cada trecho e a DGDI confere os números antes de enviar ao Master.</p><p>Segundo parágrafo, para ver o espaço entre eles.</p></div>
+      <p class="mini text-secondary mt-3 mb-0">Vale para o texto corrido na tela e para os blocos de texto novos criados no editor de páginas. Os blocos que vieram do PDF mantêm a fonte do PDF.</p>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

@@ -680,6 +680,42 @@ VERSOES = [
 
 
 @login_required
+def padrao_design(request):
+    """Padrão de design do texto: fonte, tamanho e espaçamentos (as paletas dos gráficos ficam em "Cores")."""
+    from decimal import Decimal, InvalidOperation
+
+    from django.core.exceptions import PermissionDenied
+
+    from . import design
+    if not P.cuida_das_cores(request.user):
+        raise PermissionDenied
+    inst = Instituicao.atual()
+    if request.method == "POST":
+        try:
+            fonte = request.POST.get("fonte_texto", "")
+            tam = int(request.POST.get("tamanho_texto") or 0)
+            lin = Decimal(request.POST.get("espaco_linhas") or "0")
+            par = int(request.POST.get("espaco_paragrafos") or 0)
+        except (ValueError, InvalidOperation):
+            fonte, tam, lin, par = None, -1, Decimal("-1"), -1
+        if request.POST.get("acao") == "restaurar":
+            fonte, tam, lin, par = "", 0, Decimal("0"), 0
+        if fonte not in design.FONTES or tam not in design.TAMANHOS or lin not in design.LINHAS \
+                or par not in design.PARAGRAFOS:
+            messages.error(request, "Valor fora das opções. Escolha nas listas.")
+        else:
+            inst.fonte_texto, inst.tamanho_texto, inst.espaco_linhas, inst.espaco_paragrafos = fonte, tam, lin, par
+            inst.save(update_fields=["fonte_texto", "tamanho_texto", "espaco_linhas", "espaco_paragrafos",
+                                     "atualizado_em"])
+            S.registrar("instituicao_alterada", request.user, descricao="padrão de design do texto", request=request)
+            messages.success(request, "Padrão de design salvo.")
+        return redirect("padrao_design")
+    return render(request, "contas/padrao_design.html", {
+        "inst": inst, "fontes": [(k, v[0]) for k, v in design.FONTES.items()], "tamanhos": design.TAMANHOS,
+        "linhas": design.LINHAS, "paragrafos": design.PARAGRAFOS})
+
+
+@login_required
 def cores_graficos(request):
     """Paletas de cores dos gráficos: escolher a usada, criar, editar, importar e baixar (Master e diagramação)."""
     from django.core.exceptions import PermissionDenied

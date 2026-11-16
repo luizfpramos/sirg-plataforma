@@ -16,7 +16,7 @@ LIMITE_PAGINA = 20      # pontos de folga fora da página
 MINIMO = 12             # menor largura/altura de um bloco, em pontos
 CSS_PADRAO = ("font-family:Calibri,Carlito,sans-serif;font-size:11px;font-weight:400;font-style:normal;"
               "color:#000000;line-height:13.4px;text-align:justify")
-TIPOS_NOVOS = (Bloco.TEXTO, Bloco.GRAFICO, Bloco.TABELA)
+TIPOS_NOVOS = (Bloco.TEXTO, Bloco.GRAFICO, Bloco.TABELA, Bloco.IMAGEM)
 
 
 class Recusado(Exception):
@@ -30,7 +30,7 @@ def _caixa(b):
 
 def serializar(b, setores_da_secao):
     cx = _caixa(b)
-    atr = AT.anotar(b, setores_da_secao, cx) if b.tipo == Bloco.TEXTO else None
+    atr = AT.anotar(b, setores_da_secao, cx) if b.tipo in (Bloco.TEXTO, Bloco.IMAGEM) else None
     trava = F.trava_ativa(b)
     return {
         "id": b.pk, "tipo": b.tipo, "tipo_nome": b.get_tipo_display(),
@@ -146,7 +146,9 @@ def _css_de_corpo(pagina):
         css = _caixa(b).get("css")
         if css and (melhor is None or len(b.conteudo) > melhor[0]):
             melhor = (len(b.conteudo), css)
-    return melhor[1] if melhor else CSS_PADRAO
+    from contas import design
+    from contas.models import Instituicao
+    return design.ajustar_css_da_caixa(melhor[1] if melhor else CSS_PADRAO, Instituicao.atual())
 
 
 def _proxima_ordem(pagina):
@@ -170,7 +172,7 @@ def criar(user, pagina, d):
         raise Recusado("Tipo de bloco inválido.")
     secao = _secao(ciclo, d.get("secao"))
     quadro = None
-    if tipo != Bloco.TEXTO:
+    if tipo in (Bloco.GRAFICO, Bloco.TABELA):
         quadro = Quadro.objects.filter(ciclo=ciclo, pk=d.get("quadro") or 0).first()
         if quadro is None:
             raise Recusado("Escolha o quadro de números do gráfico ou da tabela.")
@@ -183,6 +185,9 @@ def criar(user, pagina, d):
         config = {"caixa": caixa, "criado_no_editor": True}
         if tipo == Bloco.GRAFICO:
             config.update({"tipo": "barras", "colunas": [f"a{ciclo.ano}"]})
+        elif tipo == Bloco.IMAGEM:
+            caixa.update({"fundo": None})
+            config["imagem"] = {"ajuste": "contain"}
     b = Bloco.objects.create(secao=secao, pagina=pagina, tipo=tipo, quadro=quadro, ordem=_proxima_ordem(pagina),
                              titulo=quadro.titulo if quadro else "", config=config, atualizado_por=None,
                              **_atributos(ciclo, d))

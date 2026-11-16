@@ -36,6 +36,16 @@ class Instituicao(models.Model):
                                                "Vazio = assinatura padrão da DGDI.")
     paleta_graficos = models.CharField("cores dos gráficos", max_length=40, default="ufcimg",
                                        help_text="Paleta usada em todos os gráficos (tela, Word e diagramação).")
+    # Padrão de design do texto do relatório (além das paletas dos gráficos): vale para o texto corrido na tela e
+    # para os blocos de texto novos feitos no editor de páginas. Os blocos que vieram do PDF mantêm a fonte do PDF.
+    fonte_texto = models.CharField("fonte do texto", max_length=40, default="", blank=True,
+                                   help_text="Vazio = a fonte padrão do sistema.")
+    tamanho_texto = models.PositiveSmallIntegerField("tamanho do texto (px)", default=0,
+                                                     help_text="0 = o tamanho padrão do sistema.")
+    espaco_linhas = models.DecimalField("espaço entre linhas", max_digits=3, decimal_places=2, default=0,
+                                        help_text="Múltiplo do tamanho do texto (ex.: 1,5). 0 = padrão.")
+    espaco_paragrafos = models.PositiveSmallIntegerField("espaço entre parágrafos (px)", default=0,
+                                                         help_text="0 = o padrão do sistema.")
     atualizado_em = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
 

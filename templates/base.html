@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/sirg.css' %}?v={{ VERSAO }}">
+  {% if DESIGN_CSS %}<style>{{ DESIGN_CSS|safe }}</style>{% endif %}
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -37,6 +38,7 @@
         <li><h6 class="dropdown-header">{% if E_MASTER or E_ADMIN %}Master{% else %}Diagramação{% endif %}</h6></li>
         {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'exportar' CICLO_MENU.ano %}"><i class="bi bi-file-earmark-word"></i> Baixar em Word</a></li>{% endif %}
         <li><a class="dropdown-item" href="{% url 'cores_graficos' %}"><i class="bi bi-palette"></i> Cores dos gráficos</a></li>
+        <li><a class="dropdown-item" href="{% url 'padrao_design' %}"><i class="bi bi-fonts"></i> Padrão de design</a></li>
         {% if CICLO_MENU and E_MASTER or CICLO_MENU and E_ADMIN %}
         <li><a class="dropdown-item" href="{% url 'ciclo' CICLO_MENU.ano %}"><i class="bi bi-table"></i> Quadros de números</a></li>
         <li><a class="dropdown-item" href="{% url 'conferencia_conexoes' CICLO_MENU.ano %}"><i class="bi bi-diagram-3"></i> Conferência dos números</a></li>

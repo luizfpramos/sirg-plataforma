@@ -26,8 +26,16 @@ from .models import Bloco, Ciclo, Comentario, MovimentoSecao, Secao, Sugestao
 TRAVA_MINUTOS = 10
 
 
+class Confirmar(Exception):
+    """A ação só vale se a pessoa confirmar (a mensagem é a pergunta)."""
+
+
 class Recusado(Exception):
     pass
+
+
+class SemPermissao(Recusado):
+    """A pessoa não é quem escreve neste trecho (a tela responde 403)."""
 
 
 # --- permissões -------------------------------------------------------------------
@@ -51,7 +59,12 @@ def pode_editar_texto(user, secao):
 
 
 def pode_editar_bloco(user, bloco):
-    """Pode escrever neste trecho? Sem setor no bloco, vale o que vale para a seção. Com setor no bloco (definido pelo
+    """Pode escrever neste trecho? Trecho marcado como concluído não se altera até alguém usar Desfazer."""
+    return not bloco.concluido_em and pode_responder_pelo_bloco(user, bloco)
+
+
+def pode_responder_pelo_bloco(user, bloco):
+    """Pode escrever neste trecho (ou marcá-lo como concluído e desfazer)? Sem setor no bloco, vale o que vale para a seção. Com setor no bloco (definido pelo
     administrador), quem escreve é o pessoal desse setor — mesmo que não seja um dos setores da seção — e o Master;
     a situação do ciclo e da seção continuam valendo."""
     if not bloco.setor_id:
@@ -70,10 +83,43 @@ def motivo_bloco_bloqueado(user, bloco):
     """Por que a pessoa não escreve neste bloco ("" se pode)."""
     if pode_editar_bloco(user, bloco):
         return ""
+    if bloco.concluido_em and pode_responder_pelo_bloco(user, bloco):
+        return "Este trecho está marcado como concluído. Use Desfazer para voltar a editar."
     secao = bloco.secao
     if bloco.setor_id and secao.ciclo.situacao == Ciclo.COLETA and secao.situacao not in (Secao.ENVIADA, Secao.APROVADA):
         return f"Este trecho é de responsabilidade de: {bloco.setor.sigla}."
     return motivo_texto_bloqueado(user, secao) or "Você não pode alterar este texto."
+
+
+def concluir_bloco(user, bloco, confirmar=False):
+    """Marca o trecho como concluído. Texto vazio não conclui; abaixo do mínimo de caracteres pede confirmação
+    (levanta `Confirmar`). Imagem sem arquivo não conclui."""
+    from . import atributos as AT
+    if not pode_responder_pelo_bloco(user, bloco):
+        raise SemPermissao(motivo_bloco_bloqueado(user, bloco) or "Você não pode concluir este trecho.")
+    if bloco.concluido_em:
+        return bloco
+    if bloco.tipo == Bloco.IMAGEM:
+        if not (bloco.config or {}).get("imagem", {}).get("id"):
+            raise Recusado("Insira a imagem antes de concluir.")
+    elif bloco.tipo == Bloco.TEXTO:
+        n = AT.contar_caracteres(bloco.conteudo)
+        if n == 0:
+            raise Recusado("Escreva o texto antes de concluir.")
+        if bloco.min_caracteres and n < bloco.min_caracteres and not confirmar:
+            raise Confirmar(f"O texto tem {n} caracteres e o mínimo é {bloco.min_caracteres}. Concluir assim mesmo?")
+    Bloco.objects.filter(pk=bloco.pk).update(concluido_em=timezone.now(), concluido_por=user,
+                                             editando_por=None, editando_desde=None)
+    bloco.refresh_from_db()
+    return bloco
+
+
+def desfazer_conclusao(user, bloco):
+    if not pode_responder_pelo_bloco(user, bloco):
+        raise SemPermissao(motivo_bloco_bloqueado(user, bloco) or "Você não pode reabrir este trecho.")
+    Bloco.objects.filter(pk=bloco.pk).update(concluido_em=None, concluido_por=None)
+    bloco.refresh_from_db()
+    return bloco
 
 
 def pode_sugerir(user, secao):
