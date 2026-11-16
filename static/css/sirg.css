@@ -751,3 +751,11 @@ main#conteudo:focus { outline: none; }
 .bloco-contador[data-estado="muito"] { background: #f8d7da; color: #842029; }
 .doc-bloco:not(.pg-cx) .bloco-contador { position: static; display: inline-block; margin: .2rem 0; font-size: .75rem; }
 @media print { .pg-cx.com-setor { box-shadow: none; } .doc-bloco.com-setor:not(.pg-cx) { border-left: 0; padding-left: 0; } }
+
+/* importador de PDF: conferência das páginas lidas */
+.imp-rolagem { overflow-x: auto; padding-bottom: .5rem; }
+.imp-cx { outline: 1px dashed rgba(13, 110, 253, .55); outline-offset: 1px; }
+.imp-fixo { outline: 1px dotted rgba(108, 117, 125, .8); outline-offset: 1px; }
+.imp-leg { display: inline-block; width: 14px; height: 10px; vertical-align: -1px; }
+.imp-leg-texto { border: 1px dashed rgba(13, 110, 253, .8); }
+.imp-leg-fixo { border: 1px dotted rgba(108, 117, 125, .9); }

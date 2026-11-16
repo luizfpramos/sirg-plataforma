@@ -289,6 +289,61 @@ class Pagina(models.Model):
     def __str__(self):
         return f"Página {self.numero} de {self.ciclo}"
 
+    @property
+    def fundo_url(self):
+        from .paginas import url_do_fundo
+        return url_do_fundo(self.fundo)
+
+    @property
+    def fundo_caminho(self):
+        from .paginas import caminho_do_fundo
+        return caminho_do_fundo(self.fundo)
+
+
+class ImportacaoPDF(models.Model):
+    """Um PDF diagramado do Relatório de Gestão enviado pelo administrador. O sistema lê o PDF em segundo plano
+    (fundo de cada página sem texto + caixas de texto) e guarda o resultado em dados/arquivos/importacoes/<id>/;
+    depois o administrador confere e aplica ao ciclo, que passa a ter as páginas do PDF."""
+    PROCESSANDO, PRONTA, ERRO, APLICADA = "processando", "pronta", "erro", "aplicada"
+    SITUACOES = [(PROCESSANDO, "Lendo o PDF"), (PRONTA, "Pronta para aplicar"), (ERRO, "Erro na leitura"),
+                 (APLICADA, "Aplicada ao ciclo")]
+    ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE, related_name="importacoes")
+    nome = models.CharField("arquivo", max_length=255)
+    tamanho = models.PositiveIntegerField("tamanho (bytes)", default=0)
+    enviado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name="+")
+    enviado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    situacao = models.CharField("situação", max_length=12, choices=SITUACOES, default=PROCESSANDO)
+    progresso = models.PositiveSmallIntegerField("progresso (%)", default=0)
+    etapa = models.CharField(max_length=120, blank=True, default="")
+    mensagem = models.TextField(blank=True, default="")
+    resumo = models.JSONField(default=dict, blank=True)
+    aplicada_em = models.DateTimeField(null=True, blank=True)
+    aplicada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name="+")
+
+    class Meta:
+        ordering = ["-enviado_em", "-id"]
+        verbose_name = "importação de PDF"
+        verbose_name_plural = "importações de PDF"
+
+    def __str__(self):
+        return f"{self.nome} ({self.ciclo})"
+
+    @property
+    def pasta(self):
+        from pathlib import Path
+        return Path(settings.MEDIA_ROOT) / "importacoes" / str(self.pk)
+
+    @property
+    def interrompida(self):
+        """Ficou "lendo" sem avançar por muito tempo (o servidor foi reiniciado no meio da leitura)."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+        return self.situacao == self.PROCESSANDO and self.atualizado_em < timezone.now() - timedelta(minutes=15)
+
 
 class Bloco(models.Model):
     """Um pedaço do texto do relatório, dentro de uma seção, na ordem em que aparece no documento.

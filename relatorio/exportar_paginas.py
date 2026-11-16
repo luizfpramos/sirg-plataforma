@@ -9,9 +9,7 @@ import io
 import re
 from html import escape, unescape
 from html.parser import HTMLParser
-from pathlib import Path
 
-from django.conf import settings
 from docx import Document
 from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.text import WD_BREAK
@@ -270,7 +268,7 @@ def _html_final(b, calc):
 def _pagina(doc, p, caixas, objetos, calc, coletar, cont):
     par = doc.add_paragraph()
     frags = []
-    fundo = Path(settings.BASE_DIR) / "static" / p.fundo
+    fundo = p.fundo_caminho
     if fundo.exists():
         rid, _ = doc.part.get_or_add_image(str(fundo))
         frags.append(_ancora(_figura(rid, p.largura, p.altura, fundo.name), 0, 0, p.largura, p.altura, atras=True,
