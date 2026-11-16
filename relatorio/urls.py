@@ -3,6 +3,7 @@ from django.urls import path
 from . import views as V
 from . import views_doc as D
 from . import views_atributos as AT
+from . import views_editor_blocos as ED
 from . import views_importar as IM
 from . import views_texto as T
 
@@ -45,6 +46,9 @@ urlpatterns = [
     path("ciclos/<int:ano>/imagens/enviar/", T.imagem_enviar, name="imagem_enviar"),
     path("ciclos/<int:ano>/imagens/<int:pk>/", T.imagem_ver, name="imagem_ver"),
     path("ciclos/<int:ano>/blocos/atributos/", AT.blocos_atributos, name="blocos_atributos"),
+    path("ciclos/<int:ano>/paginas/", ED.editor_inicio, name="editor_inicio"),
+    path("ciclos/<int:ano>/paginas/<int:n>/editor/", ED.editor_pagina, name="editor_pagina"),
+    path("ciclos/<int:ano>/paginas/<int:n>/editor/<str:acao>/", ED.editor_acao, name="editor_acao"),
     path("ciclos/<int:ano>/importar-pdf/", IM.importar_pdf, name="importar_pdf"),
     path("ciclos/<int:ano>/importar-pdf/<int:pk>/", IM.importacao_ver, name="importacao_ver"),
     path("ciclos/<int:ano>/importar-pdf/<int:pk>/aplicar/", IM.importacao_aplicar, name="importacao_aplicar"),
