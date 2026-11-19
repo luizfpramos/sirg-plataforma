@@ -1,6 +1,6 @@
 """
 Paletas de cores dos gráficos. A paleta vale para todos os gráficos do relatório (tela, Word e
-pacote da diagramação) e é escolhida pelo Master ou pelo administrador em "Cores dos gráficos".
+pacote da diagramação) e é escolhida pelo Editor-chefe ou pelo administrador em "Cores dos gráficos".
 
 A ordem das cores importa: a 1ª é a cor das barras de uma série só; a 2ª, a da linha sobre as
 barras (ex.: recursos); as seguintes, as demais séries e fatias. As paletas "acessivel", "ufcimg"

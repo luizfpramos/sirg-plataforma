@@ -5,13 +5,13 @@ O código do SiRG fica num repositório privado no GitHub. O SiRG continua rodan
 | Quando | O que acontece | Onde aparece |
 |---|---|---|
 | Código entra na `main` e os testes passam | A **homologação** é atualizada em até 5 min | https://hml-sirg.softwares.net.br |
-| Na homologação, o Master ou o admin clica em **Sobre › Enviar para a produção** (2.15) | A **produção** recebe exatamente o código da homologação em até 5 min, com backup antes | https://sirg.softwares.net.br |
+| Na homologação, o Editor-chefe ou o admin clica em **Sobre › Enviar para a produção** (2.15) | A **produção** recebe exatamente o código da homologação em até 5 min, com backup antes | https://sirg.softwares.net.br |
 | Ou: uma tag `vX.Y` é criada e os testes passam | A **produção** é atualizada em até 5 min, com backup antes | https://sirg.softwares.net.br |
 
 - Ninguém precisa acessar o PC da DGDI. O PC só **lê** o GitHub, com uma chave só de leitura.
 - Os dados (banco, arquivos enviados, `.env`) nunca vão para o GitHub.
 - A produção só recebe código que já passou pela homologação.
-- O resultado de cada instalação aparece em **Sobre** (para o Master e o administrador) e no log do PC (`C:\ProgramData\SiRG\implantador\logs`).
+- O resultado de cada instalação aparece em **Sobre** (para o Editor-chefe e o administrador) e no log do PC (`C:\ProgramData\SiRG\implantador\logs`).
 
 ---
 

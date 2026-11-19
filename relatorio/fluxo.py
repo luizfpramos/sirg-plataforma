@@ -2,13 +2,13 @@
 Texto do relatório e fluxo das seções.
 
 Permissões do texto (blocos):
-  - Master: edita direto ou sugere, em qualquer seção (exceto ciclo encerrado).
+  - Editor-chefe: edita direto ou sugere, em qualquer seção (exceto ciclo encerrado).
   - Setor responsável: edita a própria seção durante a coleta, enquanto ela não foi
-    enviada ao Master (ou depois de devolvida).
-  - Administrador sem Master: monta a estrutura, mas não escreve o texto dos setores.
+    enviada ao Editor-chefe (ou depois de devolvida).
+  - Administrador sem Editor-chefe: monta a estrutura, mas não escreve o texto dos setores.
 
 Fluxo da seção:
-  não iniciada → em preenchimento (sozinho, na 1ª alteração) → enviada ao Master
+  não iniciada → em preenchimento (sozinho, na 1ª alteração) → enviada ao Editor-chefe
   → aprovada  (ou devolvida ao setor, voltando a "em preenchimento").
 """
 import re
@@ -65,7 +65,7 @@ def pode_editar_bloco(user, bloco):
 
 def pode_responder_pelo_bloco(user, bloco):
     """Pode escrever neste trecho (ou marcá-lo como concluído e desfazer)? Sem setor no bloco, vale o que vale para a seção. Com setor no bloco (definido pelo
-    administrador), quem escreve é o pessoal desse setor — mesmo que não seja um dos setores da seção — e o Master;
+    administrador), quem escreve é o pessoal desse setor — mesmo que não seja um dos setores da seção — e o Editor-chefe;
     a situação do ciclo e da seção continuam valendo."""
     if not bloco.setor_id:
         return pode_editar_texto(user, bloco.secao)
@@ -127,7 +127,7 @@ def pode_sugerir(user, secao):
 
 
 def pode_responder_sugestao(user, secao):
-    """Quem aceita/recusa sugestões: o setor responsável (ou o Master, se a seção não tiver setor)."""
+    """Quem aceita/recusa sugestões: o setor responsável (ou o Editor-chefe, se a seção não tiver setor)."""
     if secao.ciclo.situacao == Ciclo.ENCERRADO:
         return False
     if e_do_setor(user, secao):
@@ -144,11 +144,11 @@ def motivo_texto_bloqueado(user, secao):
     if ciclo.situacao == Ciclo.PREPARACAO:
         return "O ciclo está em preparação: a coleta ainda não foi aberta."
     if ciclo.situacao == Ciclo.REVISAO:
-        return "O ciclo está em revisão: só o Master altera o texto."
+        return "O ciclo está em revisão: só o Editor-chefe altera o texto."
     if secao.situacao == Secao.ENVIADA:
-        return "Seção enviada ao Master: aguardando a revisão."
+        return "Seção enviada ao Editor-chefe: aguardando a revisão."
     if secao.situacao == Secao.APROVADA:
-        return "Seção aprovada pelo Master."
+        return "Seção aprovada pelo Editor-chefe."
     setores = ", ".join(s.sigla for s in secao.setores.all()) or "nenhum setor definido"
     return f"Texto de responsabilidade de: {setores}."
 
@@ -193,8 +193,8 @@ def salvar_texto(user, bloco, html, titulo=None, versao=None):
                        "recarregue a página e aplique de novo.")
     novo = revisao.carimbar(b.conteudo, limpar(html), user)
     if not P.e_master(user) and revisao.texto_base(novo) != revisao.texto_base(b.conteudo):
-        # quem não é Master só altera o texto com o controle de alterações ligado (o texto base não muda)
-        raise Recusado("Com o controle de alterações, o texto original continua no lugar até o Master aceitar a "
+        # quem não é Editor-chefe só altera o texto com o controle de alterações ligado (o texto base não muda)
+        raise Recusado("Com o controle de alterações, o texto original continua no lugar até o Editor-chefe aceitar a "
                        "mudança. Recarregue a página (F5) e escreva de novo.")
     b.conteudo = novo
     b.config = {k: v for k, v in (b.config or {}).items() if k not in ("herdado_de", "modelo")}
@@ -227,7 +227,7 @@ def criar_bloco(user, secao, tipo, depois_de=None, quadro=None):
     if not pode_editar_texto(user, secao):
         raise Recusado(motivo_texto_bloqueado(user, secao) or "Você não pode alterar esta seção.")
     if not P.e_master(user):
-        raise Recusado("Os setores alteram o texto que já está no relatório; novos trechos são incluídos pelo Master.")
+        raise Recusado("Os setores alteram o texto que já está no relatório; novos trechos são incluídos pelo Editor-chefe.")
     if tipo not in dict(Bloco.TIPOS):
         raise Recusado("Tipo de bloco inválido.")
     blocos = list(secao.blocos.order_by("ordem", "id"))
@@ -268,8 +268,8 @@ def excluir_bloco(user, bloco):
     if not pode_editar_texto(user, bloco.secao):
         raise Recusado(motivo_texto_bloqueado(user, bloco.secao))
     if not P.e_master(user):
-        raise Recusado("Só o Master exclui trechos. Para propor a retirada de um texto, apague-o com o controle de "
-                       "alterações (fica riscado até o Master aceitar).")
+        raise Recusado("Só o Editor-chefe exclui trechos. Para propor a retirada de um texto, apague-o com o controle de "
+                       "alterações (fica riscado até o Editor-chefe aceitar).")
     if trava_ativa(bloco) and bloco.editando_por_id != user.pk:
         raise Recusado("Outra pessoa está editando este trecho.")
     bloco._change_reason = "bloco excluído"
@@ -278,7 +278,7 @@ def excluir_bloco(user, bloco):
 
 # --- controle de alterações (sugestões no próprio texto) ----------------------------------------
 def pode_resolver_alteracoes(user, secao):
-    """Aceitar ou recusar o que foi sugerido no texto: o Master (que revisa o relatório). Quem sugeriu pode
+    """Aceitar ou recusar o que foi sugerido no texto: o Editor-chefe (que revisa o relatório). Quem sugeriu pode
     desfazer (recusar) a própria alteração enquanto escreve."""
     return P.e_master(user) and pode_editar_texto(user, secao)
 
@@ -288,7 +288,7 @@ def resolver_alteracoes(user, bloco, ids=None, aceitar=True):
     """Aceita (ou recusa) as sugestões `ids` do bloco (todas, se None). Devolve (bloco, quantas)."""
     master = pode_resolver_alteracoes(user, bloco.secao)
     if not master and not (not aceitar and pode_editar_texto(user, bloco.secao)):
-        raise Recusado("Quem aceita ou recusa as alterações é o Master, na revisão da seção.")
+        raise Recusado("Quem aceita ou recusa as alterações é o Editor-chefe, na revisão da seção.")
     b = Bloco.objects.select_for_update().select_related("editando_por", "secao__ciclo").get(pk=bloco.pk)
     if trava_ativa(b) and b.editando_por_id not in (None, user.pk):
         raise Recusado(f"{b.editando_por.get_full_name() or b.editando_por.username} está escrevendo neste trecho "
@@ -350,7 +350,7 @@ def preencher_campo(user, bloco, chave, texto):
 
 
 def alteracoes_de_fora(secao, alteracoes=None):
-    """Sugestões feitas por quem não é do setor da seção (ex.: o Master): o setor precisa decidir antes de enviar."""
+    """Sugestões feitas por quem não é do setor da seção (ex.: o Editor-chefe): o setor precisa decidir antes de enviar."""
     from django.contrib.auth import get_user_model
     alteracoes = alteracoes_da_secao(secao) if alteracoes is None else alteracoes
     ids = {a["autor_id"] for a in alteracoes if a["autor_id"]}
@@ -364,11 +364,11 @@ def alteracoes_de_fora(secao, alteracoes=None):
     return [a for a in alteracoes if a["autor_id"] not in do_setor]
 
 
-# --- sugestões do Master -------------------------------------------------------------------
+# --- sugestões do Editor-chefe -------------------------------------------------------------------
 @transaction.atomic
 def sugerir(user, bloco, html, comentario=""):
     if not pode_sugerir(user, bloco.secao):
-        raise Recusado("Só o Master pode sugerir alterações.")
+        raise Recusado("Só o Editor-chefe pode sugerir alterações.")
     proposto = limpar(html)
     if proposto == bloco.conteudo:
         raise Recusado("A sugestão é igual ao texto atual.")
@@ -389,7 +389,7 @@ def responder_sugestao(user, sugestao, aceitar, resposta=""):
     if aceitar:
         b.conteudo = s.proposto
         b.atualizado_por = user
-        b._change_reason = f"sugestão de {s.autor.get_full_name() if s.autor else 'Master'} aceita"
+        b._change_reason = f"sugestão de {s.autor.get_full_name() if s.autor else 'Editor-chefe'} aceita"
         b.save()
         _marcar_preenchimento(b.secao, user)
     s.situacao = Sugestao.ACEITA if aceitar else Sugestao.RECUSADA
@@ -520,6 +520,6 @@ def acao_secao(user, secao, acao, comentario=""):
         if not (comentario or "").strip():
             raise Recusado("Explique ao setor o que precisa ser ajustado.")
         mover_secao(secao, Secao.PREENCHIMENTO, user, comentario)
-        comentar(user, secao, f"Seção devolvida pelo Master: {comentario}")
+        comentar(user, secao, f"Seção devolvida pelo Editor-chefe: {comentario}")
     elif acao == "reabrir":
-        mover_secao(secao, Secao.PREENCHIMENTO, user, comentario or "reaberta pelo Master")
+        mover_secao(secao, Secao.PREENCHIMENTO, user, comentario or "reaberta pelo Editor-chefe")

@@ -29,7 +29,7 @@ class Ciclo(models.Model):
     SITUACOES = [
         (PREPARACAO, "Em preparação (estrutura sendo montada)"),
         (COLETA, "Coleta aberta (setores preenchendo)"),
-        (REVISAO, "Em revisão (só o Master edita)"),
+        (REVISAO, "Em revisão (só o Editor-chefe edita)"),
         (ENCERRADO, "Encerrado (somente leitura)"),
     ]
     ano = models.PositiveSmallIntegerField("ano-base", unique=True)
@@ -60,7 +60,7 @@ class Secao(models.Model):
     SITUACOES = [
         (NAO_INICIADA, "Não iniciada"),
         (PREENCHIMENTO, "Em preenchimento"),
-        (ENVIADA, "Enviada ao Master"),
+        (ENVIADA, "Enviada ao Editor-chefe"),
         (APROVADA, "Aprovada"),
     ]
     ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE, related_name="secoes")
@@ -204,7 +204,7 @@ class Coluna(models.Model):
     chave = models.CharField(max_length=60, validators=[CHAVE])
     rotulo = models.CharField("rótulo", max_length=120)
     ano = models.PositiveSmallIntegerField(null=True, blank=True)
-    travada = models.BooleanField(default=False, help_text="Ano anterior já publicado: só o Master altera, com justificativa.")
+    travada = models.BooleanField(default=False, help_text="Ano anterior já publicado: só o Editor-chefe altera, com justificativa.")
     history = HistoricalRecords()
 
     class Meta:
@@ -388,7 +388,7 @@ class Bloco(models.Model):
 
 
 class Sugestao(models.Model):
-    """Alteração de texto proposta pelo Master, que o setor aceita ou recusa."""
+    """Alteração de texto proposta pelo Editor-chefe, que o setor aceita ou recusa."""
     PENDENTE, ACEITA, RECUSADA, RETIRADA = "pendente", "aceita", "recusada", "retirada"
     SITUACOES = [(PENDENTE, "Aguardando o setor"), (ACEITA, "Aceita"), (RECUSADA, "Recusada"),
                  (RETIRADA, "Retirada pelo autor")]

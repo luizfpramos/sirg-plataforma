@@ -14,7 +14,7 @@
     <div class="col-md-2"><label class="mini text-secondary" for="f-perfil">Perfil</label>
       <select id="f-perfil" name="perfil" class="form-select form-select-sm"><option value="">todos</option>
         <option value="admin" {% if perfil_sel == 'admin' %}selected{% endif %}>Administrador</option>
-        <option value="master" {% if perfil_sel == 'master' %}selected{% endif %}>Master</option></select></div>
+        <option value="master" {% if perfil_sel == 'master' %}selected{% endif %}>Editor-chefe</option></select></div>
     <div class="col-md-2"><label class="mini text-secondary" for="f-sit">Situação</label>
       <select id="f-sit" name="situacao" class="form-select form-select-sm">
         <option value="ativos" {% if situacao_sel == 'ativos' %}selected{% endif %}>ativos</option>
@@ -33,7 +33,7 @@
     <td><a href="{% url 'usuario' u.pk %}">{{ u.get_full_name|default:"(sem nome)" }}</a></td>
     <td class="codigo">{{ u.username }}</td>
     <td>{% for v in u.vinculos_ativos %}<span class="badge badge-setor me-1" title="{{ v.setor.nome }}">{{ v.setor.sigla }}</span>{% empty %}<span class="text-secondary mini">—</span>{% endfor %}</td>
-    <td>{% if u.is_superuser or u.perfil_sirg.e_admin %}<span class="badge badge-perfil-admin me-1">Administrador</span>{% endif %}{% if u.perfil_sirg.e_master %}<span class="badge badge-perfil-master me-1">Master</span>{% endif %}{% if u.perfil_sirg.e_diagramacao %}<span class="badge text-bg-info me-1">Diagramação</span>{% endif %}{% if not u.vinculos_ativos and not u.perfil_sirg.e_master and not u.perfil_sirg.e_admin and not u.is_superuser %}<span class="badge badge-perfil-leitor">Leitor</span>{% endif %}</td>
+    <td>{% if u.is_superuser or u.perfil_sirg.e_admin %}<span class="badge badge-perfil-admin me-1">Administrador</span>{% endif %}{% if u.perfil_sirg.e_master %}<span class="badge badge-perfil-master me-1">Editor-chefe</span>{% endif %}{% if u.perfil_sirg.e_diagramacao %}<span class="badge text-bg-info me-1">Diagramação</span>{% endif %}{% if not u.vinculos_ativos and not u.perfil_sirg.e_master and not u.perfil_sirg.e_admin and not u.is_superuser %}<span class="badge badge-perfil-leitor">Leitor</span>{% endif %}</td>
     <td><span class="badge text-bg-{{ sit.1 }}">{{ sit.0 }}</span></td>
     <td class="mini text-secondary">{{ u.last_login|naturaltime|default:"nunca" }}</td>
   </tr>

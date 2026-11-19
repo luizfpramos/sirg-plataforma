@@ -176,7 +176,7 @@ def _resumo_relatorio(user):
                        "pode": F.pode_editar_texto(user, s), "acoes": F.acoes_possiveis(user, s),
                        **consistencia.resumo(ps)})
     entregues = sum(1 for m in minhas if m["s"].situacao in (Secao.ENVIADA, Secao.APROVADA))
-    # prazo e seções paradas (para o Master achar o que está atrasado)
+    # prazo e seções paradas (para o Editor-chefe achar o que está atrasado)
     from datetime import date
 
     from django.db.models import Max
@@ -551,20 +551,24 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.17", "novembro de 2026", [
+        "O papel “Master” passou a se chamar “Editor-chefe” em todas as telas, mensagens e no manual (as permissões não mudaram).",
+        "Menu do alto sempre inteiro na tela: para o administrador, abre em duas colunas em telas largas; em telas baixas, rola e o “Sair” fica sempre à vista.",
+    ]),
     ("2.16", "novembro de 2026", [
         "Editor de blocos: o administrador importa o PDF diagramado do ano dentro do sistema (fundo das páginas e caixas de texto) e, na própria página, desenha, move, redimensiona, junta e apaga blocos (texto, gráfico, tabela e imagem), sem depender de desenvolvedor.",
         "Atributos do bloco: setor responsável, descrição do conteúdo esperado, mínimo e máximo de caracteres, com contador e aviso; a cor do bloco segue o setor e as orientações aparecem dentro dos blocos vazios.",
         "Reimportação: se o PDF mudar depois que os setores começaram a escrever, o sistema troca o fundo e reposiciona os blocos sem alterar o texto já escrito.",
         "Em cada trecho: Concluí/Desfazer, navegação entre os trechos pendentes, versões anteriores com opção de voltar, e bloco de imagem inserido pelo setor responsável (com texto alternativo).",
-        "Padrão de design: fonte, tamanho e espaçamentos do texto, escolhidos pelo Master ou pela diagramação.",
+        "Padrão de design: fonte, tamanho e espaçamentos do texto, escolhidos pelo Editor-chefe ou pela diagramação.",
     ]),
     ("2.15", "novembro de 2026", [
-        "Enviar para a produção pela homologação: na tela Sobre da homologação, o Master ou o administrador confere a versão e clica em “Enviar para a produção”. Em até 5 minutos o PC instala na produção exatamente o código testado na homologação, com backup antes, e o resultado aparece na própria tela.",
+        "Enviar para a produção pela homologação: na tela Sobre da homologação, o Editor-chefe ou o administrador confere a versão e clica em “Enviar para a produção”. Em até 5 minutos o PC instala na produção exatamente o código testado na homologação, com backup antes, e o resultado aparece na própria tela.",
         "Tela Sobre: mostra a versão que está na produção e quem pediu cada envio.",
     ]),
     ("2.14.1", "novembro de 2026", [
         "Implantação pelo Git: o código fica num repositório; a homologação se atualiza sozinha quando há código novo aprovado nos testes, e a produção quando sai uma versão marcada (tag), depois de passar pela homologação.",
-        "Tela Sobre: para o Master e o administrador, mostra o código instalado (commit) e o resultado das últimas instalações automáticas.",
+        "Tela Sobre: para o Editor-chefe e o administrador, mostra o código instalado (commit) e o resultado das últimas instalações automáticas.",
     ]),
     ("2.14", "novembro de 2026", [
         "Gráficos nas páginas: ao preencher os dados, o gráfico se redesenha no mesmo lugar e do mesmo tamanho (antes, voltava no formato antigo, por cima da página).",
@@ -584,8 +588,8 @@ VERSOES = [
         "Gráficos e tabelas: o botão “Dados” abre a tabela ao lado do texto; digitado o número de 2026, o gráfico se atualiza na hora.",
         "Botão “Faltam N” leva de um número em branco ao próximo; cada seção mostra quantos faltam e o link para a página do RG 2025 em PDF.",
         "Sem menu lateral: um único menu no alto da tela. Menos texto de orientação na tela.",
-        "Os setores editam só o texto que já está no relatório, sempre com o controle de alterações ligado; o Master aceita ou recusa. Novos trechos e imagens ficam com o Master.",
-        "Apêndice trocado pela planilha “Acompanhamento das metas do PDI 2023-2027” (41 metas): cada unidade líder informa situação, justificativa e evidência; o Master baixa a planilha preenchida.",
+        "Os setores editam só o texto que já está no relatório, sempre com o controle de alterações ligado; o Editor-chefe aceita ou recusa. Novos trechos e imagens ficam com o Editor-chefe.",
+        "Apêndice trocado pela planilha “Acompanhamento das metas do PDI 2023-2027” (41 metas): cada unidade líder informa situação, justificativa e evidência; o Editor-chefe baixa a planilha preenchida.",
         "Paletas de cores editáveis pela diagramação: criar, importar (.ase, .gpl ou códigos), reordenar, baixar em .ase e escolher a paleta em uso. Novo perfil “Diagramação”.",
         "Ambiente de homologação (porta 8003, faixa laranja) e os instaladores instalar_hml.bat e subir_prd.bat, que leem o pacote .zip direto, sem extrair.",
     ]),
@@ -594,13 +598,13 @@ VERSOES = [
         "Cada alteração é aceita ou recusada separadamente: clicando nela no texto ou no novo painel de revisão, que lista as alterações por seção, com “Aceitar as N” e “Recusar” da seção inteira.",
         "Comentários presos a um trecho selecionado (marcado em amarelo), com respostas, resolver e reabrir. Quem não escreve a seção também comenta.",
         "Ler o relatório, o Word e o pacote da diagramação levam só o que foi aceito; as alterações pendentes aparecem em O que falta.",
-        "O setor aceita ou recusa as alterações do Master antes de enviar; o Master só aprova a seção sem alterações pendentes.",
-        "O modo “Sugerir” do Master (sugestão do trecho inteiro) deu lugar ao controle de alterações, que já começa ligado para o Master.",
+        "O setor aceita ou recusa as alterações do Editor-chefe antes de enviar; o Editor-chefe só aprova a seção sem alterações pendentes.",
+        "O modo “Sugerir” do Editor-chefe (sugestão do trecho inteiro) deu lugar ao controle de alterações, que já começa ligado para o Editor-chefe.",
         "Números, imagens e texto colado entram marcados; “Limpar formatação” não apaga as marcas.",
     ]),
     ("2.10", "novembro de 2026", [
         "Correções da auditoria independente de dados e lógica (591 valores conferidos com o RG 2025, sem divergência).",
-        "Atualizar não desfaz mais o que o Master ajustou: nomes e fórmulas de linhas, regras apagadas e tabelas/gráficos acrescentados ficam como estão.",
+        "Atualizar não desfaz mais o que o Editor-chefe ajustou: nomes e fórmulas de linhas, regras apagadas e tabelas/gráficos acrescentados ficam como estão.",
         "Total de uma tabela em branco enquanto falta alguma parcela do ano (antes saía uma soma parcial).",
         "Valor digitado diferente do automático passa a impedir o envio até alguém escolher “corrigir” ou “ignorar”.",
         "Regras de mobilidade internacional conferem o ano do relatório (antes olhavam o ano anterior).",
@@ -612,10 +616,10 @@ VERSOES = [
     ("2.9", "novembro de 2026", [
         "Correções do diagnóstico de usabilidade (20 pontos): tabelas e gráficos do RG 2025 colados no texto saem quando o sistema já monta o mesmo objeto.",
         "A tabela que sai numa seção e mora em outra (ex.: Tabela 1 de Execução orçamentária) aparece também na seção onde sai, e conta no “Terminei”.",
-        "Início: prazo da coleta com os dias que faltam; para o Master, as seções ainda não enviadas, das paradas há mais tempo, com a última alteração e o selo “atrasada”; setores clicáveis.",
+        "Início: prazo da coleta com os dias que faltam; para o Editor-chefe, as seções ainda não enviadas, das paradas há mais tempo, com a última alteração e o selo “atrasada”; setores clicáveis.",
         "Célula com valor inválido fica marcada em vermelho, com a mensagem embaixo, e não conta como preenchida; Esc desfaz.",
         "Aviso de variação acima de 50% em todos os quadros por ano, com alerta de provável erro de unidade.",
-        "“Enviar ao Master” fica desativado, com o motivo, enquanto faltam números ou correções.",
+        "“Enviar ao Editor-chefe” fica desativado, com o motivo, enquanto faltam números ou correções.",
         "O que falta junta os campos em branco de cada tabela numa linha só; “Abrir” leva até a célula, sem colar no topo, já pronta para digitar.",
         "Gráficos de barras com muitos nomes compridos passam para a horizontal.",
         "Inserir número não pula a tela e mostra de onde o número vem.",
@@ -642,7 +646,7 @@ VERSOES = [
     ]),
     ("2.5", "novembro de 2026", [
         "Nova identidade visual da UFCIMG: marca na tela de entrada, no menu e na capa do Word; telas no azul-marinho e verde-água da marca.",
-        "Paleta de gráficos “UFCIMG (azul e verde-água)”, conferida para daltonismo, passa a ser a padrão (o Master pode trocar em “Cores dos gráficos”).",
+        "Paleta de gráficos “UFCIMG (azul e verde-água)”, conferida para daltonismo, passa a ser a padrão (o Editor-chefe pode trocar em “Cores dos gráficos”).",
         "“CEFET-MG” passa a “UFCIMG” nos títulos de seções, quadros e gráficos (as metas do PDI mantêm o texto original).",
         "Nos textos, cada menção ao CEFET-MG fica em amarelo e quem escreve escolhe: manter CEFET-MG (fato histórico) ou trocar por UFCIMG.",
         "Word: parágrafos com quebras de linha (dirigentes, obras) ficam alinhados à esquerda, sem espaços esticados.",
@@ -651,14 +655,14 @@ VERSOES = [
         "Ajustes do piloto: Preencher os números mostra só as seções do seu setor; “Quem somos” ficou só com a SEGEP.",
         "Pente fino dos números: cerca de 25 quadros novos nos capítulos de orçamento, custos, patrimônio, frota, TI, ouvidoria, sustentabilidade, CPA e governança, com os valores do RG 2025.",
         "Cada quadro diz onde aparece no relatório (e avisa quando é em outra seção); cada gráfico do Escrever diz de qual quadro e setor vêm os números.",
-        "Fim da seção claro: painel “Terminei: o que faço agora?”, com o que falta, revisar o texto e Enviar ao Master.",
+        "Fim da seção claro: painel “Terminei: o que faço agora?”, com o que falta, revisar o texto e Enviar ao Editor-chefe.",
         "Gráficos de barras empilhadas mais legíveis (valores abreviados e total em cima); tabelas com muitos anos abrem na coluna do ano.",
         "Painel de fotos das obras volta a ser um cartão por obra (lugar da foto, nome, situação e valor).",
     ]),
     ("2.3", "outubro de 2026", [
         "Nome novo da instituição: Universidade Federal de Ciência e Inovação de Minas Gerais – UFCIMG.",
         "Nova seção “UFCIMG em números”, com os 14 objetivos estratégicos, na Apresentação.",
-        "Paletas de cores para os gráficos, escolhidas pelo Master em “Cores dos gráficos”.",
+        "Paletas de cores para os gráficos, escolhidas pelo Editor-chefe em “Cores dos gráficos”.",
         "atualizar.bat para atualizar com dois cliques; servidor.bat mostra o erro em vez de fechar a janela.",
     ]),
     ("2.2", "outubro de 2026", [
@@ -724,7 +728,7 @@ def padrao_design(request):
 
 @login_required
 def cores_graficos(request):
-    """Paletas de cores dos gráficos: escolher a usada, criar, editar, importar e baixar (Master e diagramação)."""
+    """Paletas de cores dos gráficos: escolher a usada, criar, editar, importar e baixar (Editor-chefe e diagramação)."""
     from django.core.exceptions import PermissionDenied
 
     from relatorio import graficos, paletas

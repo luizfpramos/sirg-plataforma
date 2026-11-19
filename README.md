@@ -6,13 +6,13 @@ Plataforma web em que cada setor preenche os dados e os textos da sua parte do R
 >
 > **Versão 2.13**: o relatório são as páginas do RG 2025 publicado, com a mesma diagramação (fundo de cada página em `static/rg2025/`, caixas de texto em `relatorio/dados_iniciais/paginas_rg2025.json`, gerados do PDF por `ferramentas/paginas_rg2025.py`). Números a atualizar como **xxxxx**; gráficos da plataforma no lugar dos do PDF (`relatorio/paginas.py`, `LUGARES`).
 >
-> **Versão 2.12**: uma tela só (o relatório igual ao RG 2025, com os números a atualizar como **xxxxx**; tabelas e gráficos preenchidos ao lado do texto, no botão **Dados**); menu único no alto; setores só alteram o texto base, com controle de alterações sempre ligado (o Master aceita); apêndice com a planilha das 41 metas do PDI 2023-2027; paletas editáveis pela diagramação (.ase); ambiente de **homologação** e os instaladores `instalar_hml.bat` / `subir_prd.bat`.
+> **Versão 2.12**: uma tela só (o relatório igual ao RG 2025, com os números a atualizar como **xxxxx**; tabelas e gráficos preenchidos ao lado do texto, no botão **Dados**); menu único no alto; setores só alteram o texto base, com controle de alterações sempre ligado (o Editor-chefe aceita); apêndice com a planilha das 41 metas do PDI 2023-2027; paletas editáveis pela diagramação (.ase); ambiente de **homologação** e os instaladores `instalar_hml.bat` / `subir_prd.bat`.
 >
 > **Versão 2.11**: controle de alterações e comentários como no Word, no Escrever: o que se digita ou apaga fica marcado, com nome e hora, e cada alteração é aceita ou recusada no texto ou no painel de revisão; comentários presos a um trecho, com respostas e resolver. Leitura e Word levam só o que foi aceito.
 >
-> **Versão 2.10**: correções da auditoria independente de dados e lógica (atualizar preserva os ajustes do Master, total sem soma parcial, divergência impede o envio, regras de mobilidade no ano certo, conferências por grupo de despesa, números em milhões ligados aos quadros).
+> **Versão 2.10**: correções da auditoria independente de dados e lógica (atualizar preserva os ajustes do Editor-chefe, total sem soma parcial, divergência impede o envio, regras de mobilidade no ano certo, conferências por grupo de despesa, números em milhões ligados aos quadros).
 >
-> **Versão 2.9**: correções do diagnóstico de usabilidade (tabelas duplicadas no texto, Tabela 1 visível em Execução orçamentária, prazo e seções paradas para o Master, células inválidas marcadas, aviso de variação, envio só sem pendências, O que falta agrupado, menu recolhido no celular, primeiro acesso mais simples).
+> **Versão 2.9**: correções do diagnóstico de usabilidade (tabelas duplicadas no texto, Tabela 1 visível em Execução orçamentária, prazo e seções paradas para o Editor-chefe, células inválidas marcadas, aviso de variação, envio só sem pendências, O que falta agrupado, menu recolhido no celular, primeiro acesso mais simples).
 >
 > **Versão 2.8**: o `atualizar.bat` para o servidor, atualiza e liga de novo sozinho.
 >
@@ -26,14 +26,14 @@ Plataforma web em que cada setor preenche os dados e os textos da sua parte do R
 > - **Preencher os números por setor:** a lista e cada seção mostram só o que é do seu setor; “Quem somos” ficou só com a SEGEP.
 > - **Pente fino dos números:** cerca de 25 quadros novos (execução orçamentária, LOA, discricionárias, maiores despesas, investimentos, restos a pagar, receitas, custos, patrimônio, frota, infraestrutura, TI, ouvidoria e LAI, sustentabilidade, CPA, governança e controle), com os valores do RG 2025 e o setor responsável.
 > - **Onde o número aparece:** cada quadro diz em que tabela/gráfico e seção ele sai (selo “outra seção”); cada gráfico do Escrever diz de qual quadro e setor vêm os números.
-> - **Fim da seção:** barra fixa com a contagem e o painel “Terminei: o que faço agora?” (o que falta, revisar o texto, Enviar ao Master).
+> - **Fim da seção:** barra fixa com a contagem e o painel “Terminei: o que faço agora?” (o que falta, revisar o texto, Enviar ao Editor-chefe).
 > - **Gráficos e tabelas:** barras empilhadas com valores abreviados e total em cima; tabelas com muitos anos abrem na coluna do ano; fotos das obras em cartões.
 > - Em instalações já em uso, `atualizar.bat` acrescenta os quadros novos, passa a dotação já digitada para a nova Tabela 1, corrige os setores de “Quem somos” e refaz os textos que ninguém alterou. Nada que foi digitado é apagado.
 >
 > **Versão 2.3** acrescenta:
 > - **Nome novo:** “Centro Federal de Educação Tecnológica de Minas Gerais – CEFET-MG” passa a “Universidade Federal de Ciência e Inovação de Minas Gerais – UFCIMG” nos dados da instituição (capa, telas, Word) e nos textos em que o nome aparece junto com a sigla. Menções históricas ficam como estão.
 > - **“UFCIMG em números”:** nova seção da Apresentação com os 14 objetivos estratégicos.
-> - **Cores dos gráficos:** quatro paletas padronizadas; o Master escolhe a que vale para todos os gráficos.
+> - **Cores dos gráficos:** quatro paletas padronizadas; o Editor-chefe escolhe a que vale para todos os gráficos.
 > - **`atualizar.bat`:** atualização com dois cliques.
 >
 > **Versão 2.2** acrescenta:
@@ -92,7 +92,7 @@ O SiRG usa a **porta 8001** e roda ao lado do SiMED (porta 8000) sem interferir 
 | Perfil | O que faz |
 |---|---|
 | **Administrador da plataforma** | Cria usuários e setores, vincula e muda as pessoas de setor, configura a instituição e vê a auditoria |
-| **Master** | Edita qualquer parte do relatório e sugere alterações aos setores |
+| **Editor-chefe** | Edita qualquer parte do relatório e sugere alterações aos setores |
 | **Editor** | Quem está vinculado a um setor; edita só o que é de responsabilidade do setor |
 | **Leitor** | Quem não tem setor nem perfil; vê o relatório inteiro, sem editar |
 
@@ -102,11 +102,11 @@ Os perfis podem ser combinados, e uma pessoa pode estar em mais de um setor. Qua
 
 - **Ciclo:** um relatório por ano-base. A plataforma trabalha com um relatório por vez (hoje, o RG 2026).
   - O próximo ciclo (RG 2027) é criado a partir do atual, em **Administração › Relatórios (anos)**, e copia a estrutura.
-  - Nos quadros por ano, os anos passados vêm preenchidos e **travados**. Só o Master os altera, pelo botão “Corrigir anos publicados”, sempre com justificativa.
+  - Nos quadros por ano, os anos passados vêm preenchidos e **travados**. Só o Editor-chefe os altera, pelo botão “Corrigir anos publicados”, sempre com justificativa.
   - Situações do ciclo:
-    - **em preparação:** só administradores e Master;
+    - **em preparação:** só administradores e Editor-chefe;
     - **coleta:** cada setor preenche o que é seu;
-    - **revisão:** só o Master;
+    - **revisão:** só o Editor-chefe;
     - **encerrado:** somente leitura.
 - **Seções:** organizadas em capítulos, cada uma com seus setores responsáveis.
 - **Quadros de dados:** tabelas configuradas pelo administrador (ícone ⚙ no quadro):
@@ -138,13 +138,13 @@ Os perfis podem ser combinados, e uma pessoa pode estar em mais de um setor. Qua
 - **Atualização automática:** a cada 20 segundos o documento busca o que os colegas mudaram nos outros trechos.
 - **Números vivos:** “Inserir número” liga o número a uma tabela; “[a preencher]” aparece até o dado ser digitado.
 - **Tabelas, gráficos e destaques** vêm dos números e não são editados no texto. Na tela da seção, aba **Texto, tabelas e gráficos**, eles são incluídos, movidos e configurados.
-- **Master:** modo **Editar** (direto) ou **Sugerir** (o setor aceita ou recusa); aprova e devolve seções no alto de cada seção.
+- **Editor-chefe:** modo **Editar** (direto) ou **Sugerir** (o setor aceita ou recusa); aprova e devolve seções no alto de cada seção.
 - **Controle de alterações e comentários** como no Word: inserções e remoções marcadas com nome e hora, aceitas ou recusadas uma a uma; comentários presos a um trecho, com respostas.
 - **Versões** de cada trecho, com comparação palavra a palavra e volta a uma versão anterior.
 - **Orientação por seção:** a frase “O que escrever aqui” (campo da seção) aparece para quem escreve. Textos-modelo de 2026 servem de ponto de partida.
 
 Fluxo da seção:
-- **em preenchimento → enviada ao Master → aprovada**, ou **devolvida** com comentário.
+- **em preenchimento → enviada ao Editor-chefe → aprovada**, ou **devolvida** com comentário.
 - O envio é bloqueado se os números da seção tiverem algo a preencher ou para corrigir.
 - Depois de enviada, o setor não altera mais a seção até ela ser devolvida.
 

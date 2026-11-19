@@ -30,7 +30,7 @@ def e_admin(user):
 
 
 def e_master(user):
-    """Master: edita qualquer parte do relatório."""
+    """Editor-chefe: edita qualquer parte do relatório."""
     if not getattr(user, "is_authenticated", False) or not user.is_active:
         return False
     p = perfil(user)
@@ -84,7 +84,7 @@ def papeis(user):
     if e_admin(user):
         out.append("Administrador")
     if e_master(user):
-        out.append("Master")
+        out.append("Editor-chefe")
     if e_diagramacao(user):
         out.append("Diagramação")
     if e_editor(user):

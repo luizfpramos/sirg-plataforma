@@ -37,7 +37,7 @@ def montar_quadro(calc, q, user, pendencias=(), corrigir=False):
             r = calc.celula(q, li.chave, c)
             k = chave_celula(li.pk, c)
             ps = por_celula.get(k, [])
-            # anos travados só viram campo quando o Master pede "corrigir anos publicados" neste quadro
+            # anos travados só viram campo quando o Editor-chefe pede "corrigir anos publicados" neste quadro
             preenchivel = not li.calculada or li.importada
             editavel = (editavel_quadro and preenchivel and c != TOTAL and (not c.travada or (master and corrigir)))
             v = calc.valor_preenchido(li, c) if c != TOTAL and preenchivel else None

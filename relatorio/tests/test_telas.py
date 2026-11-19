@@ -176,7 +176,7 @@ class GravacaoTests(Base):
         self.assertTrue(col.travada)
         self.entrar("srca")
         r, j = self.salvar(li, col, "1")
-        self.assertIn("Master", j["erro"])
+        self.assertIn("Editor-chefe", j["erro"])
         self.client.logout()
         self.entrar("master")
         r, j = self.salvar(li, col, "6.900")

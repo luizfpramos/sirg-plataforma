@@ -61,9 +61,9 @@ class Command(BaseCommand):
                                f"{e['regras']} regra(s) de conferência e gráficos no formato do RG 2025 em "
                                f"{e['secoes_graficos']} seção(ões).")
                 if e.get("preservadas"):
-                    self.dizer(f"Mantidos como o Master deixou: nome ou fórmula de {len(e['preservadas'])} linha(s).")
+                    self.dizer(f"Mantidos como o Editor-chefe deixou: nome ou fórmula de {len(e['preservadas'])} linha(s).")
                 if e.get("secoes_preservadas"):
-                    self.dizer(f"Mantidas como o Master deixou: tabelas e gráficos de {len(e['secoes_preservadas'])} "
+                    self.dizer(f"Mantidas como o Editor-chefe deixou: tabelas e gráficos de {len(e['secoes_preservadas'])} "
                                f"seção(ões).")
             from relatorio.dados_iniciais import rg2026
             r = rg2026.ajustar(Ciclo.objects.get(ano=ANO))

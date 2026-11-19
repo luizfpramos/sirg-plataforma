@@ -2,7 +2,7 @@
  * Editor do texto do relatório (SiRG).
  * - Editar: reserva o trecho (ninguém mais edita ao mesmo tempo), salva sozinho a cada 20 s
  *   e ao concluir; guarda um rascunho no navegador contra queda de energia/rede.
- * - Sugerir (Master): mesmo editor, mas grava como sugestão para o setor aceitar ou recusar.
+ * - Sugerir (Editor-chefe): mesmo editor, mas grava como sugestão para o setor aceitar ou recusar.
  * - Números vivos: botão "Número" insere um valor ligado a um quadro.
  * - Colar do Word: o HTML colado é limpo (sem estilos, cores e fontes).
  */

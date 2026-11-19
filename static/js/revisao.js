@@ -633,8 +633,8 @@ window.SIRGRevisao = (function () {
         '<div class="rev-quem"><span class="rev-av' + (it.autorId === String(EU.id) ? " eu" : "") + '">' + T.esc(iniciais(it.autor)) + '</span><strong>' + T.esc(it.autor) + '</strong><span class="mini text-secondary ms-auto">' + T.esc(dataBR(it.data)) + "</span></div>" +
         '<div class="rev-desc">' + descricao(it) + "</div>" +
         (it.pode ? '<div class="rev-acoes"><button type="button" class="btn btn-sm btn-outline-success js-aceitar"><i class="bi bi-check-lg"></i> Aceitar</button><button type="button" class="btn btn-sm btn-outline-danger js-recusar"><i class="bi bi-x-lg"></i> Recusar</button></div>' :
-          it.desfazer ? '<div class="rev-acoes"><button type="button" class="btn btn-sm btn-outline-secondary js-recusar" title="Volta o texto como estava"><i class="bi bi-arrow-counterclockwise"></i> Desfazer</button><span class="mini text-secondary align-self-center">O Master aceita na revisão.</span></div>' :
-          '<div class="mini text-secondary mt-1">O Master aceita ou recusa na revisão.</div>') + "</div>";
+          it.desfazer ? '<div class="rev-acoes"><button type="button" class="btn btn-sm btn-outline-secondary js-recusar" title="Volta o texto como estava"><i class="bi bi-arrow-counterclockwise"></i> Desfazer</button><span class="mini text-secondary align-self-center">O Editor-chefe aceita na revisão.</span></div>' :
+          '<div class="mini text-secondary mt-1">O Editor-chefe aceita ou recusa na revisão.</div>') + "</div>";
     });
     return h + "</div>";
   }
@@ -904,7 +904,7 @@ window.SIRGRevisao = (function () {
 
   // ---- ligar e desligar o controle -----------------------------------------------------------------------------
   function lerPreferencia() {
-    if (CFG.rastreioObrigatorio) return true;       // quem não é Master sempre escreve com o controle ligado
+    if (CFG.rastreioObrigatorio) return true;       // quem não é Editor-chefe sempre escreve com o controle ligado
     try { var v = localStorage.getItem("sirg-rastreio"); if (v === "1" || v === "0") return v === "1"; } catch (e) { /* sem armazenamento */ }
     return !!CFG.rastreioPadrao;
   }
