@@ -61,7 +61,7 @@ def salvar_valor(user, linha, coluna, entrada, anterior=None, justificativa=""):
         if linha.calculada and not linha.importada:
             raise Recusado("Esta linha é calculada automaticamente.")
         if coluna.travada and RP.pode_editar_quadro(user, linha.quadro):
-            raise Recusado("Ano anterior já publicado: só o Master pode alterar.")
+            raise Recusado("Ano anterior já publicado: só o Editor-chefe pode alterar.")
         raise Recusado(RP.motivo_bloqueio(user, linha.quadro) or "Você não pode alterar esta célula.")
     tipo, casas = linha.tipo, linha.quadro.casas_decimais
     try:

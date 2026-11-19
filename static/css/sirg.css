@@ -604,6 +604,18 @@ main#conteudo:focus { outline: none; }
 .menu-topo { min-width: 250px; }
 .menu-topo .dropdown-item { display: flex; align-items: center; gap: .55rem; padding: .38rem 1rem; }
 .menu-topo .dropdown-header { text-transform: uppercase; font-size: .66rem; letter-spacing: .08em; }
+/* menu sempre inteiro na tela: rola se for mais alto que a janela, e "Sair" fica sempre à vista no pé */
+.menu-topo { max-height: calc(100vh - 64px); overflow-y: auto; }
+.menu-topo .menu-sair { position: sticky; bottom: 0; background: var(--bs-dropdown-bg, #fff); }
+.menu-topo .menu-sair .dropdown-item { border-top: 1px solid var(--bs-border-color, #dee2e6); }
+.menu-topo li:has(+ .menu-sair) > .dropdown-divider { display: none; }
+/* administrador: o menu é longo, então em tela larga ele abre em duas colunas */
+@media (min-width: 900px) {
+  .menu-topo.menu-longo.show { columns: 2; column-gap: 0; min-width: 500px; }
+  .menu-topo.menu-longo li { break-inside: avoid; }
+  .menu-topo.menu-longo .dropdown-header { break-after: avoid; }
+  .menu-topo.menu-longo .menu-sair { position: static; }
+}
 @media (max-width: 700px) {
   .barra-titulo, .btn-menu-topo .quem { display: none; }
   .barra-topo { gap: .5rem; padding: 0 .6rem; }

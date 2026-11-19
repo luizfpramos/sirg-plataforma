@@ -93,9 +93,9 @@ class LoginTests(Base):
 
 class PermissoesTests(Base):
     def test_papeis(self):
-        self.assertEqual(P.papeis(self.admin), ["Administrador", "Master"])
+        self.assertEqual(P.papeis(self.admin), ["Administrador", "Editor-chefe"])
         self.assertEqual(P.papeis(self.editor), ["Editor"])
-        self.assertEqual(P.papeis(self.master), ["Master"])
+        self.assertEqual(P.papeis(self.master), ["Editor-chefe"])
         self.assertEqual(P.papeis(self.leitor), ["Leitor"])
 
     def test_editor_so_edita_o_proprio_setor(self):

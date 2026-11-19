@@ -45,10 +45,10 @@ def motivo_bloqueio(user, quadro):
     if ciclo.situacao == Ciclo.PREPARACAO:
         return "O ciclo ainda está em preparação: a coleta não foi aberta."
     if ciclo.situacao == Ciclo.REVISAO:
-        return "O ciclo está em revisão: só o Master altera os dados."
+        return "O ciclo está em revisão: só o Editor-chefe altera os dados."
     if quadro.secao.situacao == Secao.ENVIADA:
-        return "Seção enviada ao Master: aguardando a revisão."
+        return "Seção enviada ao Editor-chefe: aguardando a revisão."
     if quadro.secao.situacao == Secao.APROVADA:
-        return "Seção aprovada pelo Master."
+        return "Seção aprovada pelo Editor-chefe."
     setores = ", ".join(s.sigla for s in quadro.setores_responsaveis()) or "nenhum setor definido"
     return f"Dados de responsabilidade de: {setores}."

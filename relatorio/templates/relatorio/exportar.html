@@ -7,7 +7,7 @@
 <div class="card mb-3" style="max-width:960px"><div class="card-body">
   <h2 class="h6">Situação do relatório agora</h2>
   <ul class="mb-0">
-    <li>Seções aprovadas pelo Master: <strong>{{ n_aprovadas }} de {{ n_secoes }}</strong></li>
+    <li>Seções aprovadas pelo Editor-chefe: <strong>{{ n_aprovadas }} de {{ n_secoes }}</strong></li>
     <li>Dados: {% include "relatorio/_contagem.html" with erros=resumo.erros avisos=resumo.avisos faltam=resumo.faltam %} <a class="mini" href="{% url 'pendencias' ciclo.ano %}">ver inconsistências</a></li>
     {% if n_alt %}<li>Texto: <strong>{{ n_alt }} alteraç{{ n_alt|pluralize:"ão,ões" }} sugerida{{ n_alt|pluralize }}</strong> esperando aceitar ou recusar. O arquivo sai sem ela{{ n_alt|pluralize }} (só vale o que foi aceito). <a class="mini" href="{% url 'escrever' ciclo.ano %}?revisao=1">revisar</a></li>{% endif %}
     <li>{{ n_tabelas }} tabela{{ n_tabelas|pluralize }} e {{ n_graficos }} gráfico{{ n_graficos|pluralize }}</li>

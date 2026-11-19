@@ -7,7 +7,7 @@
   {% include "contas/_campo.html" with f=form.titulo %}
   <div class="mb-3"><label class="form-label">Situação</label>
     {% for v, r in form.fields.situacao.choices %}<div class="form-check"><input class="form-check-input" type="radio" name="situacao" id="sit-{{ v }}" value="{{ v }}" {% if form.situacao.value == v %}checked{% endif %}><label class="form-check-label" for="sit-{{ v }}">{{ r }}</label></div>{% endfor %}
-    <div class="form-text">Em preparação: só administradores e Master. Coleta: cada setor preenche o que é seu. Revisão: só o Master. Encerrado: ninguém altera.</div>
+    <div class="form-text">Em preparação: só administradores e Editor-chefe. Coleta: cada setor preenche o que é seu. Revisão: só o Editor-chefe. Encerrado: ninguém altera.</div>
   </div>
   <div class="row"><div class="col-md-4"><div class="mb-3"><label class="form-label" for="id_prazo">Prazo da coleta</label><input type="date" class="form-control" id="id_prazo" name="prazo" value="{{ form.prazo.value|date:'Y-m-d'|default:form.prazo.value|default_if_none:'' }}"></div></div></div>
   <div class="mb-3"><label class="form-label" for="id_observacao">Observação (aparece no topo do ciclo)</label><textarea class="form-control" id="id_observacao" name="observacao" rows="3">{{ form.observacao.value|default_if_none:'' }}</textarea></div>

@@ -58,7 +58,7 @@ class UsuarioForm(forms.Form):
     email = forms.EmailField(label="E-mail", required=False)
     e_admin = forms.BooleanField(label="Administrador da plataforma", required=False,
                                  help_text="Cria usuários e setores, configura a plataforma e a estrutura do relatório.")
-    e_master = forms.BooleanField(label="Master", required=False,
+    e_master = forms.BooleanField(label="Editor-chefe", required=False,
                                   help_text="Edita qualquer parte do relatório e aceita ou recusa as alterações dos setores.")
     e_diagramacao = forms.BooleanField(label="Diagramação", required=False,
                                        help_text="Cria e edita as paletas de cores dos gráficos e baixa o Word e o pacote.")

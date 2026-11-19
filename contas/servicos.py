@@ -92,7 +92,7 @@ def atualizar_usuario(u, *, nome, email, e_admin, e_master, observacao="", ator=
 
 
 def _rotulo_campo(k):
-    return {"nome": "nome", "email": "e-mail", "admin": "perfil Administrador", "master": "perfil Master",
+    return {"nome": "nome", "email": "e-mail", "admin": "perfil Administrador", "master": "perfil Editor-chefe",
             "diagramacao": "perfil Diagramação"}.get(k, k)
 
 

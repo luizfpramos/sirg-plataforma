@@ -16,7 +16,7 @@ from .views_atributos import pode_definir_atributos
 def _acesso(request, ano, n):
     c = get_object_or_404(Ciclo, ano=ano)
     if not pode_definir_atributos(request.user):
-        raise PermissionDenied("Só o administrador e o Master editam os blocos da página.")
+        raise PermissionDenied("Só o administrador e o Editor-chefe editam os blocos da página.")
     return c, get_object_or_404(Pagina, ciclo=c, numero=n)
 
 
@@ -58,7 +58,7 @@ def editor_acao(request, ano, n, acao):
 def editor_inicio(request, ano):
     c = get_object_or_404(Ciclo, ano=ano)
     if not pode_definir_atributos(request.user):
-        raise PermissionDenied("Só o administrador e o Master editam os blocos da página.")
+        raise PermissionDenied("Só o administrador e o Editor-chefe editam os blocos da página.")
     primeira = c.paginas.order_by("numero").first()
     if primeira is None:
         from django.contrib import messages

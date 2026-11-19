@@ -163,7 +163,7 @@ def carregar(S):
         anos=12, tipo=I, total=True, rotulo_total="Total (km)", setor_sigla="DPG", obrigatorio=False,
         fonte="DPG (RG 2025, Gráfico 5, p. 78)",
         descricao="O RG 2025 publicou só o gráfico (cerca de 412.000 km em 2025 e 350.000 km em 2024), sem os números "
-                  "por tipo. O histórico por tipo de veículo precisa ser informado pela DPG ao Master (Corrigir anos "
+                  "por tipo. O histórico por tipo de veículo precisa ser informado pela DPG ao Editor-chefe (Corrigir anos "
                   "publicados) para o gráfico sair completo.")
     _q2(con, "infra_numeros", "Infraestrutura física", [
         lin("campi", "Campi", tipo=I, total=False), lin("municipios", "Municípios", tipo=I, total=False),
@@ -201,7 +201,7 @@ def carregar(S):
         ("concursos", "Concursos e processos seletivos")],
         tipo=I, total=False, setor_sigla="GAB", fonte="Fala.BR (RG 2025, p. 27)",
         descricao="Os 10 assuntos com mais manifestações no ano. Se o ranking do ano tiver outros assuntos, peça ao "
-                  "Master para trocar os nomes das linhas.",
+                  "Editor-chefe para trocar os nomes das linhas.",
         valores={"acesso_info": [29], "ouvidoria": [25], "assedio_moral": [22], "beneficios": [20], "abono": [18],
                  "ept": [18], "superior": [17], "conduta": [16], "agente": [13], "concursos": [12]})
     _q2(amb, "ouv_ranking_subassunto", "Manifestações por subassunto (ranking da Ouvidoria)", [
@@ -213,7 +213,7 @@ def carregar(S):
         ("salario", "Salário e valorização dos professores"),
         ("terceirizado", "Servidor – discente – terceirizado – discriminação")],
         tipo=I, total=False, setor_sigla="GAB", fonte="Fala.BR (RG 2025, p. 27)",
-        descricao="Os 10 subassuntos com mais manifestações no ano. Se o ranking do ano tiver outros, peça ao Master "
+        descricao="Os 10 subassuntos com mais manifestações no ano. Se o ranking do ano tiver outros, peça ao Editor-chefe "
                   "para trocar os nomes das linhas.",
         valores={"conduta_trabalho": [21], "conduta_sexual": [7], "discriminacao": [6], "racismo": [2],
                  "enfrentamento": [1], "assedio_sexual": [1], "autonomia": [1], "cursos_prof": [1], "salario": [1],

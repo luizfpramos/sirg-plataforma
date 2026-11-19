@@ -53,7 +53,7 @@
     <div class="card-body p-0">
     {{ colunas.management_form }}
     {% if quadro and quadro.modo_colunas == 'anos' %}
-      <p class="mini text-secondary px-3 pt-2 mb-1">Colunas por ano, criadas conforme “anos exibidos” (terminando no ano-base {{ ciclo.ano }}). Marque <strong>travada</strong> nos anos já publicados: só o Master altera, com justificativa.</p>
+      <p class="mini text-secondary px-3 pt-2 mb-1">Colunas por ano, criadas conforme “anos exibidos” (terminando no ano-base {{ ciclo.ano }}). Marque <strong>travada</strong> nos anos já publicados: só o Editor-chefe altera, com justificativa.</p>
       <table class="table table-sm mb-0"><tbody>
       {% for f in colunas %}{% if f.instance.pk %}<tr><td class="ps-3">{{ f.id }}<input type="hidden" name="{{ f.ordem.html_name }}" value="{{ f.ordem.value }}"><input type="hidden" name="{{ f.rotulo.html_name }}" value="{{ f.rotulo.value }}"><input type="hidden" name="{{ f.chave.html_name }}" value="{{ f.chave.value }}">{{ f.rotulo.value }}</td>
         <td><div class="form-check"><input class="form-check-input" type="checkbox" name="{{ f.travada.html_name }}" id="{{ f.travada.id_for_label }}" {% if f.travada.value %}checked{% endif %}><label class="form-check-label mini" for="{{ f.travada.id_for_label }}">travada</label></div></td></tr>{% endif %}{% endfor %}

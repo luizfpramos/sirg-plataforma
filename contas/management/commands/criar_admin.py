@@ -9,7 +9,7 @@ from contas.servicos import obter_perfil, registrar
 
 
 class Command(BaseCommand):
-    help = "Cria o usuário administrador da plataforma (também com perfil Master)."
+    help = "Cria o usuário administrador da plataforma (também com perfil Editor-chefe)."
 
     def add_arguments(self, parser):
         parser.add_argument("--login")
@@ -23,7 +23,7 @@ class Command(BaseCommand):
             raise CommandError("Informe um login.")
         u = User.objects.filter(username__iexact=login).first()
         if u:
-            self.stdout.write(f"O usuário '{u.username}' já existe: ele será promovido a Administrador e Master.")
+            self.stdout.write(f"O usuário '{u.username}' já existe: ele será promovido a Administrador e Editor-chefe.")
         else:
             nome = o.get("nome") or input("Nome completo: ").strip()
             senha = o.get("senha")

@@ -122,7 +122,7 @@ def bloco_travar(request, ano, pk):
     modo = _json(request).get("modo", "editar")
     if modo == "sugerir":
         if not F.pode_sugerir(request.user, b.secao):
-            return JsonResponse({"ok": False, "erro": "Só o Master pode sugerir."}, status=403)
+            return JsonResponse({"ok": False, "erro": "Só o Editor-chefe pode sugerir."}, status=403)
         calc = Calculadora(b.secao.ciclo)
         html, _ = renderizar(b.conteudo, calc)
         return JsonResponse({"ok": True, "html": html, "versao": b.atualizado_em.isoformat()})
@@ -333,7 +333,7 @@ def secao_acao(request, ano, chave):
     except F.Recusado as ex:
         messages.error(request, str(ex))
     else:
-        messages.success(request, {"enviar": "Seção enviada ao Master.", "aprovar": "Seção aprovada.",
+        messages.success(request, {"enviar": "Seção enviada ao Editor-chefe.", "aprovar": "Seção aprovada.",
                                    "devolver": "Seção devolvida ao setor.", "reabrir": "Seção reaberta."}.get(acao, "Ok."))
     return voltar(request, redirect("secao", ano=ano, chave=chave))
 
@@ -418,7 +418,7 @@ def imagem_enviar(request, ano):
     c = get_object_or_404(Ciclo, ano=ano)
     secao = None
     if not P.e_master(request.user):
-        return JsonResponse({"ok": False, "erro": "Imagens novas são incluídas pelo Master."}, status=403)
+        return JsonResponse({"ok": False, "erro": "Imagens novas são incluídas pelo Editor-chefe."}, status=403)
     if request.POST.get("secao"):
         secao = Secao.objects.filter(ciclo=c, pk=request.POST.get("secao")).first()
     if secao is not None:
@@ -483,7 +483,7 @@ AJUSTES_IMAGEM = {"contain": "Mostrar inteira (pode sobrar espaço)", "cover": "
 @require_POST
 def bloco_imagem(request, ano, pk):
     """Insere, troca ou tira a imagem de um bloco de imagem; define o texto alternativo e o enquadramento.
-    Quem escreve no bloco (o setor responsável ou o Master) pode fazê-lo."""
+    Quem escreve no bloco (o setor responsável ou o Editor-chefe) pode fazê-lo."""
     from django.core.files.base import ContentFile
 
     from .models import Imagem

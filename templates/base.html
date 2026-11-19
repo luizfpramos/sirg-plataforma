@@ -24,9 +24,9 @@
     <div class="barra-acoes">{% block barra_acoes %}{% endblock %}</div>
     <div class="dropdown">
       <button class="btn-menu-topo dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu">
-        <i class="bi bi-person-circle"></i><span class="quem">{{ user.get_full_name|default:user.username }}<small>{% for s in MEUS_SETORES %}{{ s.sigla }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if E_MASTER %}{% if MEUS_SETORES %} · {% endif %}Master{% endif %}</small></span>
+        <i class="bi bi-person-circle"></i><span class="quem">{{ user.get_full_name|default:user.username }}<small>{% for s in MEUS_SETORES %}{{ s.sigla }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if E_MASTER %}{% if MEUS_SETORES %} · {% endif %}Editor-chefe{% endif %}</small></span>
       </button>
-      <ul class="dropdown-menu dropdown-menu-end menu-topo">
+      <ul class="dropdown-menu dropdown-menu-end menu-topo{% if E_ADMIN %} menu-longo{% endif %}">
         {% if not TROCA_SENHA %}
         <li><a class="dropdown-item" href="{% url 'painel' %}"><i class="bi bi-house"></i> Início</a></li>
         {% if CICLO_MENU %}
@@ -35,7 +35,7 @@
         {% endif %}
         {% if E_MASTER or E_ADMIN or E_DIAGRAMACAO %}
         <li><hr class="dropdown-divider"></li>
-        <li><h6 class="dropdown-header">{% if E_MASTER or E_ADMIN %}Master{% else %}Diagramação{% endif %}</h6></li>
+        <li><h6 class="dropdown-header">{% if E_MASTER or E_ADMIN %}Editor-chefe{% else %}Diagramação{% endif %}</h6></li>
         {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'exportar' CICLO_MENU.ano %}"><i class="bi bi-file-earmark-word"></i> Baixar em Word</a></li>{% endif %}
         <li><a class="dropdown-item" href="{% url 'cores_graficos' %}"><i class="bi bi-palette"></i> Cores dos gráficos</a></li>
         <li><a class="dropdown-item" href="{% url 'padrao_design' %}"><i class="bi bi-fonts"></i> Padrão de design</a></li>
@@ -65,7 +65,7 @@
         <li><a class="dropdown-item" href="{% url 'senha' %}"><i class="bi bi-shield-lock"></i> Trocar senha</a></li>
         {% endif %}
         <li><hr class="dropdown-divider"></li>
-        <li><form method="post" action="{% url 'sair' %}">{% csrf_token %}<button class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Sair</button></form></li>
+        <li class="menu-sair"><form method="post" action="{% url 'sair' %}">{% csrf_token %}<button class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Sair</button></form></li>
       </ul>
     </div>
   </header>

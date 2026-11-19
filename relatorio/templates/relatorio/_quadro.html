@@ -8,7 +8,7 @@
     </div>
     <span class="mini text-secondary js-progresso" title="Células a preencher nas colunas abertas">{% if b.total_celulas %}{{ b.preenchidas }} de {{ b.total_celulas }} preenchidas{% else %}calculado automaticamente{% endif %}</span>
     <span class="js-contagem">{% if b.aguardando and not b.erros and not b.faltam %}<span class="badge badge-aguarda" title="Os números deste quadro vêm de outros quadros que ainda não foram preenchidos">aguardando dados</span>{% else %}{% include "relatorio/_contagem.html" with erros=b.erros avisos=b.avisos faltam=b.faltam %}{% endif %}</span>
-    {% if b.pode_corrigir and not gaveta %}{% if b.corrigir %}<a class="btn btn-sm btn-warning" href="?aba=dados#quadro-{{ b.q.chave }}" title="Voltar a travar os anos publicados"><i class="bi bi-unlock"></i> Corrigindo anos publicados — concluir</a>{% else %}<a class="btn btn-sm btn-outline-secondary" href="?aba=dados&corrigir={{ b.q.chave }}#quadro-{{ b.q.chave }}" title="Master: corrigir um valor de ano já publicado (exige justificativa)"><i class="bi bi-lock"></i> Corrigir anos publicados</a>{% endif %}{% endif %}
+    {% if b.pode_corrigir and not gaveta %}{% if b.corrigir %}<a class="btn btn-sm btn-warning" href="?aba=dados#quadro-{{ b.q.chave }}" title="Voltar a travar os anos publicados"><i class="bi bi-unlock"></i> Corrigindo anos publicados — concluir</a>{% else %}<a class="btn btn-sm btn-outline-secondary" href="?aba=dados&corrigir={{ b.q.chave }}#quadro-{{ b.q.chave }}" title="Editor-chefe: corrigir um valor de ano já publicado (exige justificativa)"><i class="bi bi-lock"></i> Corrigir anos publicados</a>{% endif %}{% endif %}
     {% if pode_estruturar %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'quadro_editar' ciclo.ano b.q.chave %}" title="Editar estrutura do quadro"><i class="bi bi-gear"></i></a>{% endif %}
   </div>
   <div class="card-body pb-2">
@@ -24,7 +24,7 @@
     {% if b.graficos %}<div class="quadro-com-grafico"><div class="quadro-grade">{% endif %}
     <div class="table-responsive js-rolar-fim">
     <table class="table table-sm grade mb-1" data-tipo="{{ b.q.tipo_valor }}">
-      <thead><tr><th class="rot"></th>{% for c in b.colunas %}<th class="text-end {% if c.atual %}col-atual{% endif %}{% if c.total %} col-total{% endif %}" scope="col">{% if c.travada %}<i class="bi bi-lock-fill text-secondary mini" title="Ano já publicado: só o Master altera, com justificativa"></i> {% endif %}{{ c.rotulo }}</th>{% endfor %}</tr></thead>
+      <thead><tr><th class="rot"></th>{% for c in b.colunas %}<th class="text-end {% if c.atual %}col-atual{% endif %}{% if c.total %} col-total{% endif %}" scope="col">{% if c.travada %}<i class="bi bi-lock-fill text-secondary mini" title="Ano já publicado: só o Editor-chefe altera, com justificativa"></i> {% endif %}{{ c.rotulo }}</th>{% endfor %}</tr></thead>
       <tbody>
       {% for l in b.linhas %}
       <tr class="{% if l.total %}linha-total{% elif l.calculada %}linha-calc{% endif %}">

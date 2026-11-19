@@ -47,7 +47,7 @@ def pode_definir_atributos(user):
 def blocos_atributos(request, ano):
     c = get_object_or_404(Ciclo, ano=ano)
     if not pode_definir_atributos(request.user):
-        raise PermissionDenied("Só o administrador e o Master definem os atributos dos blocos.")
+        raise PermissionDenied("Só o administrador e o Editor-chefe definem os atributos dos blocos.")
     if c.situacao == Ciclo.ENCERRADO:
         raise PermissionDenied("O ciclo está encerrado.")
     secoes = list(c.secoes.order_by("ordem", "id"))

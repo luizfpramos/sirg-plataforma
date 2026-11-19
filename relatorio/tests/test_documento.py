@@ -115,7 +115,7 @@ class EscreverTests(Base):
         self.assertRegex(html, rf'class="texto-rg doc-texto[^"]* editavel[^"]*"\s+data-bloco="{meu.pk}"')
         self.assertNotRegex(html, rf'class="texto-rg doc-texto[^"]* editavel[^"]*"\s+data-bloco="{alheio.pk}"')
         self.assertIn("sec-card pg-secao pode", html)   # a seção da pessoa começa com a faixa de ferramentas
-        self.assertIn("Enviar ao Master", html)
+        self.assertIn("Enviar ao Editor-chefe", html)
         self.assertIn('id="so-minhas"', html)           # chave "Só o que eu escrevo" no sumário
         # a seção dos outros é só a página, sem faixa nem botões
         self.assertIn('<span class="pg-ancora doc-sec" id="sec-pesquisa_inovacao"', html)

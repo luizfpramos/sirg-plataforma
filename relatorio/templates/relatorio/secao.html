@@ -11,7 +11,7 @@
   </div>
   <div class="ms-auto d-flex gap-2 flex-wrap">
     {% for a in acoes %}
-      {% if a == 'enviar' %}{% if envio_falta %}<span class="d-inline-flex align-items-center gap-2"><button class="btn btn-sm btn-outline-secondary" disabled aria-describedby="envio-motivo"><i class="bi bi-send"></i> Enviar ao Master</button><span id="envio-motivo" class="mini text-secondary">{{ envio_falta }} antes de enviar</span></span>{% else %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}" onsubmit="return confirm('Enviar esta seção ao Master? Depois de enviada, o setor só volta a editar se o Master devolver.')">{% csrf_token %}<input type="hidden" name="acao" value="enviar"><button class="btn btn-sm btn-success"><i class="bi bi-send"></i> Enviar ao Master</button></form>{% endif %}{% endif %}
+      {% if a == 'enviar' %}{% if envio_falta %}<span class="d-inline-flex align-items-center gap-2"><button class="btn btn-sm btn-outline-secondary" disabled aria-describedby="envio-motivo"><i class="bi bi-send"></i> Enviar ao Editor-chefe</button><span id="envio-motivo" class="mini text-secondary">{{ envio_falta }} antes de enviar</span></span>{% else %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}" onsubmit="return confirm('Enviar esta seção ao Editor-chefe? Depois de enviada, o setor só volta a editar se o Editor-chefe devolver.')">{% csrf_token %}<input type="hidden" name="acao" value="enviar"><button class="btn btn-sm btn-success"><i class="bi bi-send"></i> Enviar ao Editor-chefe</button></form>{% endif %}{% endif %}
       {% if a == 'aprovar' %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}">{% csrf_token %}<input type="hidden" name="acao" value="aprovar"><button class="btn btn-sm btn-success"><i class="bi bi-check2-circle"></i> Aprovar seção</button></form>{% endif %}
       {% if a == 'devolver' %}<button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modal-devolver"><i class="bi bi-arrow-return-left"></i> Devolver ao setor</button>{% endif %}
       {% if a == 'reabrir' %}<form method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}">{% csrf_token %}<input type="hidden" name="acao" value="reabrir"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-unlock"></i> Reabrir</button></form>{% endif %}
@@ -41,7 +41,7 @@
       <a class="btn btn-primary btn-sm ms-auto" href="{% url 'escrever' ciclo.ano %}?secao={{ secao.chave }}"><i class="bi bi-file-earmark-text"></i> Escrever no documento</a>
     </div>
     <p class="mini text-secondary">Nesta aba você também organiza os elementos da seção: incluir uma tabela, um gráfico ou números em destaque, mudar a ordem e escolher o que cada gráfico mostra.</p>
-    {% if not pode_texto %}<p class="mini text-secondary"><i class="bi bi-lock"></i> {{ motivo_texto }}{% if pode_sugerir %} Como Master, você pode sugerir alterações.{% endif %}</p>{% endif %}
+    {% if not pode_texto %}<p class="mini text-secondary"><i class="bi bi-lock"></i> {{ motivo_texto }}{% if pode_sugerir %} Como Editor-chefe, você pode sugerir alterações.{% endif %}</p>{% endif %}
     <div class="documento-secao">
     {% for d in blocos_texto %}{% include "relatorio/_bloco.html" %}{% empty %}
       <div class="card card-body text-secondary mb-3">Esta seção ainda não tem texto.{% if pode_texto %} Comece adicionando um bloco de texto abaixo.{% endif %}</div>
@@ -78,11 +78,11 @@
       <p class="mb-2">O que fazer agora:</p>
       <ol>
         {% if tem_texto %}<li><strong>Revise o texto</strong> desta seção: <a class="btn btn-sm btn-outline-primary" href="{% url 'escrever' ciclo.ano %}?secao={{ secao.chave }}"><i class="bi bi-pencil-square"></i> Escrever o relatório</a></li>{% endif %}
-        <li>{% if 'enviar' in acoes %}<strong>Envie ao Master</strong> para revisão:
-          <form class="d-inline" method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}" onsubmit="return confirm('Enviar esta seção ao Master? Depois de enviada, o setor só volta a editar se o Master devolver.')">{% csrf_token %}<input type="hidden" name="acao" value="enviar"><button class="btn btn-sm btn-success"><i class="bi bi-send"></i> Enviar ao Master</button></form>
-          {% elif secao.situacao == 'enviada' %}A seção já foi <strong>enviada ao Master</strong>.
+        <li>{% if 'enviar' in acoes %}<strong>Envie ao Editor-chefe</strong> para revisão:
+          <form class="d-inline" method="post" action="{% url 'secao_acao' ciclo.ano secao.chave %}" onsubmit="return confirm('Enviar esta seção ao Editor-chefe? Depois de enviada, o setor só volta a editar se o Editor-chefe devolver.')">{% csrf_token %}<input type="hidden" name="acao" value="enviar"><button class="btn btn-sm btn-success"><i class="bi bi-send"></i> Enviar ao Editor-chefe</button></form>
+          {% elif secao.situacao == 'enviada' %}A seção já foi <strong>enviada ao Editor-chefe</strong>.
           {% elif secao.situacao == 'aprovada' %}A seção já foi <strong>aprovada</strong>.
-          {% else %}Quem envia esta seção ao Master é o setor responsável por ela ({% for x in secao.setores.all %}{{ x.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}). Não é preciso fazer mais nada aqui.{% endif %}</li>
+          {% else %}Quem envia esta seção ao Editor-chefe é o setor responsável por ela ({% for x in secao.setores.all %}{{ x.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}). Não é preciso fazer mais nada aqui.{% endif %}</li>
       </ol>
       {% endif %}
       <a href="{% url 'ciclo' ciclo.ano %}" class="mini"><i class="bi bi-arrow-left"></i> Voltar para a lista dos meus números</a>

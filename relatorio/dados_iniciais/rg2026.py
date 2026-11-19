@@ -459,7 +459,7 @@ def sincronizar_estrutura(ciclo):
                     feito["linhas"] += 1
                 elif vl.rotulo != li.rotulo or (vl.formula != li.formula and (vl.formula or li.formula)):
                     if _mexido_por_alguem(vl):
-                        # o Master mudou o nome ou a fórmula na plataforma (ex.: curso de 2026): fica como está
+                        # o Editor-chefe mudou o nome ou a fórmula na plataforma (ex.: curso de 2026): fica como está
                         feito.setdefault("preservadas", []).append(f"{vq.chave}.{vl.chave}")
                         continue
                     vl.rotulo, vl.formula = li.rotulo, li.formula
@@ -515,7 +515,7 @@ def sincronizar_estrutura(ciclo):
                 continue
             if any(_mexido_por_alguem(b) for b in atuais) or Bloco.history.filter(
                     secao_id=vs.pk, history_user__isnull=False).exclude(tipo=Bloco.TEXTO).exists():
-                # o Master incluiu, apagou ou ajustou tabela/gráfico nesta seção: não refaz nada aqui
+                # o Editor-chefe incluiu, apagou ou ajustou tabela/gráfico nesta seção: não refaz nada aqui
                 feito.setdefault("secoes_preservadas", []).append(sch)
                 continue
             for b in atuais:
@@ -703,7 +703,7 @@ def ajustar(ciclo):
             feito["titulos"] += 1
 
     # 4. observações de conferência do RG 2025 saem das descrições dos quadros
-    #    (só as frases de conferência; o resto da orientação fica, e o que o Master escreveu não é tocado)
+    #    (só as frases de conferência; o resto da orientação fica, e o que o Editor-chefe escreveu não é tocado)
     for q in Quadro.objects.filter(ciclo=ciclo):
         if q.descricao and NOTAS_2025.search(q.descricao) and not _mexido_por_alguem(q):
             frases = re.split(r"(?<=[.!?])\s+", q.descricao.strip())
@@ -714,7 +714,7 @@ def ajustar(ciclo):
                 feito["descricoes"] += 1
     Quadro.objects.filter(ciclo=ciclo, chave="frota_km", descricao="").update(descricao=(
         "Quilometragem rodada por tipo de veículo (Gráfico 5). Preencha 2026. A série de anos anteriores não foi "
-        "publicada em números no RG: se a DPG tiver os valores, envie ao Master para lançar."))
+        "publicada em números no RG: se a DPG tiver os valores, envie ao Editor-chefe para lançar."))
     # 5. toda seção diz, em uma frase, o que se espera do texto
     com_dados = set(Quadro.objects.filter(ciclo=ciclo).values_list("secao_id", flat=True))
     ciclo.secoes.filter(orientacao=_PDI_ANTES).update(orientacao=_PDI)
@@ -724,7 +724,30 @@ def ajustar(ciclo):
             s.orientacao = texto
             s.save(update_fields=["orientacao"])
             feito["orientacoes"] += 1
+    # 2.17: o papel "Master" passou a se chamar "Editor-chefe" nas orientações que o sistema escreveu
+    #       (só onde ninguém mexeu pela plataforma; depois da troca a palavra some, então não repete)
+    feito["editor_chefe"] = renomear_master(ciclo)
     return feito
+
+
+_MASTER = re.compile(r"\bMaster\b")
+
+
+def renomear_master(ciclo):
+    """Troca "Master" por "Editor-chefe" nas orientações de seções, quadros e blocos que vieram do sistema.
+    O que alguém alterou pela plataforma (histórico com usuário) fica como está."""
+    n = 0
+    alvos = [(ciclo.secoes.all(), "orientacao"), (Quadro.objects.filter(ciclo=ciclo), "descricao"),
+             (Bloco.objects.filter(secao__ciclo=ciclo), "descricao")]
+    for consulta, campo in alvos:
+        for obj in consulta.filter(**{f"{campo}__contains": "Master"}):
+            texto = getattr(obj, campo)
+            if not _MASTER.search(texto) or _mexido_por_alguem(obj):
+                continue
+            setattr(obj, campo, _MASTER.sub("Editor-chefe", texto))
+            obj.save(update_fields=[campo])
+            n += 1
+    return n
 
 
 

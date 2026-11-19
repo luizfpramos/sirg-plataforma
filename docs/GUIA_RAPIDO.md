@@ -9,7 +9,7 @@ Para quem toca o SiRG sem o Luiz (Wesley, a partir de novembro de 2026). Os deta
 | Item | Como conferir |
 |---|---|
 | Wesley é colaborador do repositório, com permissão de escrita | github.com/luizfpramos/sirg-plataforma › Settings › Collaborators. Wesley precisa conseguir criar ramo e fazer merge. |
-| Wesley tem usuário **Master** ou **admin** na PRD | O banco da HML é cópia do da PRD, então o mesmo usuário vale nas duas. Só esses perfis veem o envio para a produção e as instalações em **Sobre**. |
+| Wesley tem usuário **Editor-chefe** ou **admin** na PRD | O banco da HML é cópia do da PRD, então o mesmo usuário vale nas duas. Só esses perfis veem o envio para a produção e as instalações em **Sobre**. |
 | O implantador do PC está na versão 2.15 | Depois do merge da 2.15, o Luiz roda **uma vez** `instalar_implantador.bat` da pasta `hml\sirg-plataforma`. A chave já está cadastrada: é só dar Enter nas perguntas. Em até 5 min, o **Sobre** da HML passa a mostrar a versão da produção. |
 | O botão já foi testado uma vez | O Luiz envia a 2.15 para a produção pelo botão e confere o **Sobre** da PRD. |
 | O PC da DGDI fica ligado | Sem suspender nem hibernar. Se possível, configurar a BIOS para religar depois de queda de energia. O SiRG, a HML e o implantador sobem sozinhos quando o Windows inicia. |

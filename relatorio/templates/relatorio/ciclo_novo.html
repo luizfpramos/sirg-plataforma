@@ -15,6 +15,6 @@
     <div class="col-md-4">{% include "contas/_campo.html" with f=form.anos_serie %}</div>
     <div class="col-md-4"><div class="mb-3"><label class="form-label" for="id_prazo">Prazo da coleta</label><input type="date" class="form-control" id="id_prazo" name="prazo" value="{{ form.prazo.value|default_if_none:'' }}"></div></div>
   </div>
-  <p class="mini text-secondary mb-0">O ciclo nasce <strong>em preparação</strong>: só administradores e Master mexem nele até você abrir a coleta.</p>
+  <p class="mini text-secondary mb-0">O ciclo nasce <strong>em preparação</strong>: só administradores e Editor-chefe mexem nele até você abrir a coleta.</p>
 </div><div class="card-footer"><button class="btn btn-primary">Criar ciclo</button></div></form>
 {% endblock %}

@@ -20,3 +20,6 @@ relatorio/dados_iniciais/paginas_amostra.json
 .idea/
 .DS_Store
 Thumbs.db
+
+# banco em memória dos testes, quando o SQLite cria um arquivo com esse nome
+file:*

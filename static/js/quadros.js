@@ -4,7 +4,7 @@
  * - Atualiza na hora as linhas calculadas, os totais e as pendências do quadro.
  * - Detecta quando outra pessoa alterou a célula ao mesmo tempo (conflito).
  * - Enter/↓ desce, ↑ sobe, colar do Excel preenche várias células.
- * - Ano travado (Master): pede justificativa antes de gravar.
+ * - Ano travado (Editor-chefe): pede justificativa antes de gravar.
  */
 (function () {
   "use strict";

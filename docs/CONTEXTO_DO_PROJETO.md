@@ -16,7 +16,7 @@ Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `doc
 - **Exportação e gráficos:** python-docx (Word), openpyxl (Excel), matplotlib (gráficos SVG/PNG).
 - **Front-end:** Bootstrap 5, JS puro e DOMPurify. Não há etapa de build.
 - **Apps:**
-  - `contas`: usuários, setores, perfis (Master, Diagramação, admin), paletas de cores e a tela "Sobre", com a lista `VERSOES` em `contas/views.py`.
+  - `contas`: usuários, setores, perfis (Editor-chefe, Diagramação, admin), paletas de cores e a tela "Sobre", com a lista `VERSOES` em `contas/views.py`.
   - `relatorio`: ciclos, seções, quadros (tabelas de números), blocos (trechos de texto, gráficos e tabelas), páginas, campos, fluxo, exportações e conferência.
 - **Testes:** `python manage.py test` roda 181 testes, todos passando na 2.14. O modo `--parallel` falha por um problema de pickling, então rode os testes em série.
 - **Sem acesso a outros sites:** a plataforma não acessa a internet. A IA (`config_ia/`) é opcional.
@@ -42,11 +42,11 @@ Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `doc
   - Só editam o texto base, sempre com rastreio.
   - O servidor recusa o salvamento se `texto_base` mudar.
   - Não criam trechos novos nem inserem imagens.
-  - Só o Master aceita ou recusa alterações.
+  - Só o Editor-chefe aceita ou recusa alterações.
 - **Painéis (2.14):** números e textos que no PDF eram imagem ganharam caixas editáveis por cima, definidas em `relatorio/paineis.py` e `dados_iniciais/paineis_rg2025.json`.
 - **Gráficos no lugar:** `relatorio/paginas.py` tem o dicionário `LUGARES`, com seção, título, página e área de cada gráfico, conferido página a página.
 - **Word (2.14):** `relatorio/exportar_paginas.py` gera páginas do tamanho do RG (935,4 × 566,9 pt). O fundo é uma imagem ancorada e os textos, gráficos e tabelas viram caixas de texto do Word (wps).
-- **Apêndice:** a planilha das 41 metas do PDI (quadro `pdi_metas`). Cada linha tem setor próprio (`Linha.setor`; GDG → GAB). O Master baixa a planilha preenchida no modelo original.
+- **Apêndice:** a planilha das 41 metas do PDI (quadro `pdi_metas`). Cada linha tem setor próprio (`Linha.setor`; GDG → GAB). O Editor-chefe baixa a planilha preenchida no modelo original.
 - **Preparação idempotente:** `python manage.py preparar_rg2026` prepara o banco e pode ser rodado várias vezes. Cada passo de migração de conteúdo roda uma vez só e preserva o que foi editado. Os passos estão em `relatorio/dados_iniciais/rg2026.py` (`ajustar()`).
 
 ### Telas principais
@@ -55,11 +55,11 @@ Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `doc
   - Clicar no xxxxx abre o popover de preenchimento.
   - O botão "Dados" (ou clicar no gráfico) abre a gaveta com a tabela.
   - O botão "Faltam N" leva ao próximo item a preencher.
-  - Cada seção tem uma faixa com situação e "Enviar ao Master".
+  - Cada seção tem uma faixa com situação e "Enviar ao Editor-chefe".
 - **Ver como fica** (`/ler/`): a leitura limpa, que também pode ser impressa.
 - **O que falta** (`/pendencias/`).
-- **Quadros de números:** só para o Master.
-- **Cores dos gráficos:** Master e diagramação.
+- **Quadros de números:** só para o Editor-chefe.
+- **Cores dos gráficos:** Editor-chefe e diagramação.
 - **Menu:** um único menu no alto (não há barra lateral).
 
 ## 3. Ambientes e implantação (Windows, PC do Luiz)
@@ -87,7 +87,7 @@ Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `doc
   - tag `vX.Y` atualiza `implantar/prd`. A tag precisa bater com `SIRG_VERSAO` e o commit precisa já ter passado pela `main`.
 - No PC, a tarefa "SiRG - Implantador" (`C:\ProgramData\SiRG\implantador`, a cada 5 min, conta SYSTEM) lê esses ramos com uma deploy key só de leitura e roda `implantacao/implantar.ps1 -Automatico`.
 - A produção só recebe código que já foi instalado na homologação.
-- O resultado de cada instalação vai para `dados/implantacao.json` e aparece na tela Sobre para o Master e o administrador.
+- O resultado de cada instalação vai para `dados/implantacao.json` e aparece na tela Sobre para o Editor-chefe e o administrador.
 - Os `.bat` manuais continuam funcionando como plano B.
 
 ## 4. Histórico recente (resumo)
@@ -106,7 +106,7 @@ Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `doc
   - Correção do gráfico que "se desmanchava" ao salvar os dados.
   - Painéis que eram imagem no PDF ficaram editáveis: Ouvidoria e seus rankings, LAI, PGEN, riscos, integridade, despesas de investimento, custos e SWOT.
   - Word no formato das páginas.
-  - Teste completo preenchendo tudo pela tela, como Master e como setor, com as correções que ele revelou.
+  - Teste completo preenchendo tudo pela tela, como Editor-chefe e como setor, com as correções que ele revelou.
 
 ## 5. Limitações conhecidas e próximos passos possíveis
 
@@ -139,6 +139,6 @@ python manage.py createsuperuser   # ou crie usuários pelo admin
 python servir.py   # ou: python manage.py runserver 8001
 ```
 
-- **Usuários de teste usados no desenvolvimento:** mara.master (Master), ana.dirgrad (setor DIRGRAD), carlos.dpg, paulo.dppg e luiz.ramos. Eles foram criados à mão no ambiente de desenvolvimento e não existem no zip.
+- **Usuários de teste usados no desenvolvimento:** mara.master (Editor-chefe), ana.dirgrad (setor DIRGRAD), carlos.dpg, paulo.dppg e luiz.ramos. Eles foram criados à mão no ambiente de desenvolvimento e não existem no zip.
 - **Testes de navegador:** foram feitos com Playwright (Chromium).
 - **Regenerar as páginas a partir do PDF** (só se o PDF de referência mudar): `python3 ferramentas/paginas_rg2025.py static/referencia/RG2025.pdf`. Precisa de pdfminer.six, pypdf, fontTools e poppler-utils, além das fontes Carlito e Liberation instaladas.

@@ -13,7 +13,7 @@
       {% if n_marcas_minhas %}<span class="badge badge-atualizar" title="Menções ao CEFET-MG em amarelo: clique e escolha manter ou trocar por UFCIMG">{{ n_marcas_minhas }} em amarelo</span>{% endif %}
       <span class="doc-revisao-barra ms-auto">
         {% if n_editaveis %}{% if e_master %}<button type="button" class="btn btn-sm btn-rastreio js-rastreio" aria-pressed="false" title="Ligado: o que você digitar ou apagar fica marcado, com o seu nome (como no Word)"><i class="bi bi-pencil-square"></i> <span>Controlar alterações</span></button>
-        {% else %}<span class="btn btn-sm btn-rastreio on" title="O que você digita ou apaga fica marcado, com o seu nome, até o Master aceitar"><i class="bi bi-pencil-square"></i> Controle de alterações ligado</span>{% endif %}{% endif %}
+        {% else %}<span class="btn btn-sm btn-rastreio on" title="O que você digita ou apaga fica marcado, com o seu nome, até o Editor-chefe aceitar"><i class="bi bi-pencil-square"></i> Controle de alterações ligado</span>{% endif %}{% endif %}
         {% if pode_comentar %}<button type="button" class="btn btn-sm btn-outline-secondary js-comentar-sel" title="Selecione um trecho do texto e clique aqui"><i class="bi bi-chat-left-text"></i> Comentar</button>{% endif %}
         <button type="button" class="btn btn-sm btn-cont js-cont-sug" title="Alterações no texto"><span>0 alterações</span></button>
         <button type="button" class="btn btn-sm btn-cont js-cont-com" title="Comentários abertos"><span>0 comentários</span></button>
@@ -58,7 +58,7 @@
     </aside>
 
     <div class="doc-mesa">
-      {% if n_editaveis %}<div class="doc-dica-topo d-print-none js-dica-topo"><span><strong>xxxxx</strong> = número para preencher: clique nele. Tabelas e gráficos: clique para preencher os dados de {{ ciclo.ano }}. No texto, o que você muda fica marcado para o Master.</span><button type="button" class="btn-close btn-sm js-dica-fechar" aria-label="Fechar a dica"></button></div>
+      {% if n_editaveis %}<div class="doc-dica-topo d-print-none js-dica-topo"><span><strong>xxxxx</strong> = número para preencher: clique nele. Tabelas e gráficos: clique para preencher os dados de {{ ciclo.ano }}. No texto, o que você muda fica marcado para o Editor-chefe.</span><button type="button" class="btn-close btn-sm js-dica-fechar" aria-label="Fechar a dica"></button></div>
       {% elif not modo_coleta %}<div class="doc-dica-topo d-print-none"><span><i class="bi bi-lock"></i> A coleta não está aberta agora: somente leitura.</span></div>{% endif %}
       {% include "relatorio/_folha.html" with editor=True %}
     </div>
@@ -111,7 +111,7 @@
 <div class="modal fade" id="modal-comentar" tabindex="-1" aria-labelledby="modal-comentar-titulo" aria-hidden="true">
   <div class="modal-dialog"><form class="modal-content" method="post" id="form-comentar">{% csrf_token %}<input type="hidden" name="voltar" id="comentar-voltar">
     <div class="modal-header"><h2 class="modal-title h6" id="modal-comentar-titulo">Comentar este trecho</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
-    <div class="modal-body"><input type="hidden" name="bloco" id="comentar-bloco"><label class="form-label mini text-secondary" for="comentar-texto">O comentário aparece para quem escreve e para o Master. Ele não vai para o relatório.</label><textarea class="form-control" name="texto" id="comentar-texto" rows="4" required></textarea></div>
+    <div class="modal-body"><input type="hidden" name="bloco" id="comentar-bloco"><label class="form-label mini text-secondary" for="comentar-texto">O comentário aparece para quem escreve e para o Editor-chefe. Ele não vai para o relatório.</label><textarea class="form-control" name="texto" id="comentar-texto" rows="4" required></textarea></div>
     <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary">Comentar</button></div>
   </form></div>
 </div>

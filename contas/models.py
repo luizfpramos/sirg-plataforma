@@ -4,7 +4,7 @@ Usuários, setores e perfis de acesso da Plataforma SiRG.
 Perfis (podem ser combinados):
   - Administrador da plataforma: cria usuários e setores, vincula usuários a setores,
     configura a instituição e (nas próximas etapas) ciclos e estrutura do relatório.
-  - Master: edita qualquer parte do relatório e pode sugerir alterações aos setores.
+  - Editor-chefe: edita qualquer parte do relatório e pode sugerir alterações aos setores.
   - Editor: quem tem ao menos um vínculo ATIVO com um setor ATIVO edita o que é do setor.
   - Leitor: quem não tem nenhum dos anteriores; vê o relatório inteiro, sem editar.
 
@@ -188,7 +188,7 @@ class EventoAuditoria(models.Model):
 
 
 class Paleta(models.Model):
-    """Paleta de cores dos gráficos (criada e editada pela diagramação ou pelo Master).
+    """Paleta de cores dos gráficos (criada e editada pela diagramação ou pelo Editor-chefe).
     A ordem importa: a 1ª cor é a das barras; a 2ª, a da linha sobre as barras; as seguintes, as outras séries."""
     chave = models.SlugField(max_length=40, unique=True)
     nome = models.CharField(max_length=80)
