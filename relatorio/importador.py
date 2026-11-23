@@ -150,16 +150,22 @@ def _ordem_secao(s):
     return ((s.pai.ordem if s.pai_id else s.ordem), (s.ordem if s.pai_id else -1), s.pk)
 
 
-def marcos_das_secoes(ciclo, paginas, e_fixo):
-    """Procura o título de cada seção (na ordem do relatório) entre os títulos do PDF. Devolve
-    ([(página, coluna, altura, seção)], [seções não encontradas])."""
-    from .paginas import _coluna, _parecido, normalizar
+def limite_de_titulo(paginas):
+    """Tamanho de letra a partir do qual uma caixa é título (30% maior que o texto corrido, no mínimo 12,5)."""
     pesos = Counter()
     for p in paginas:
         for c in p["caixas"]:
             pesos[c["tam"]] += len(c["texto"])
     corpo = max(pesos, key=pesos.get) if pesos else 10
-    limite = max(12.5, corpo * 1.3)
+    return max(12.5, corpo * 1.3)
+
+
+def marcos_das_secoes(ciclo, paginas, e_fixo):
+    """Procura o título de cada seção (na ordem do relatório) entre os títulos do PDF. Não usa IA: compara o nome
+    da seção com os textos de letra grande (sem acentos nem maiúsculas; a partir de 80% de semelhança). Devolve
+    ([(página, coluna, altura, seção)], [seções não encontradas])."""
+    from .paginas import _coluna, _parecido, normalizar
+    limite = limite_de_titulo(paginas)
     titulos = []
     for p in paginas:
         if any(normalizar(c["texto"]) == "sumario" for c in p["caixas"]):
@@ -182,7 +188,57 @@ def marcos_das_secoes(ciclo, paginas, e_fixo):
     return marcos, faltam
 
 
+def conferencia(imp):
+    """Linhas da tabela "seção → página inicial" que o administrador confere antes de aplicar: o que o sistema
+    achou e o que ficou gravado como escolha (imp.resumo["inicios"], {pk: página ou None})."""
+    paginas = paginas_lidas(imp)
+    marcos, _ = marcos_das_secoes(imp.ciclo, paginas, textos_fixos(paginas))
+    achadas = {m[3].pk: m[0] for m in marcos}
+    escolhas = (imp.resumo or {}).get("inicios") or {}
+    linhas, maior = [], 0
+    for s in sorted(imp.ciclo.secoes.select_related("pai").prefetch_related("setores"), key=_ordem_secao):
+        k = str(s.pk)
+        pagina = escolhas[k] if k in escolhas else achadas.get(s.pk)
+        linhas.append({"s": s, "achada": achadas.get(s.pk), "pagina": pagina, "fixo": s.conteudo_fixo,
+                       "fora_de_ordem": bool(pagina and pagina < maior)})   # começa antes de uma seção anterior
+        maior = max(maior, pagina or 0)
+    return linhas
+
+
+def marcos_com_escolhas(ciclo, paginas, e_fixo, inicios=None):
+    """Os marcos achados, com as páginas escolhidas pelo administrador no lugar. `inicios`: {pk: página ou None}
+    (None = a seção não está no PDF). Mesma página que a achada = mantém a posição exata do título; outra página
+    = a seção começa no alto dela. Devolve ([marcos em ordem de posição], [seções sem página])."""
+    marcos, faltam = marcos_das_secoes(ciclo, paginas, e_fixo)
+    if inicios is None:
+        return marcos, faltam
+    por_secao = {m[3].pk: m for m in marcos}
+    numeros = {p["n"] for p in paginas}
+    novos, sem = [], []
+    for s in sorted(ciclo.secoes.select_related("pai"), key=_ordem_secao):
+        n = inicios.get(s.pk, por_secao[s.pk][0] if s.pk in por_secao else None)
+        if not n:
+            sem.append(s)
+            continue
+        if n not in numeros:
+            raise Recusado(f"A página {n} (seção “{s.titulo}”) não existe no PDF.")
+        achado = por_secao.get(s.pk)
+        novos.append(achado if achado and achado[0] == n else (n, -1, -1, s))
+    ordem = {s.pk: i for i, s in enumerate(sorted(ciclo.secoes.select_related("pai"), key=_ordem_secao))}
+    novos.sort(key=lambda m: (m[:3], ordem[m[3].pk]))
+    return novos, sem
+
+
 # --- aplicar ao ciclo -----------------------------------------------------------------------------------------
+def inicios_gravados(ciclo, exceto=None):
+    """As páginas iniciais escolhidas na última aplicação de PDF do ciclo ({pk: página ou None}), ou None."""
+    for imp in ciclo.importacoes.exclude(pk=getattr(exceto, "pk", None)).filter(situacao=ImportacaoPDF.APLICADA):
+        ini = (imp.resumo or {}).get("inicios")
+        if ini:
+            return {int(k): v for k, v in ini.items()}
+    return None
+
+
 def motivo_para_nao_aplicar(imp):
     if imp.situacao == ImportacaoPDF.APLICADA:
         return "Este PDF já foi aplicado ao ciclo."
@@ -197,9 +253,39 @@ def motivo_para_nao_aplicar(imp):
     return ""
 
 
-def aplicar(imp, user):
-    """Cria as páginas e os trechos de texto do ciclo a partir do PDF lido. Só num ciclo sem páginas."""
+def tamanho_sugerido(n):
+    """Mínimo e máximo de caracteres sugeridos a partir do tamanho do texto que estava no PDF (70% a 130%).
+    Textos muito curtos (rótulos, legendas) ficam sem limite."""
+    if n < 40:
+        return None, None
+    return int(n * 0.7), int(n * 1.3) + 1
+
+
+def conteudo_da_caixa(c, secao, limite, automatico=False):
+    """O que entra no bloco criado a partir de uma caixa do PDF. Devolve (conteúdo, config extra, mínimo, máximo,
+    campos criados).
+
+    - Título (letra grande) ou seção de conteúdo fixo: o texto do PDF como está; só o Editor-chefe altera.
+    - Demais caixas: o bloco nasce vazio. O texto do PDF fica guardado como referência do ano anterior e o
+      tamanho dele sugere o mínimo e o máximo de caracteres.
+    - RG 2026 automático (montado pelo desenvolvedor a partir do RG 2025): o texto do PDF com os números como xxxxx,
+      como antes da 2.18."""
+    from . import atributos as AT
     from . import campos as CT
+    from .html_seguro import limpar
+    html = limpar(c["html"])
+    if automatico:
+        html, novos = CT.camposificar(html)
+        return html, {}, None, None, len(novos)
+    if c["tam"] >= limite or secao.conteudo_fixo:
+        return html, {"fixo": True}, None, None, 0
+    minimo, maximo = tamanho_sugerido(AT.contar_caracteres(html))
+    return "", {"referencia_pdf": html}, minimo, maximo, 0
+
+
+def aplicar(imp, user, inicios=None):
+    """Cria as páginas e os blocos do ciclo a partir do PDF lido. Só num ciclo sem páginas. `inicios`: as páginas
+    iniciais escolhidas na conferência ({pk da seção: página ou None}); sem elas, vale o que o sistema achou."""
     from .html_seguro import limpar
     from .paginas import _caixa_css, _coluna
     motivo = motivo_para_nao_aplicar(imp)
@@ -210,7 +296,8 @@ def aplicar(imp, user):
         raise Recusado("Não há páginas lidas neste PDF.")
     ciclo = imp.ciclo
     e_fixo = textos_fixos(paginas)
-    marcos, faltam = marcos_das_secoes(ciclo, paginas, e_fixo)
+    limite = limite_de_titulo(paginas)
+    marcos, faltam = marcos_com_escolhas(ciclo, paginas, e_fixo, inicios)
     primeira_secao = sorted(ciclo.secoes.select_related("pai"), key=_ordem_secao)[0]
 
     def dono(n, col, y):
@@ -222,7 +309,7 @@ def aplicar(imp, user):
                 break
         return atual or primeira_secao
 
-    feito = {"paginas": 0, "caixas": 0, "campos": 0}
+    feito = {"paginas": 0, "caixas": 0, "campos": 0, "vazios": 0, "fixos": 0}
     with transaction.atomic():
         if Pagina.objects.select_for_update().filter(ciclo=ciclo).exists():
             raise Recusado("Este ciclo já tem páginas.")
@@ -237,18 +324,23 @@ def aplicar(imp, user):
                                        secao=sec_pag, fixos=fixos)
             feito["paginas"] += 1
             for i, c in enumerate(corpo):
-                html, novos = CT.camposificar(limpar(c["html"]))
-                feito["campos"] += len(novos)
+                secao = dono(n, _coluna(c, W), c["y"])
+                html, extra, minimo, maximo, campos = conteudo_da_caixa(c, secao, limite, ciclo.automatico)
+                feito["campos"] += campos
+                if extra.get("fixo"):
+                    feito["fixos"] += 1
+                elif not html:
+                    feito["vazios"] += 1
                 Bloco.objects.create(
-                    secao=dono(n, _coluna(c, W), c["y"]), pagina=pg, tipo=Bloco.TEXTO, ordem=n * 1000 + i,
-                    conteudo=html, config={"caixa": {"x": c["x"], "y": c["y"], "w": c["w"], "h": c["h"],
-                                                     "css": c["css"], "quebra": c["quebra"]},
-                                           "importacao": imp.pk, "campos212": True})
+                    secao=secao, pagina=pg, tipo=Bloco.TEXTO, ordem=n * 1000 + i, conteudo=html,
+                    min_caracteres=minimo, max_caracteres=maximo,
+                    config={"caixa": {"x": c["x"], "y": c["y"], "w": c["w"], "h": c["h"], "css": c["css"],
+                                      "quebra": c["quebra"]}, "importacao": imp.pk, "campos212": True, **extra})
                 feito["caixas"] += 1
         resumo = dict(imp.resumo or {}, aplicado=feito, secoes_achadas=len(marcos),
-                      secoes_faltando=[s.titulo for s in faltam])
+                      secoes_faltando=[s.titulo for s in faltam],
+                      inicios={str(m[3].pk): m[0] for m in marcos} | {str(s.pk): None for s in faltam})
         ImportacaoPDF.objects.filter(pk=imp.pk).update(
             situacao=ImportacaoPDF.APLICADA, aplicada_em=timezone.now(), aplicada_por=user, resumo=resumo)
     imp.refresh_from_db()
     return feito
-

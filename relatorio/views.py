@@ -49,7 +49,7 @@ def ciclo_novo(request):
     _estruturar(request)
     ultimo = Ciclo.objects.order_by("-ano").first()
     form = CicloNovoForm(request.POST or None, initial={
-        "ano": (ultimo.ano + 1) if ultimo else 2026, "origem": ultimo, "anos_serie": ultimo.anos_serie if ultimo else 5})
+        "ano": (ultimo.ano + 1) if ultimo else 2026, "origem": None, "anos_serie": ultimo.anos_serie if ultimo else 5})
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
         titulo = d["titulo"] or f"Relatório de Gestão {d['ano']}"

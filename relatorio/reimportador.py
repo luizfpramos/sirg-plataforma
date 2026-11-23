@@ -53,7 +53,7 @@ def parear(blocos, caixas):
     for b in blocos:
         for i, c in enumerate(caixas):
             sob = _sobreposicao(b.config["caixa"], c)
-            sem = _semelhanca(b.conteudo, c["texto"])
+            sem = _semelhanca(b.conteudo or (b.config or {}).get("referencia_pdf", ""), c["texto"])
             if sob >= LIMITE_POSICAO or sem >= LIMITE_TEXTO:
                 pares.append((sob + sem, b.pk, i))
     pares.sort(reverse=True)
@@ -151,7 +151,6 @@ def gravar_copia(ciclo):
 
 def reimportar(imp, user):
     """Aplica o PDF revisado ao ciclo que já tem páginas, sem tocar no conteúdo escrito. Devolve o resumo."""
-    from . import campos as CT
     from .html_seguro import limpar
     from .paginas import _caixa_css, _coluna
     motivo = motivo_para_nao_reimportar(imp)
@@ -161,7 +160,14 @@ def reimportar(imp, user):
     paginas, e_fixo, existentes, saida = _por_pagina(imp)
     if not paginas:
         raise I.Recusado("Não há páginas lidas neste PDF.")
-    marcos, faltam = I.marcos_das_secoes(ciclo, paginas, e_fixo)
+    inicios = I.inicios_gravados(ciclo, exceto=imp)
+    if inicios:      # as seções que já não existem saem; as novas ficam com o que o sistema achar
+        inicios = {k: v for k, v in inicios.items() if ciclo.secoes.filter(pk=k).exists()}
+    try:
+        marcos, faltam = I.marcos_com_escolhas(ciclo, paginas, e_fixo, inicios or None)
+    except I.Recusado:            # página escolhida antes não existe no PDF novo: volta ao que o sistema achar
+        marcos, faltam = I.marcos_com_escolhas(ciclo, paginas, e_fixo, None)
+    limite = I.limite_de_titulo(paginas)
     primeira = sorted(ciclo.secoes.select_related("pai"), key=I._ordem_secao)[0]
 
     def dono(n, col, y):
@@ -202,12 +208,14 @@ def reimportar(imp, user):
                 Bloco.objects.filter(pk=b.pk).update(config=cfg)      # só a posição: nem o texto nem a data mudam
             base = n * 1000 + 800
             for i, c in enumerate(sorted(novas, key=lambda c: (_coluna(c, W), c["y"], c["x"]))):
-                html, _ = CT.camposificar(limpar(c["html"]))
+                secao = dono(n, _coluna(c, W), c["y"])
+                html, extra, minimo, maximo, _ = I.conteudo_da_caixa(c, secao, limite, ciclo.automatico)
                 Bloco.objects.create(
-                    secao=dono(n, _coluna(c, W), c["y"]), pagina=pg, tipo=Bloco.TEXTO, ordem=base + i, conteudo=html,
+                    secao=secao, pagina=pg, tipo=Bloco.TEXTO, ordem=base + i, conteudo=html,
+                    min_caracteres=minimo, max_caracteres=maximo,
                     config={"caixa": {"x": c["x"], "y": c["y"], "w": c["w"], "h": c["h"], "css": c["css"],
                                       "quebra": c["quebra"]}, "importacao": imp.pk, "campos212": True,
-                            "novo_na_reimportacao": True})
+                            "novo_na_reimportacao": True, **extra})
                 feito["novos"] += 1
         resumo = dict(imp.resumo or {}, reimportado=dict(feito, copia=copia,
                                                          so_no_ciclo=sorted(set(existentes) - {p["n"] for p in paginas})),

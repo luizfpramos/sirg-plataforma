@@ -827,3 +827,7 @@ main#conteudo:focus { outline: none; }
   justify-content: center; font-weight: 600; flex-shrink: 0; border: 2px solid #8a9bb0; color: #142C46; background: #fff; }
 .passos-montagem .passo-feito { background: #198754; border-color: #198754; color: #fff; }
 .passos-montagem .passo-aviso { background: #ffc107; border-color: #c79100; color: #3d2c00; }
+/* 2.18: bloco vazio com texto de enchimento (lorem ipsum ou xxx), só na tela */
+.bloco-guia.guia-enchimento { font: inherit; font-style: normal; color: #9aa3ad; background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--cor-setor, #6c757d) 60%, #fff); text-align: justify; }
+.doc-bloco:not(.pg-cx) .bloco-guia.guia-enchimento { font-size: inherit; }

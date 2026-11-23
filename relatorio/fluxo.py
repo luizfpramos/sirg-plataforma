@@ -66,7 +66,10 @@ def pode_editar_bloco(user, bloco):
 def pode_responder_pelo_bloco(user, bloco):
     """Pode escrever neste trecho (ou marcá-lo como concluído e desfazer)? Sem setor no bloco, vale o que vale para a seção. Com setor no bloco (definido pelo
     administrador), quem escreve é o pessoal desse setor — mesmo que não seja um dos setores da seção — e o Editor-chefe;
-    a situação do ciclo e da seção continuam valendo."""
+    a situação do ciclo e da seção continuam valendo. Bloco de texto fixo do modelo (título ou seção de conteúdo
+    fixo, 2.18): só o Editor-chefe."""
+    if (bloco.config or {}).get("fixo"):
+        return bloco.secao.ciclo.situacao != Ciclo.ENCERRADO and P.e_master(user)
     if not bloco.setor_id:
         return pode_editar_texto(user, bloco.secao)
     secao = bloco.secao
@@ -86,6 +89,8 @@ def motivo_bloco_bloqueado(user, bloco):
     if bloco.concluido_em and pode_responder_pelo_bloco(user, bloco):
         return "Este trecho está marcado como concluído. Use Desfazer para voltar a editar."
     secao = bloco.secao
+    if (bloco.config or {}).get("fixo") and secao.ciclo.situacao != Ciclo.ENCERRADO:
+        return "Texto fixo do modelo (título ou seção de conteúdo fixo): só o Editor-chefe altera."
     if bloco.setor_id and secao.ciclo.situacao == Ciclo.COLETA and secao.situacao not in (Secao.ENVIADA, Secao.APROVADA):
         return f"Este trecho é de responsabilidade de: {bloco.setor.sigla}."
     return motivo_texto_bloqueado(user, secao) or "Você não pode alterar este texto."

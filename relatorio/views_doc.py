@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 
 from contas import permissoes as P
 
+from .html_seguro import limpar
 from . import apresentacao as A
 from . import atributos as AT
 from . import consistencia
@@ -62,8 +63,9 @@ def estrutura(ciclo, calc, user=None, editor=False):
                                **A.tamanho_na_pagina(b))
             A.caixa_na_pagina(b, m)
             if b.tipo in (Bloco.TEXTO, Bloco.IMAGEM):
-                m["atr"] = AT.anotar(b, s.setores.all(), m.get("caixa"))
-                dele = pode if not b.setor_id else (
+                m["atr"] = AT.anotar(b, s.setores.all(), m.get("caixa"), ciclo.exibicao_vazio)
+                dele = F.pode_responder_pelo_bloco(user, b) if (editor and (b.config or {}).get("fixo")) else \
+                    pode if not b.setor_id else (
                     F.pode_responder_pelo_bloco(user, b) if (e_master or b.setor_id in meus_setores) else False)
                 m["pode_concluir"] = bool(editor and dele)                 # quem escreve também conclui e desfaz
                 m["pode_bloco"] = bool(editor and dele and not b.concluido_em)
@@ -201,6 +203,14 @@ def escrever_estado(request, ano):
             por = b.editando_por.get_full_name() or b.editando_por.username
         out[b.pk] = {"v": b.atualizado_em.isoformat(), "por": por}
     return JsonResponse({"blocos": out})
+
+
+@login_required
+def bloco_referencia(request, ano, pk):
+    """2.18: o texto que estava no PDF importado no lugar deste bloco (referência do ano anterior)."""
+    b = get_object_or_404(Bloco.objects.select_related("secao__ciclo"), pk=pk, secao__ciclo__ano=ano)
+    ref = (b.config or {}).get("referencia_pdf") or ""
+    return JsonResponse({"ok": True, "html": limpar(ref), "titulo": b.secao.titulo})
 
 
 @login_required

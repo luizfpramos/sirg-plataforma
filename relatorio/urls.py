@@ -45,6 +45,7 @@ urlpatterns = [
     path("ciclos/<int:ano>/escrever/estado/", D.escrever_estado, name="escrever_estado"),
     path("ciclos/<int:ano>/escrever/inserir/", D.inserir_texto, name="inserir_texto"),
     path("ciclos/<int:ano>/blocos/<int:pk>/html/", D.bloco_html, name="bloco_html"),
+    path("ciclos/<int:ano>/blocos/<int:pk>/referencia/", D.bloco_referencia, name="bloco_referencia"),
     path("ciclos/<int:ano>/blocos/<int:pk>/excluir-texto/", D.excluir_texto, name="excluir_texto"),
     path("ciclos/<int:ano>/quadros/<int:pk>/graficos/", D.quadro_graficos, name="quadro_graficos"),
     path("ciclos/<int:ano>/exportar/", T.exportar, name="exportar"),

@@ -44,6 +44,14 @@ class Ciclo(models.Model):
     em_trabalho = models.BooleanField("ciclo de trabalho", default=False,
                                       help_text="O relatório que o menu abre para todos. Se nenhum estiver marcado, "
                                                 "vale o de ano mais recente.")
+    NADA, ORIENTACAO, LOREM, XXX = "nada", "orientacao", "lorem", "xxx"
+    EXIBICOES_VAZIO = [(NADA, "Nada (o bloco fica em branco)"),
+                       (ORIENTACAO, "A orientação do que escrever aqui"),
+                       (LOREM, "Texto de enchimento (lorem ipsum) ocupando a área"),
+                       (XXX, "“xxx” ocupando a área")]
+    exibicao_vazio = models.CharField("como aparece o bloco vazio", max_length=12, choices=EXIBICOES_VAZIO,
+                                      default=ORIENTACAO,
+                                      help_text="Só na tela, em cinza, até alguém escrever. O bloco continua vazio.")
     automatico = models.BooleanField("mantido pela preparação automática", default=False,
                                      help_text="Só o RG 2026 montado a partir do RG 2025 pelo desenvolvedor. Ciclos "
                                                "montados pela tela nunca são alterados pela preparação automática.")
@@ -82,6 +90,9 @@ class Secao(models.Model):
     nivel = models.PositiveSmallIntegerField("nível", default=1, choices=[(1, "seção"), (2, "subseção")],
                                              help_text="Subseção: aparece dentro da seção anterior (ex.: as áreas "
                                                        "finalísticas dentro de “Desempenho e resultados”).")
+    conteudo_fixo = models.BooleanField("conteúdo fixo", default=False,
+                                        help_text="Seção praticamente igual todo ano: na importação do PDF, recebe o "
+                                                  "texto do PDF como está, e só o Editor-chefe altera.")
     referencia = models.TextField("texto de referência", blank=True, default="",
                                   help_text="Texto desta seção no relatório anterior (só para consulta).")
     referencia_fonte = models.CharField("origem da referência", max_length=120, blank=True, default="",
