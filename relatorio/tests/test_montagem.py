@@ -277,3 +277,31 @@ class QuadrosEPdfAnteriorTests(BaseMontagem):
         self.assertEqual(b"".join(r.streaming_content), b"%PDF-1.4 teste")
         self.assertContains(self.client.get(reverse("escrever", args=[2030])), reverse("pdf_anterior", args=[2030]))
         self.assertEqual(self.client.get(reverse("pdf_anterior_enviar", args=[2030])).status_code, 403)
+
+
+class EnvioExigeBlocosTests(BaseMontagem):
+    def test_envio_so_sem_bloco_vazio(self):
+        from relatorio import fluxo as F
+        Ciclo.objects.filter(pk=self.c.pk).update(situacao=Ciclo.COLETA)
+        self.c.refresh_from_db()
+        cap = secao(self.c, "cap", "Capítulo", ordem=10)
+        s = secao(self.c, "grad", "Graduação", pai=cap, ordem=10, setores=["DIRGRAD"])
+        Bloco.objects.create(secao=s, conteudo="<p>Título fixo</p>", config={"fixo": True})
+        vazio = Bloco.objects.create(secao=s, conteudo="", config={"referencia_pdf": "<p>antigo</p>"})
+        Bloco.objects.create(secao=s, tipo=Bloco.IMAGEM, config={})
+        self.assertEqual(F.blocos_vazios_da_secao(s), 2)
+        with self.assertRaisesRegex(F.Recusado, "2 blocos ainda vazios"):
+            F.acao_secao(self.ana, s, "enviar")
+        F.salvar_texto(self.ana, vazio, "<p><ins data-s=\"a1b2c3\">Texto novo do setor.</ins></p>")   # fica marcado para o Editor-chefe aceitar
+        Bloco.objects.filter(secao=s, tipo=Bloco.IMAGEM).update(config={"imagem": {"id": 1}})
+        self.assertEqual(F.blocos_vazios_da_secao(s), 0)
+        F.acao_secao(self.ana, s, "enviar")
+        s.refresh_from_db()
+        self.assertEqual(s.situacao, Secao.ENVIADA)
+
+    def test_rg2026_automatico_segue_a_regra_antiga(self):
+        from relatorio import fluxo as F
+        Ciclo.objects.filter(pk=self.c.pk).update(automatico=True)
+        cap = secao(self.c, "cap", "Capítulo", ordem=10)
+        Bloco.objects.create(secao=cap, conteudo="")
+        self.assertEqual(F.blocos_vazios_da_secao(Secao.objects.get(pk=cap.pk)), 0)

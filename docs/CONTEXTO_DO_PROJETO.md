@@ -1,6 +1,6 @@
 # SiRG — contexto do projeto
 
-Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
+Atualizado em 23/11/2026, versão **2.18**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
 
 ## 1. O que é
 
@@ -107,6 +107,14 @@ Atualizado em 13/11/2026, versão **2.14.1**. O código fica no GitHub; ver `doc
   - Painéis que eram imagem no PDF ficaram editáveis: Ouvidoria e seus rankings, LAI, PGEN, riscos, integridade, despesas de investimento, custos e SWOT.
   - Word no formato das páginas.
   - Teste completo preenchendo tudo pela tela, como Editor-chefe e como setor, com as correções que ele revelou.
+
+## 4b. Montagem do relatório do ano (2.18)
+
+- **Montar o relatório** (`relatorio/montagem.py`, `views_montagem.py`): passos, seções (lista colada), quadros simples, PDF do relatório anterior (`MEDIA_ROOT/referencia/anterior_ciclo_<pk>.pdf`), ciclo de trabalho (`Ciclo.em_trabalho`; sem marca, vale o de ano mais alto) e excluir ciclo só onde `SIRG_PERMITE_EXCLUIR_CICLO` (padrão: HML).
+- **`Ciclo.automatico`:** só o RG 2026 montado a partir do RG 2025. `preparar_rg2026` só mexe nele; não recria um RG 2026 excluído e não apaga ciclos montados pela tela.
+- **Importação:** conferência seção → página inicial (`importador.conferencia`, escolhas em `ImportacaoPDF.resumo["inicios"]`, usadas também na reimportação). `conteudo_da_caixa`: parágrafo → bloco vazio com `config["referencia_pdf"]` e mínimo/máximo sugeridos; título, texto curto (< 40 caracteres, `config["rotulo"]`, com `numero_antigo` se tem número) e `Secao.conteudo_fixo` → `config["fixo"]` (só o Editor-chefe altera). No RG 2026 automático, como antes (texto com xxxxx).
+- **`Ciclo.exibicao_vazio`:** como o bloco vazio aparece na tela (nada, orientação, lorem, xxx); só exibição.
+- **Envio:** `fluxo.blocos_vazios_da_secao` bloqueia o envio com bloco vazio (fora do RG 2026 automático).
 
 ## 5. Limitações conhecidas e próximos passos possíveis
 

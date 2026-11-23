@@ -332,6 +332,25 @@ def campos_vazios_da_secao(secao):
     return n
 
 
+def blocos_vazios_da_secao(secao):
+    """2.18: blocos que o setor precisa escrever e ainda estão vazios (texto sem nenhum caractere, contando o que
+    espera o aceite do Editor-chefe; imagem sem arquivo). Textos fixos do modelo não contam. Só nos relatórios
+    montados pela tela: o RG 2026 automático segue a regra de antes (só números)."""
+    from . import atributos as AT
+    if secao.ciclo.automatico:
+        return 0
+    n = 0
+    for b in secao.blocos.filter(tipo__in=(Bloco.TEXTO, Bloco.IMAGEM)).only("tipo", "conteudo", "config"):
+        cfg = b.config or {}
+        if cfg.get("fixo"):
+            continue
+        if b.tipo == Bloco.IMAGEM:
+            n += not (cfg.get("imagem") or {}).get("id")
+        else:
+            n += AT.contar_caracteres(b.conteudo) == 0
+    return n
+
+
 @transaction.atomic
 def preencher_campo(user, bloco, chave, texto):
     """Grava o valor do ano de um número do texto (campo xxxxx). Devolve o CampoTexto."""
@@ -511,6 +530,10 @@ def acao_secao(user, secao, acao, comentario=""):
                            f"{r['faltam']} a preencher e {r['erros']} erro(s).")
         if not secao.blocos.exists() and not secao.quadros.exists():
             raise Recusado("A seção está vazia.")
+        n_vazios = blocos_vazios_da_secao(secao)
+        if n_vazios:
+            raise Recusado(f"Antes de enviar, escreva {'os' if n_vazios > 1 else 'o'} {n_vazios} bloco"
+                           f"{'s' if n_vazios > 1 else ''} ainda vazio{'s' if n_vazios > 1 else ''} desta seção.")
         n_campos = campos_vazios_da_secao(secao)
         if n_campos:
             raise Recusado(f"Antes de enviar, preencha os {n_campos} número{'s' if n_campos > 1 else ''} do texto que "

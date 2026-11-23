@@ -100,7 +100,8 @@ def estrutura(ciclo, calc, user=None, editor=False):
             from . import permissoes as RP
             extra_meu = [p for p in extra if RP.pode_editar_quadro(user, p.quadro)]   # de outro setor: não conta
             d["resumo"] = consistencia.resumo(pend.get(s.pk, []) + extra_meu)
-            d["faltam"] = d["resumo"]["faltam"] + d["campos_vazios"]
+            d["blocos_vazios"] = F.blocos_vazios_da_secao(s) if not ciclo.automatico else 0
+            d["faltam"] = d["resumo"]["faltam"] + d["campos_vazios"] + d["blocos_vazios"]
             d["tem_dados"] = any(q.secao_id == s.pk and not A.so_texto(q) for q in calc.quadros.values())
             proprios = sorted([q for q in calc.quadros.values() if q.secao_id == s.pk and not A.so_texto(q)],
                               key=lambda q: (q.ordem, q.pk))
@@ -330,7 +331,7 @@ def campo_salvar(request, ano):
         return JsonResponse({"ok": False, "erro": str(ex)}, status=400)
     orig = next((unescape(m.group(2)) for m in CT.CAMPO.finditer(b.conteudo) if m.group(1) == c.chave), "")
     return JsonResponse({"ok": True, "exibido": CT.exibir(orig, c.numero), "vazio": c.numero is None,
-                         "faltam_secao": F.campos_vazios_da_secao(b.secao)})
+                         "faltam_secao": F.campos_vazios_da_secao(b.secao) + F.blocos_vazios_da_secao(b.secao)})
 
 
 @login_required
@@ -409,7 +410,7 @@ def _faltam(user, ciclo, secoes):
     for s in ciclo.secoes.all():
         if not F.pode_editar_texto(user, s) and str(s.pk) not in secoes:
             continue
-        n = pend.get(s.pk, 0) + F.campos_vazios_da_secao(s)
+        n = pend.get(s.pk, 0) + F.campos_vazios_da_secao(s) + F.blocos_vazios_da_secao(s)
         if str(s.pk) in secoes:
             out[str(s.pk)] = n
         if F.pode_editar_texto(user, s):
