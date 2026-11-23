@@ -202,7 +202,8 @@ def salvar_texto(user, bloco, html, titulo=None, versao=None):
         raise Recusado("Com o controle de alterações, o texto original continua no lugar até o Editor-chefe aceitar a "
                        "mudança. Recarregue a página (F5) e escreva de novo.")
     b.conteudo = novo
-    b.config = {k: v for k, v in (b.config or {}).items() if k not in ("herdado_de", "modelo")}
+    # quem salva o texto já conferiu: sai a marca de número do ano anterior (2.18)
+    b.config = {k: v for k, v in (b.config or {}).items() if k not in ("herdado_de", "modelo", "numero_antigo")}
     if titulo is not None:
         b.titulo = titulo.strip()[:255]
     b.atualizado_por = user

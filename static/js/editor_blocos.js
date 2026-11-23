@@ -9,7 +9,7 @@
   var painel = document.getElementById("ed-painel"), statusEl = document.getElementById("ed-status");
   var escala = document.getElementById("ed-escala");
   var LEITURA = !!D.somente_leitura;
-  var blocos = D.blocos, sel = [], rascunho = null, z = 1, arrasto = null, salvarTimer = null;
+  var blocos = D.blocos, sel = [], rascunho = null, z = 1, arrasto = null, salvarTimer = null, area = null;
 
   function $(s, r) { return (r || document).querySelector(s); }
   function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
@@ -48,7 +48,8 @@
     caixas.innerHTML = "";
     blocos.forEach(function (b) {
       var e = document.createElement("div");
-      e.className = "ed-bloco ed-" + b.tipo + (sel.indexOf(b.id) >= 0 ? " sel" : "");
+      e.className = "ed-bloco ed-" + b.tipo + (sel.indexOf(b.id) >= 0 ? " sel" : "") + (b.fixo ? " ed-fixo" : "") +
+        (b.numero_antigo ? " ed-numero" : "");
       e.dataset.id = b.id;
       e.style.cssText = "left:" + b.x + "px;top:" + b.y + "px;width:" + b.w + "px;height:" + b.h + "px;--cor:" + b.cor;
       var h = '<div class="ed-conteudo"' + (b.tipo === "texto" ? ' style="' + esc(b.css) + '"' : "") + ">";
@@ -64,6 +65,12 @@
       }
       caixas.appendChild(e);
     });
+    if (area) {
+      var q = document.createElement("div");
+      q.className = "ed-area-sel";
+      q.style.cssText = "left:" + area.x + "px;top:" + area.y + "px;width:" + area.w + "px;height:" + area.h + "px";
+      caixas.appendChild(q);
+    }
     if (rascunho) {
       var r = document.createElement("div");
       r.className = "ed-rascunho";
@@ -143,20 +150,35 @@
       var b = achar(sel[0]);
       h = '<h2 class="h6">Bloco selecionado</h2>' + camposComuns(b, false) +
         '<div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-primary" id="b-salvar"><i class="bi bi-check-lg"></i> Salvar</button><button class="btn btn-sm btn-outline-danger ms-auto" id="b-apagar"><i class="bi bi-trash"></i> Apagar</button></div>';
+      if (b.tipo === "texto" && b.fixo) h += '<div class="alert alert-secondary mini py-2 mt-3 mb-0"><strong>Texto fixo do modelo</strong>' + (b.numero_antigo ? ' <span class="text-warning-emphasis">com número do ano anterior</span>' : "") + ': só o Editor-chefe altera.<br><button class="btn btn-sm btn-outline-primary mt-2" id="b-liberar"><i class="bi bi-unlock"></i> Liberar para o setor</button></div>';
+      else if (b.tipo === "texto" && b.referencia && !b.editado) h += '<p class="mini mt-3 mb-0"><button class="btn btn-sm btn-link p-0" id="b-fixar"><i class="bi bi-lock"></i> Voltar ao texto fixo do PDF</button></p>';
       if (b.previa) h += '<p class="mini text-secondary mt-3 mb-0">' + esc(b.previa) + (b.caracteres > 120 ? "…" : "") + "</p>";
       painel.innerHTML = h;
+      if ($("#b-liberar")) $("#b-liberar").onclick = function () { enviar("fixo", { id: b.id, fixo: false }); };
+      if ($("#b-fixar")) $("#b-fixar").onclick = function () { enviar("fixo", { id: b.id, fixo: true }); };
       $("#b-salvar").onclick = function () { var d = lerCampos(); d.id = b.id; enviar("salvar", d); };
       $("#b-apagar").onclick = function () { enviar("apagar", { id: b.id }); };
     } else if (sel.length > 1) {
       h = '<h2 class="h6">' + sel.length + " blocos selecionados</h2><ul class=\"mini ps-3\">";
       sel.forEach(function (id) { var b = achar(id); h += "<li>" + esc(b.tipo_nome) + (b.previa ? ": " + esc(b.previa.slice(0, 50)) : "") + "</li>"; });
-      h += '</ul><p class="mini text-secondary">Juntar cria um só bloco que cobre todos, com o texto na ordem de leitura. A fonte do bloco é a do primeiro.</p>' +
-        '<button class="btn btn-sm btn-primary" id="b-juntar"><i class="bi bi-union"></i> Juntar em um bloco</button>';
+      var fixos = sel.filter(function (id) { return achar(id).fixo; }).length;
+      h += '</ul><p class="mini text-secondary">Juntar cria um só bloco que cobre todos, com o texto na ordem de leitura. A fonte do bloco é a do primeiro. Para trocar um gráfico do PDF por um gráfico do sistema, apague os rótulos dele e desenhe o bloco de gráfico no lugar.</p>' +
+        '<div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-primary" id="b-juntar"><i class="bi bi-union"></i> Juntar em um bloco</button>' +
+        (fixos ? '<button class="btn btn-sm btn-outline-primary" id="b-liberar-v"><i class="bi bi-unlock"></i> Liberar ' + fixos + ' para o setor</button>' : "") +
+        '<button class="btn btn-sm btn-outline-danger" id="b-apagar-v"><i class="bi bi-trash"></i> Apagar os ' + sel.length + "</button></div>";
       painel.innerHTML = h;
       $("#b-juntar").onclick = function () { enviar("juntar", { ids: sel.slice() }); };
+      $("#b-apagar-v").onclick = function () {
+        if (window.confirm("Apagar os " + sel.length + " blocos selecionados?")) enviar("apagar", { ids: sel.slice() });
+      };
+      if ($("#b-liberar-v")) $("#b-liberar-v").onclick = function () {
+        enviar("fixo", { ids: sel.filter(function (id) { return achar(id).fixo; }), fixo: false });
+      };
     } else {
-      painel.innerHTML = '<h2 class="h6">Blocos da página ' + D.pagina + "</h2><p class=\"mini text-secondary\">" + blocos.length + ' bloco(s). Clique em um bloco para ver e mudar os atributos, ou arraste no fundo da página para desenhar um bloco novo.</p>' +
-        '<ul class="mini ed-legenda ps-0"><li><span class="ed-leg" style="--cor:#6c757d"></span> a cor do contorno é a do setor do bloco</li></ul>';
+      painel.innerHTML = '<h2 class="h6">Blocos da página ' + D.pagina + "</h2><p class=\"mini text-secondary\">" + blocos.length + ' bloco(s). Clique em um bloco para ver e mudar os atributos, ou arraste no fundo da página para desenhar um bloco novo. <strong>Shift + arrastar</strong> seleciona todos os blocos de uma área (por exemplo, os rótulos de um gráfico).</p>' +
+        '<ul class="mini ed-legenda ps-0"><li><span class="ed-leg" style="--cor:#6c757d"></span> a cor do contorno é a do setor do bloco</li>' +
+        '<li><span class="ed-leg ed-leg-fixo"></span> texto fixo do modelo (só o Editor-chefe altera)</li>' +
+        '<li><span class="ed-leg ed-leg-numero"></span> texto fixo com número do ano anterior: confira</li></ul>';
     }
   }
 
@@ -181,6 +203,9 @@
         arrasto = { modo: "mover", id: id, ini: p, orig: { x: bb.x, y: bb.y, w: bb.w, h: bb.h }, mexeu: false };
       }
       desenhar(); montarPainel();
+    } else if (e.shiftKey) {
+      rascunho = null;
+      arrasto = { modo: "area", ini: p, mexeu: false };
     } else {
       sel = []; rascunho = null;
       arrasto = { modo: "novo", ini: p, mexeu: false };
@@ -193,7 +218,9 @@
     var p = ponto(e), dx = p.x - arrasto.ini.x, dy = p.y - arrasto.ini.y;
     if (!arrasto.mexeu && Math.abs(dx) + Math.abs(dy) < 3) return;
     arrasto.mexeu = true;
-    if (arrasto.modo === "novo") {
+    if (arrasto.modo === "area") {
+      area = { x: num(Math.min(p.x, arrasto.ini.x)), y: num(Math.min(p.y, arrasto.ini.y)), w: num(Math.abs(dx)), h: num(Math.abs(dy)) };
+    } else if (arrasto.modo === "novo") {
       rascunho = { x: num(Math.min(p.x, arrasto.ini.x)), y: num(Math.min(p.y, arrasto.ini.y)), w: num(Math.abs(dx)), h: num(Math.abs(dy)) };
     } else {
       var b = achar(arrasto.id), o = arrasto.orig;
@@ -214,7 +241,17 @@
   function soltar() {
     if (!arrasto) return;
     var a = arrasto; arrasto = null;
-    if (a.modo === "novo") {
+    if (a.modo === "area") {
+      if (area) {
+        var dentro = blocos.filter(function (b) {     // blocos que tocam a área
+          return b.x < area.x + area.w && b.x + b.w > area.x && b.y < area.y + area.h && b.y + b.h > area.y;
+        }).map(function (b) { return b.id; });
+        dentro.forEach(function (id) { if (sel.indexOf(id) < 0) sel.push(id); });
+        area = null;
+        if (dentro.length) dizer(dentro.length + " bloco(s) na área.");
+      }
+      desenhar(); montarPainel();
+    } else if (a.modo === "novo") {
       if (rascunho && rascunho.w >= 12 && rascunho.h >= 12) { rascunho.secao = secaoPerto(rascunho); rascunho.setor = ""; rascunho.descricao = ""; rascunho.min = null; rascunho.max = null; }
       else rascunho = null;
       desenhar(); montarPainel();

@@ -253,6 +253,9 @@ def motivo_para_nao_aplicar(imp):
     return ""
 
 
+ROTULO_CURTO = 40      # caracteres: abaixo disso a caixa do PDF é rótulo (fica fixa), não parágrafo
+
+
 def tamanho_sugerido(n):
     """Mínimo e máximo de caracteres sugeridos a partir do tamanho do texto que estava no PDF (70% a 130%).
     Textos muito curtos (rótulos, legendas) ficam sem limite."""
@@ -266,20 +269,28 @@ def conteudo_da_caixa(c, secao, limite, automatico=False):
     campos criados).
 
     - Título (letra grande) ou seção de conteúdo fixo: o texto do PDF como está; só o Editor-chefe altera.
+    - Texto curto (menos de ROTULO_CURTO caracteres): também fixo, marcado como rótulo (e, se tem número, como
+      número do ano anterior, para o administrador conferir).
     - Demais caixas: o bloco nasce vazio. O texto do PDF fica guardado como referência do ano anterior e o
       tamanho dele sugere o mínimo e o máximo de caracteres.
     - RG 2026 automático (montado pelo desenvolvedor a partir do RG 2025): o texto do PDF com os números como xxxxx,
       como antes da 2.18."""
     from . import atributos as AT
     from . import campos as CT
-    from .html_seguro import limpar
+    from .html_seguro import limpar, texto_puro
     html = limpar(c["html"])
     if automatico:
         html, novos = CT.camposificar(html)
         return html, {}, None, None, len(novos)
     if c["tam"] >= limite or secao.conteudo_fixo:
         return html, {"fixo": True}, None, None, 0
-    minimo, maximo = tamanho_sugerido(AT.contar_caracteres(html))
+    n = AT.contar_caracteres(html)
+    if n < ROTULO_CURTO:
+        # rótulo de gráfico, célula de tabela, texto de infográfico: fica como texto fixo do modelo. O administrador
+        # libera para o setor (indicadores) ou troca a área por um bloco de gráfico ou tabela.
+        return html, {"fixo": True, "rotulo": True, "numero_antigo": bool(re.search(r"\d", texto_puro(html)))}, \
+            None, None, 0
+    minimo, maximo = tamanho_sugerido(n)
     return "", {"referencia_pdf": html}, minimo, maximo, 0
 
 

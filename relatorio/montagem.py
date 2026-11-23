@@ -37,7 +37,7 @@ def passos(ciclo):
     blocos = Bloco.objects.filter(secao__ciclo=ciclo, pagina__isnull=False)
     n_blocos = blocos.count()
     texto = blocos.filter(tipo=Bloco.TEXTO)
-    sem_descricao = texto.filter(descricao="").count()
+    sem_descricao = texto.filter(descricao="", conteudo="").count()       # os vazios, que os setores escrevem
     n_quadros = ciclo.quadros.count()
     aberto = ciclo.situacao != Ciclo.PREPARACAO
 
@@ -65,11 +65,20 @@ def passos(ciclo):
         s_pdf = p("PDF diagramado", "Envie o PDF diagramado do relatório. Crie as seções antes.", "falta",
                   reverse("importar_pdf", args=[ano]), "Importar o PDF")
 
-    s_blo = p("Blocos nas páginas",
-              f"{n_blocos} bloco(s) nas páginas." if n_blocos else "Os blocos aparecem depois de aplicar o PDF.",
-              "feito" if n_blocos else "falta", reverse("editor_inicio", args=[ano]), "Editar os blocos")
+    numeros = [b for b in texto.filter(conteudo__gt="").only("config") if (b.config or {}).get("numero_antigo")]
+    if not n_blocos:
+        s_blo = p("Blocos nas páginas", "Os blocos aparecem depois de aplicar o PDF.", "falta",
+                  reverse("editor_inicio", args=[ano]), "Editar os blocos")
+    else:
+        vazios = texto.filter(conteudo="").count()
+        txt = f"{n_blocos} bloco(s) nas páginas, {vazios} vazio(s) para os setores."
+        if numeros:
+            txt += (f" {len(numeros)} texto(s) fixo(s) com número do ano anterior (em laranja no editor): troque a área "
+                    f"por um gráfico ou tabela, libere para o setor ou confira.")
+        s_blo = p("Blocos nas páginas", txt, "aviso" if numeros else "feito",
+                  reverse("editor_inicio", args=[ano]), "Editar os blocos")
     s_atr = p("Atributos dos blocos",
-              (f"{sem_descricao} bloco(s) de texto sem a descrição do que escrever." if sem_descricao
+              (f"{sem_descricao} bloco(s) vazio(s) sem a descrição do que escrever." if sem_descricao
                else "Todos os blocos de texto têm descrição.") if n_blocos else "Setor, descrição e tamanho de cada bloco.",
               ("aviso" if sem_descricao else "feito") if n_blocos else "falta",
               reverse("blocos_atributos", args=[ano]), "Definir os atributos")

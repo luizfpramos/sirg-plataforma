@@ -831,3 +831,10 @@ main#conteudo:focus { outline: none; }
 .bloco-guia.guia-enchimento { font: inherit; font-style: normal; color: #9aa3ad; background: transparent;
   border: 1px dashed color-mix(in srgb, var(--cor-setor, #6c757d) 60%, #fff); text-align: justify; }
 .doc-bloco:not(.pg-cx) .bloco-guia.guia-enchimento { font-size: inherit; }
+/* 2.18: editor de blocos — texto fixo, número do ano anterior e seleção por área */
+.ed-bloco.ed-fixo { outline-style: dotted; outline-color: #8a94a0; background: transparent; }
+.ed-bloco.ed-numero { outline: 2px dashed #e07b00; background: color-mix(in srgb, #e07b00 10%, transparent); }
+.ed-bloco.ed-fixo.sel, .ed-bloco.ed-numero.sel { outline-style: solid; outline-color: #142C46; }
+.ed-area-sel { position: absolute; border: 1.5px dashed #0d6efd; background: rgba(13, 110, 253, .08); pointer-events: none; z-index: 5; }
+.ed-leg.ed-leg-fixo { border: 2px dotted #8a94a0; }
+.ed-leg.ed-leg-numero { border: 2px dashed #e07b00; }

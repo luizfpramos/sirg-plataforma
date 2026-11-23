@@ -124,7 +124,7 @@ class ReimportacaoTests(TestCase):
         par = Bloco.objects.get(pk=self.par.pk)
         self.assertEqual(par.conteudo, "<p>Texto escrito pelo setor.</p>")
         self.assertEqual(par.config["sem_par_no_pdf"], nova.pk)
-        criado = Bloco.objects.get(pagina__numero=1, config__referencia_pdf__icontains="Quadro de destaques")
+        criado = Bloco.objects.get(pagina__numero=1, conteudo__contains="Quadro de destaques")
         self.assertTrue(criado.config["novo_na_reimportacao"])
 
     def test_blocos_do_editor_e_paginas_so_do_ciclo_nao_mudam(self):

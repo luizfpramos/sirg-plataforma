@@ -158,6 +158,59 @@ class ConferenciaTests(TestCase):
         I.iniciar(nova)
         nova.refresh_from_db()
         RI.reimportar(nova, self.admin)
-        criado = Bloco.objects.get(pagina__numero=2, config__referencia_pdf__icontains="Quadro de destaques")
+        criado = Bloco.objects.get(pagina__numero=2, conteudo__contains="Quadro de destaques")
         self.assertEqual(criado.secao, self.pesq)          # segue a escolha feita, não o título achado
-        self.assertEqual(criado.conteudo, "")
+        self.assertTrue(criado.config["rotulo"])           # texto curto: rótulo fixo do modelo
+
+    def test_texto_curto_fica_fixo_e_numero_antigo_e_marcado(self):
+        sec = Secao(conteudo_fixo=False)
+        html, extra, mi, ma, _ = I.conteudo_da_caixa({"html": "<p>4.512 estudantes</p>", "tam": 11}, sec, 20)
+        self.assertIn("4.512", html)
+        self.assertEqual((extra["fixo"], extra["rotulo"], extra["numero_antigo"]), (True, True, True))
+        _, extra, _, _, _ = I.conteudo_da_caixa({"html": "<p>Ensino técnico</p>", "tam": 11}, sec, 20)
+        self.assertFalse(extra["numero_antigo"])
+        html, extra, mi, ma, _ = I.conteudo_da_caixa(
+            {"html": "<p>" + "Parágrafo longo do relatório. " * 4 + "</p>", "tam": 11}, sec, 20)
+        self.assertEqual(html, "")
+        self.assertIn("referencia_pdf", extra)
+
+    def test_editor_libera_para_o_setor_apaga_por_area_e_avisa_na_montagem(self):
+        from relatorio import editor_blocos as E
+        from relatorio import montagem as M
+        import json
+        self.client.post(reverse("importacao_aplicar", args=[2030, self.imp.pk]), self.form())
+        pg = self.c.paginas.get(numero=1)
+        rot = Bloco.objects.create(secao=self.apres, pagina=pg, conteudo="<p>4.512 alunos</p>",
+                                   config={"caixa": {"x": 1, "y": 1, "w": 50, "h": 10, "css": "", "quebra": False},
+                                           "fixo": True, "rotulo": True, "numero_antigo": True})
+        self.assertIn("número do ano anterior", M.passos(self.c)[2]["texto"])
+        self.assertEqual(M.passos(self.c)[2]["situacao"], "aviso")
+        url = lambda a: reverse("editor_acao", args=[2030, 1, a])
+        r = self.client.post(url("fixo"), json.dumps({"id": rot.pk, "fixo": False}), content_type="application/json")
+        self.assertTrue(r.json()["ok"])
+        rot.refresh_from_db()
+        self.assertEqual(rot.conteudo, "")
+        self.assertIn("4.512", rot.config["referencia_pdf"])
+        self.assertNotIn("fixo", rot.config)
+        self.assertTrue(F.pode_editar_bloco(self.ana, rot))
+        self.assertEqual(M.passos(self.c)[2]["situacao"], "feito")
+        self.client.post(url("fixo"), json.dumps({"id": rot.pk, "fixo": True}), content_type="application/json")
+        rot.refresh_from_db()
+        self.assertIn("4.512", rot.conteudo)
+        self.assertTrue(rot.config["fixo"])
+        # apagar vários de uma vez (seleção por área)
+        ids = [b.pk for b in pg.caixas.all()]
+        r = self.client.post(url("apagar"), json.dumps({"ids": ids}), content_type="application/json")
+        self.assertTrue(r.json()["ok"])
+        self.assertFalse(pg.caixas.exists())
+
+    def test_editor_chefe_salvar_tira_a_marca_de_numero(self):
+        self.client.post(reverse("importacao_aplicar", args=[2030, self.imp.pk]), self.form())
+        pg = self.c.paginas.get(numero=1)
+        rot = Bloco.objects.create(secao=self.apres, pagina=pg, conteudo="<p>4.512 alunos</p>",
+                                   config={"caixa": {"x": 1, "y": 1, "w": 50, "h": 10}, "fixo": True,
+                                           "numero_antigo": True})
+        F.salvar_texto(self.chefe, rot, "<p>4.800 alunos</p>")
+        rot.refresh_from_db()
+        self.assertNotIn("numero_antigo", rot.config)
+        self.assertTrue(rot.config["fixo"])
