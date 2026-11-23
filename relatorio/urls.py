@@ -5,6 +5,7 @@ from . import views_doc as D
 from . import views_atributos as AT
 from . import views_editor_blocos as ED
 from . import views_importar as IM
+from . import views_montagem as MO
 from . import views_texto as T
 
 urlpatterns = [
@@ -14,6 +15,12 @@ urlpatterns = [
     path("ler/", V.atalho, {"destino": "ler"}, name="atalho_ler"),
     path("ciclos/", V.ciclos, name="ciclos"),
     path("ciclos/novo/", V.ciclo_novo, name="ciclo_novo"),
+    path("montar/", MO.montagem_inicio, name="montagem_inicio"),
+    path("ciclos/<int:ano>/montar/", MO.montagem, name="montagem"),
+    path("ciclos/<int:ano>/de-trabalho/", MO.ciclo_de_trabalho, name="ciclo_de_trabalho"),
+    path("ciclos/<int:ano>/excluir/", MO.ciclo_excluir, name="ciclo_excluir"),
+    path("ciclos/<int:ano>/secoes/", MO.secoes_lista, name="secoes_lista"),
+    path("ciclos/<int:ano>/secoes/<str:chave>/mover/<str:direcao>/", MO.secao_mover, name="secao_mover"),
     path("ciclos/<int:ano>/", V.ciclo, name="ciclo"),
     path("ciclos/<int:ano>/editar/", V.ciclo_editar, name="ciclo_editar"),
     path("ciclos/<int:ano>/pendencias/", V.pendencias, name="pendencias"),

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Excluir {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'montagem' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Montar o relatório</a></nav>
+<h1 class="text-danger"><i class="bi bi-trash"></i> Excluir {{ ciclo.titulo }}</h1>
+<div class="card border-danger" style="max-width:640px"><div class="card-body">
+  <p>Isto apaga o relatório de ano-base <strong>{{ ciclo.ano }}</strong> e tudo o que é dele:</p>
+  <ul class="mb-3"><li>{{ resumo.secoes }} capítulo(s) e seção(ões);</li><li>{{ resumo.paginas }} página(s) e {{ resumo.blocos }} bloco(s), com o texto escrito;</li><li>{{ resumo.quadros }} quadro(s) de números, com os valores;</li><li>{{ resumo.importacoes }} PDF(s) importado(s).</li></ul>
+  <p class="mini text-secondary">Usuários, setores, paletas e o padrão de design continuam como estão. Não há como desfazer pela tela. Isto só existe na homologação.</p>
+  <form method="post">{% csrf_token %}
+    <label class="form-label" for="confirmacao">Para confirmar, digite o ano-base <strong>{{ ciclo.ano }}</strong></label>
+    <input class="form-control mb-3" id="confirmacao" name="confirmacao" inputmode="numeric" autocomplete="off" required style="max-width:180px">
+    <button class="btn btn-danger">Excluir o relatório {{ ciclo.ano }}</button>
+    <a class="btn btn-link" href="{% url 'montagem' ciclo.ano %}">Cancelar</a>
+  </form>
+</div></div>
+{% endblock %}

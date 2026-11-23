@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block titulo %}{% if secao %}Editar {{ secao.titulo }}{% else %}Nova seção{% endif %}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% if secao %}{% url 'secao' ciclo.ano secao.chave %}{% else %}{% url 'ciclo' ciclo.ano %}{% endif %}"><i class="bi bi-arrow-left"></i> voltar</a></nav>
+<nav class="mini mb-2"><a href="{% if voltar %}{% url 'secoes_lista' ciclo.ano %}{% elif secao %}{% url 'secao' ciclo.ano secao.chave %}{% else %}{% url 'ciclo' ciclo.ano %}{% endif %}"><i class="bi bi-arrow-left"></i> voltar</a></nav>
 <h1>{% if secao %}Editar seção{% else %}Nova seção ou capítulo{% endif %}</h1>
-<form method="post" class="card" style="max-width:900px">{% csrf_token %}<div class="card-body">
+<form method="post" class="card" style="max-width:900px">{% csrf_token %}{% if voltar %}<input type="hidden" name="voltar" value="secoes">{% endif %}<div class="card-body">
   {% include "contas/_campo.html" with f=form.titulo %}
   <div class="row">
     <div class="col-md-6"><div class="mb-3"><label class="form-label" for="id_pai">Capítulo</label>

@@ -32,14 +32,15 @@ def _estruturar(request):
 
 
 def ciclo_atual():
-    """O relatório em trabalho: o ciclo mais recente (a plataforma é focada num relatório por vez)."""
-    return Ciclo.objects.order_by("-ano").first()
+    """O relatório em trabalho: o marcado pelo administrador como ciclo de trabalho ou, se nenhum estiver
+    marcado, o mais recente (a plataforma é focada num relatório por vez)."""
+    return Ciclo.objects.filter(em_trabalho=True).first() or Ciclo.objects.order_by("-ano").first()
 
 
 # --- Ciclos ------------------------------------------------------------------
 @login_required
 def ciclos(request):
-    return render(request, "relatorio/ciclos.html", {"ciclos": Ciclo.objects.all(),
+    return render(request, "relatorio/ciclos.html", {"ciclos": Ciclo.objects.all(), "de_trabalho": ciclo_atual(),
                                                      "pode_estruturar": RP.pode_estruturar(request.user)})
 
 
@@ -66,7 +67,7 @@ def ciclo_novo(request):
         if d.get("prazo"):
             c.prazo = d["prazo"]
             c.save(update_fields=["prazo"])
-        return redirect("ciclo", ano=c.ano)
+        return redirect("montagem", ano=c.ano)
     return render(request, "relatorio/ciclo_novo.html", {"form": form})
 
 
@@ -233,22 +234,25 @@ def secao_form(request, ano, chave=None):
     elif s is None:
         inicial["ordem"] = (Secao.objects.filter(ciclo=c, pai__isnull=True).count() + 1) * 10
     form = SecaoForm(request.POST or None, instance=s, ciclo=c, initial=inicial)
+    voltar = (request.POST.get("voltar") or request.GET.get("voltar")) == "secoes"
     if request.method == "POST":
         if "excluir" in request.POST and s is not None:
             if s.quadros.exists() or s.filhas.exists():
                 messages.error(request, "Só é possível excluir seções sem quadros e sem seções dentro.")
-                return redirect("secao_editar", ano=ano, chave=s.chave)
+                return redirect(reverse("secao_editar", args=[ano, s.chave]) + ("?voltar=secoes" if voltar else ""))
             s.delete()
             messages.success(request, "Seção excluída.")
-            return redirect("ciclo", ano=ano)
+            return redirect("secoes_lista" if voltar else "ciclo", ano=ano)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.ciclo = c
             obj.save()
             form.save_m2m()
             messages.success(request, "Seção salva.")
+            if voltar:
+                return redirect("secoes_lista", ano=ano)
             return redirect("secao", ano=ano, chave=obj.chave)
-    return render(request, "relatorio/secao_form.html", {"form": form, "ciclo": c, "secao": s})
+    return render(request, "relatorio/secao_form.html", {"form": form, "ciclo": c, "secao": s, "voltar": voltar})
 
 
 @login_required

@@ -281,7 +281,7 @@ class EstruturaTelasTests(Base):
     def test_novo_ciclo_pela_tela(self):
         self.entrar("admin")
         r = self.client.post("/ciclos/novo/", {"ano": 2027, "titulo": "", "origem": self.c26.pk, "anos_serie": 5})
-        self.assertRedirects(r, "/ciclos/2027/")
+        self.assertRedirects(r, "/ciclos/2027/montar/")
         c = Ciclo.objects.get(ano=2027)
         self.assertEqual(c.titulo, "Relatório de Gestão 2027")
         self.assertEqual(c.quadros.count(), self.c26.quadros.count())

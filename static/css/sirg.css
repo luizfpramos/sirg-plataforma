@@ -821,3 +821,9 @@ main#conteudo:focus { outline: none; }
 /* Padrão de design (tela "Padrão de design"): só o texto corrido; as caixas das páginas seguem o PDF */
 .texto-rg:not(.pg-texto) { font-family: var(--rg-fonte, Calibri, Carlito, "Segoe UI", Arial, sans-serif); font-size: var(--rg-tamanho, 1rem); line-height: var(--rg-linhas, 1.55); }
 .texto-rg:not(.pg-texto) p { margin-bottom: var(--rg-paragrafo, .7rem); }
+
+/* 2.18: Montar o relatório (passos) */
+.passos-montagem .passo-n { width: 2rem; height: 2rem; border-radius: 50%; display: inline-flex; align-items: center;
+  justify-content: center; font-weight: 600; flex-shrink: 0; border: 2px solid #8a9bb0; color: #142C46; background: #fff; }
+.passos-montagem .passo-feito { background: #198754; border-color: #198754; color: #fff; }
+.passos-montagem .passo-aviso { background: #ffc107; border-color: #c79100; color: #3d2c00; }

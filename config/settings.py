@@ -193,5 +193,7 @@ SIRG_AMBIENTE = env("SIRG_AMBIENTE", "prd").strip().lower()
 if SIRG_AMBIENTE == "hml":
     SESSION_COOKIE_NAME = "sirg_hml_sessionid"
     CSRF_COOKIE_NAME = "sirg_hml_csrftoken"
+# Excluir um relatório (ciclo) inteiro pela tela: só na homologação, para recomeçar a montagem do zero
+SIRG_PERMITE_EXCLUIR_CICLO = env_bool("SIRG_PERMITE_EXCLUIR_CICLO", SIRG_AMBIENTE == "hml")
 # a quem pedir ajuda (tela de entrada e manual): ex. "DGDI · dgdi@instituicao.br · ramal 1234"
 SIRG_CONTATO = os.environ.get("SIRG_CONTATO", "").strip()

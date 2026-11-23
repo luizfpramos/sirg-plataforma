@@ -41,6 +41,12 @@ class Ciclo(models.Model):
     observacao = models.TextField("observação", blank=True, default="")
     origem = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
                                help_text="Ciclo do qual a estrutura foi copiada.")
+    em_trabalho = models.BooleanField("ciclo de trabalho", default=False,
+                                      help_text="O relatório que o menu abre para todos. Se nenhum estiver marcado, "
+                                                "vale o de ano mais recente.")
+    automatico = models.BooleanField("mantido pela preparação automática", default=False,
+                                     help_text="Só o RG 2026 montado a partir do RG 2025 pelo desenvolvedor. Ciclos "
+                                               "montados pela tela nunca são alterados pela preparação automática.")
     criado_em = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
