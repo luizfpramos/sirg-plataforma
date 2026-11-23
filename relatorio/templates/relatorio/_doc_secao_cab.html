@@ -4,7 +4,7 @@
   {% if it.pode and it.faltam %}<button type="button" class="badge badge-faltam js-faltam-sec" title="Ir para o próximo número a preencher nesta seção">Faltam {{ it.faltam }}</button>{% elif it.pode and it.tem_dados or it.pode and it.tem_campos %}<span class="badge badge-pronto" title="Todos os números desta seção foram preenchidos"><i class="bi bi-check2"></i> Números completos</span>{% endif %}
   {% if it.resumo.erros %}<span class="badge text-bg-danger" title="Números que não batem entre si: veja em O que falta">{{ it.resumo.erros }} para corrigir</span>{% endif %}
   {% if it.n_alt %}<button type="button" class="badge badge-alteracoes js-cont-sug-sec" title="Alterações no texto desta seção">{{ it.n_alt }} alteraç{{ it.n_alt|pluralize:"ão,ões" }}</button>{% endif %}
-  {% if it.s.referencia_pagina %}<a class="sec-card-pdf" href="{% static 'referencia/RG'|add:ano_ref_txt|add:'.pdf' %}#page={{ it.s.referencia_pagina }}" target="_blank" rel="noopener" title="Abrir esta seção no PDF do RG {{ ano_ref }}"><i class="bi bi-file-earmark-pdf"></i> RG {{ ano_ref }}, p. {{ it.s.referencia_pagina }}</a>{% endif %}
+  {% if it.s.referencia_pagina and url_pdf_ref %}<a class="sec-card-pdf" href="{{ url_pdf_ref }}#page={{ it.s.referencia_pagina }}" target="_blank" rel="noopener" title="Abrir esta seção no PDF do RG {{ ano_ref }}"><i class="bi bi-file-earmark-pdf"></i> RG {{ ano_ref }}, p. {{ it.s.referencia_pagina }}</a>{% endif %}
   {% if it.pode and it.s.orientacao %}<span class="sec-card-dica" tabindex="0" title="{{ it.s.orientacao }}"><i class="bi bi-question-circle"></i></span>{% endif %}
   {% if not it.pode and it.motivo %}<span class="sec-card-trava"><i class="bi bi-lock"></i> {{ it.motivo }}</span>{% endif %}
   <span class="sec-card-acoes">

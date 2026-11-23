@@ -75,7 +75,8 @@ class PassosTests(BaseMontagem):
         self.assertEqual(r.status_code, 200)
         passos = r.context["passos"]
         self.assertEqual([p["titulo"] for p in passos], ["Seções", "PDF diagramado", "Blocos nas páginas",
-                                                         "Atributos dos blocos", "Quadros de números", "Abrir a coleta"])
+                                                         "Atributos dos blocos", "Quadros de números",
+                                                         "PDF do relatório anterior (consulta)", "Abrir a coleta"])
         self.assertTrue(all(p["situacao"] == "falta" for p in passos))
         self.assertContains(r, "Criar as seções")
 
@@ -209,3 +210,70 @@ class PreparacaoAutomaticaTests(BaseMontagem):
         self.assertEqual(rg.secoes.count(), 0)
         self.assertEqual(rg.quadros.count(), 0)
         self.assertTrue(Ciclo.objects.filter(pk=teste.pk).exists())
+
+
+class QuadrosEPdfAnteriorTests(BaseMontagem):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.chefe, _ = CS.criar_usuario(login="chefe", nome="Chefe", e_master=True, senha=SENHA)
+        Perfil.objects.update(troca_senha=False)
+        cap = secao(cls.c, "cap", "Capítulo", ordem=10)
+        cls.sec = secao(cls.c, "grad", "Graduação", pai=cap, ordem=10, setores=["DIRGRAD"])
+
+    def test_quadro_simples_por_anos_nasce_com_o_passado_travado(self):
+        from relatorio.models import Quadro
+        self.entrar()
+        r = self.client.post(reverse("quadros_lista", args=[2030]), {
+            "titulo": "Grupos PET", "secao": self.sec.pk, "linhas": "Alunos participantes\nRecursos utilizados\n\n",
+            "tipo": "inteiro", "modo": "anos", "anos": "5"}, follow=True)
+        self.assertContains(r, "Quadro “Grupos PET” criado")
+        q = Quadro.objects.get(ciclo=self.c, titulo="Grupos PET")
+        self.assertEqual([l.rotulo for l in q.linhas.all()], ["Alunos participantes", "Recursos utilizados"])
+        cols = list(q.colunas.order_by("ordem"))
+        self.assertEqual([c.ano for c in cols], [2026, 2027, 2028, 2029, 2030])
+        self.assertEqual([c.travada for c in cols], [True, True, True, True, False])
+        self.assertEqual(M.passos(self.c)[4]["situacao"], "feito")
+
+    def test_quadro_por_categorias_e_erros(self):
+        from relatorio.models import Quadro
+        q = M.criar_quadro_simples(self.c, titulo="Por campus", secao=self.sec, linhas="Vagas", modo="categorias",
+                                   colunas="Campus I\nCampus II")
+        self.assertEqual([c.rotulo for c in q.colunas.order_by("ordem")], ["Campus I", "Campus II"])
+        self.assertEqual(q.modo_colunas, Quadro.CATEGORIAS)
+        q2 = M.criar_quadro_simples(self.c, titulo="Por campus", secao=self.sec, linhas="Vagas")
+        self.assertNotEqual(q.chave, q2.chave)
+        with self.assertRaises(M.Recusado):
+            M.criar_quadro_simples(self.c, titulo="Sem linhas", secao=self.sec, linhas="  ")
+        with self.assertRaises(M.Recusado):
+            M.criar_quadro_simples(self.c, titulo="Sem colunas", secao=self.sec, linhas="A", modo="categorias")
+        self.entrar("ana")
+        self.assertEqual(self.client.get(reverse("quadros_lista", args=[2030])).status_code, 403)
+
+    def test_historico_vazio_nao_pede_justificativa_mas_alterar_pede(self):
+        from relatorio import servicos as S
+        q = M.criar_quadro_simples(self.c, titulo="PET", secao=self.sec, linhas="Alunos", anos=3)
+        li, col = q.linhas.get(), q.colunas.get(ano=2028)
+        S.salvar_valor(self.chefe, li, col, "151")
+        with self.assertRaises(S.Recusado):
+            S.salvar_valor(self.chefe, li, col, "160", anterior="151")
+        S.salvar_valor(self.chefe, li, col, "160", anterior="151", justificativa="Dado revisado")
+        with self.assertRaises(S.Recusado):                # o setor não mexe no histórico
+            S.salvar_valor(self.ana, li, col, "170", anterior="160")
+
+    def test_pdf_do_relatorio_anterior_pela_tela(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.entrar()
+        r = self.client.post(reverse("pdf_anterior_enviar", args=[2030]),
+                             {"pdf": SimpleUploadedFile("x.txt", b"texto", content_type="text/plain")}, follow=True)
+        self.assertContains(r, "precisa ser um PDF")
+        r = self.client.post(reverse("pdf_anterior_enviar", args=[2030]),
+                             {"pdf": SimpleUploadedFile("RG.pdf", b"%PDF-1.4 teste", content_type="application/pdf")})
+        self.assertRedirects(r, reverse("montagem", args=[2030]))
+        self.assertEqual(M.passos(self.c)[5]["situacao"], "feito")
+        self.assertEqual(M.url_pdf_anterior(self.c), reverse("pdf_anterior", args=[2030]))
+        self.entrar("ana")
+        r = self.client.get(reverse("pdf_anterior", args=[2030]))
+        self.assertEqual(b"".join(r.streaming_content), b"%PDF-1.4 teste")
+        self.assertContains(self.client.get(reverse("escrever", args=[2030])), reverse("pdf_anterior", args=[2030]))
+        self.assertEqual(self.client.get(reverse("pdf_anterior_enviar", args=[2030])).status_code, 403)

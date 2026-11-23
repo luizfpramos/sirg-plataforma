@@ -288,7 +288,7 @@ def quadro_form(request, ano, chave=None):
                 linhas.instance = obj
                 linhas.save()
                 if obj.modo_colunas == Quadro.ANOS:
-                    S.sincronizar_colunas_de_anos(obj)
+                    S.sincronizar_colunas_de_anos(obj, travar_passado=True)
                     if q is not None:      # só a marcação de travada vem do formulário
                         for f in colunas.forms:
                             if f.instance.pk and f.has_changed() and "travada" in f.changed_data:

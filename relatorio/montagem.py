@@ -83,14 +83,22 @@ def passos(ciclo):
               ("aviso" if sem_descricao else "feito") if n_blocos else "falta",
               reverse("blocos_atributos", args=[ano]), "Definir os atributos")
     s_qua = p("Quadros de números",
-              f"{n_quadros} quadro(s). Os gráficos e as tabelas dos blocos vêm daqui." if n_quadros
+              f"{n_quadros} quadro(s). Os gráficos e as tabelas dos blocos vêm daqui; os anos anteriores são "
+              f"preenchidos pela DGDI." if n_quadros
               else "As tabelas de números que alimentam os gráficos e as tabelas dos blocos.",
-              "feito" if n_quadros else "falta", reverse("ciclo", args=[ano]), "Ver os quadros")
+              "feito" if n_quadros else "falta", reverse("quadros_lista", args=[ano]), "Quadros de números")
+    tem_ant = caminho_pdf_anterior(ciclo).is_file()
+    s_ant = p("PDF do relatório anterior (consulta)",
+              "Enviado: os setores abrem pelo botão no alto do relatório." if tem_ant
+              else ("Opcional. Os setores consultam o relatório publicado no ano anterior ao lado do SiRG."
+                    + (" Hoje vale o que vem no sistema." if url_pdf_anterior(ciclo) else "")),
+              "feito" if tem_ant else "falta", reverse("pdf_anterior_enviar", args=[ano]),
+              "Trocar o PDF" if tem_ant else "Enviar o PDF")
     s_col = p("Abrir a coleta",
               f"Situação: {ciclo.get_situacao_display().split(' (')[0].lower()}."
               + ("" if aberto else " Quando tudo estiver pronto, mude para “coleta” para os setores começarem."),
               "feito" if aberto else "falta", reverse("ciclo_editar", args=[ano]), "Situação e prazo")
-    return [s_sec, s_pdf, s_blo, s_atr, s_qua, s_col]
+    return [s_sec, s_pdf, s_blo, s_atr, s_qua, s_ant, s_col]
 
 
 # --- seções ------------------------------------------------------------------------------------------------------
@@ -215,3 +223,102 @@ def excluir_ciclo(ciclo, confirmacao, user=None, request=None):
     registrar("ciclo_excluido", ator=user, descricao=f"{titulo} (ano-base {ano}) excluído na homologação.",
               dados=resumo, request=request)
     return resumo
+
+
+# --- quadros (2.18, etapa 3) ----------------------------------------------------------------------------------
+def _chave_quadro_livre(ciclo, titulo):
+    from .models import Quadro
+    base = gerar_chave(titulo, 34)
+    ch, n = base, 2
+    while Quadro.objects.filter(ciclo=ciclo, chave=ch).exists():
+        ch, n = f"{base}_{n}", n + 1
+    return ch
+
+
+def _itens(texto):
+    """Uma linha por item, sem repetidos e sem linhas em branco."""
+    vistos, itens = set(), []
+    for t in (texto or "").splitlines():
+        t = t.strip().lstrip("-–•*").strip()[:200]
+        if t and t.lower() not in vistos:
+            vistos.add(t.lower())
+            itens.append(t)
+    return itens
+
+
+@transaction.atomic
+def criar_quadro_simples(ciclo, *, titulo, secao, linhas, setor=None, tipo="inteiro", modo="anos", anos=None,
+                         colunas="", total=False, descricao=""):
+    """Quadro de números pela tela de montagem, sem chaves nem fórmulas: um título, as linhas (uma por linha) e as
+    colunas (anos da série histórica, que nascem travadas antes do ano-base, ou categorias livres). Fórmulas e regras
+    continuam no formulário completo do quadro."""
+    from .models import Coluna, Linha, Quadro
+    from .servicos import sincronizar_colunas_de_anos
+    titulo = (titulo or "").strip()[:255]
+    if not titulo:
+        raise Recusado("Dê um título ao quadro.")
+    if secao is None or secao.ciclo_id != ciclo.pk:
+        raise Recusado("Escolha a seção do quadro.")
+    rotulos = _itens(linhas)
+    if not rotulos:
+        raise Recusado("Escreva as linhas do quadro, uma por linha.")
+    if tipo not in dict(Quadro.TIPOS):
+        tipo = Quadro.INTEIRO
+    cats = _itens(colunas) if modo == Quadro.CATEGORIAS else []
+    if modo == Quadro.CATEGORIAS and not cats:
+        raise Recusado("Escreva as colunas (categorias), uma por linha.")
+    q = Quadro.objects.create(
+        ciclo=ciclo, secao=secao, chave=_chave_quadro_livre(ciclo, titulo), titulo=titulo, descricao=descricao,
+        setor=setor, tipo_valor=tipo, modo_colunas=Quadro.CATEGORIAS if cats else Quadro.ANOS,
+        anos_exibidos=max(1, min(int(anos or ciclo.anos_serie or 5), 15)), linha_total=bool(total),
+        ordem=secao.quadros.count() + 1)
+    usadas = set()
+    for i, r in enumerate(rotulos, start=1):
+        ch = gerar_chave(r, 40)
+        while ch in usadas:
+            ch = f"{ch[:36]}_{i}"
+        usadas.add(ch)
+        Linha.objects.create(quadro=q, ordem=i, chave=ch, rotulo=r)
+    if cats:
+        usadas = set()
+        for i, r in enumerate(cats, start=1):
+            ch = gerar_chave(r, 40)
+            while ch in usadas:
+                ch = f"{ch[:36]}_{i}"
+            usadas.add(ch)
+            Coluna.objects.create(quadro=q, ordem=i, chave=ch, rotulo=r[:120])
+    else:
+        sincronizar_colunas_de_anos(q, travar_passado=True)
+    return q
+
+
+# --- PDF do relatório anterior, para consulta (2.18, etapa 3) -------------------------------------------------------
+def caminho_pdf_anterior(ciclo):
+    from pathlib import Path
+    return Path(settings.MEDIA_ROOT) / "referencia" / f"anterior_ciclo_{ciclo.pk}.pdf"
+
+
+def receber_pdf_anterior(ciclo, arquivo):
+    from .importador import TAMANHO_MAXIMO
+    if not arquivo:
+        raise Recusado("Escolha o arquivo PDF.")
+    if not arquivo.name.lower().endswith(".pdf") or arquivo.read(5) != b"%PDF-":
+        raise Recusado("O arquivo precisa ser um PDF.")
+    arquivo.seek(0)
+    if arquivo.size > TAMANHO_MAXIMO:
+        raise Recusado(f"O PDF passa de {TAMANHO_MAXIMO // (1024 * 1024)} MB.")
+    destino = caminho_pdf_anterior(ciclo)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    with open(destino, "wb") as f:
+        for pedaco in arquivo.chunks():
+            f.write(pedaco)
+
+
+def url_pdf_anterior(ciclo):
+    """O PDF do relatório anterior para consulta: o enviado pela tela ou, para o RG 2026, o que vem no código."""
+    from django.contrib.staticfiles import finders
+    from django.templatetags.static import static
+    if caminho_pdf_anterior(ciclo).is_file():
+        return reverse("pdf_anterior", args=[ciclo.ano])
+    nome = f"referencia/RG{ciclo.ano - 1}.pdf"
+    return static(nome) if finders.find(nome) else ""

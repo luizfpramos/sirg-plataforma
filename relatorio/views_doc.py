@@ -20,6 +20,7 @@ from . import consistencia
 from . import fluxo as F
 from .calculo import Calculadora
 from .models import Bloco, Ciclo, Comentario, Quadro, Secao, Sugestao
+from . import montagem as M
 from . import nome_inst
 from .texto import contar_marcas
 from .views_texto import _json, diff_palavras
@@ -184,7 +185,7 @@ def escrever(request, ano):
         inicio = alvo["s"].chave if alvo else ""
     return render(request, "relatorio/escrever.html", {
         "ciclo": c, "caps": caps, "seq": seq, "n_editaveis": len(editaveis), "minhas": minhas, "inicio": inicio,
-        "ano_ref": c.ano - 1, "ano_ref_txt": str(c.ano - 1), "tem_referencia": any(x["s"].referencia for x in todas),
+        "ano_ref": c.ano - 1, "ano_ref_txt": str(c.ano - 1), "url_pdf_ref": M.url_pdf_anterior(c), "tem_referencia": any(x["s"].referencia for x in todas),
         "n_marcas": sum(x["marcas"] for x in todas), "n_marcas_minhas": sum(x["marcas"] for x in minhas),
         "e_master": P.e_master(request.user), "modo_coleta": c.situacao == Ciclo.COLETA,
         "n_alt": sum(x["n_alt"] for x in todas), "n_faltam": sum(x["faltam"] for x in editaveis),
