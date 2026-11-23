@@ -5,6 +5,7 @@ from . import views_doc as D
 from . import views_atributos as AT
 from . import views_editor_blocos as ED
 from . import views_importar as IM
+from . import views_montagem as MO
 from . import views_texto as T
 
 urlpatterns = [
@@ -14,6 +15,15 @@ urlpatterns = [
     path("ler/", V.atalho, {"destino": "ler"}, name="atalho_ler"),
     path("ciclos/", V.ciclos, name="ciclos"),
     path("ciclos/novo/", V.ciclo_novo, name="ciclo_novo"),
+    path("montar/", MO.montagem_inicio, name="montagem_inicio"),
+    path("ciclos/<int:ano>/montar/", MO.montagem, name="montagem"),
+    path("ciclos/<int:ano>/de-trabalho/", MO.ciclo_de_trabalho, name="ciclo_de_trabalho"),
+    path("ciclos/<int:ano>/excluir/", MO.ciclo_excluir, name="ciclo_excluir"),
+    path("ciclos/<int:ano>/secoes/", MO.secoes_lista, name="secoes_lista"),
+    path("ciclos/<int:ano>/quadros/", MO.quadros_lista, name="quadros_lista"),
+    path("ciclos/<int:ano>/pdf-anterior/", MO.pdf_anterior, name="pdf_anterior"),
+    path("ciclos/<int:ano>/pdf-anterior/enviar/", MO.pdf_anterior_enviar, name="pdf_anterior_enviar"),
+    path("ciclos/<int:ano>/secoes/<str:chave>/mover/<str:direcao>/", MO.secao_mover, name="secao_mover"),
     path("ciclos/<int:ano>/", V.ciclo, name="ciclo"),
     path("ciclos/<int:ano>/editar/", V.ciclo_editar, name="ciclo_editar"),
     path("ciclos/<int:ano>/pendencias/", V.pendencias, name="pendencias"),
@@ -38,6 +48,7 @@ urlpatterns = [
     path("ciclos/<int:ano>/escrever/estado/", D.escrever_estado, name="escrever_estado"),
     path("ciclos/<int:ano>/escrever/inserir/", D.inserir_texto, name="inserir_texto"),
     path("ciclos/<int:ano>/blocos/<int:pk>/html/", D.bloco_html, name="bloco_html"),
+    path("ciclos/<int:ano>/blocos/<int:pk>/referencia/", D.bloco_referencia, name="bloco_referencia"),
     path("ciclos/<int:ano>/blocos/<int:pk>/excluir-texto/", D.excluir_texto, name="excluir_texto"),
     path("ciclos/<int:ano>/quadros/<int:pk>/graficos/", D.quadro_graficos, name="quadro_graficos"),
     path("ciclos/<int:ano>/exportar/", T.exportar, name="exportar"),

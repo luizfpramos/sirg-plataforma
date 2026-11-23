@@ -82,7 +82,7 @@ class ReimportacaoTests(TestCase):
         self.assertTrue(self.client.login(username="adm", password=SENHA))
         self.primeira = self.ler(pdf_com())
         I.aplicar(self.primeira, self.admin)
-        self.par = Bloco.objects.get(secao__ciclo=self.c, pagina__numero=1, conteudo__contains="resultados do ano")
+        self.par = Bloco.objects.get(secao__ciclo=self.c, pagina__numero=1, config__referencia_pdf__icontains="resultados do ano")
         # o setor reescreve o parágrafo da página 1
         Bloco.objects.filter(pk=self.par.pk).update(conteudo="<p>Texto escrito pelo setor.</p>",
                                                     atualizado_por=self.ana)
@@ -117,7 +117,8 @@ class ReimportacaoTests(TestCase):
         n = Bloco.objects.filter(secao__ciclo=self.c).count()
         nova = self.ler(pdf_com(extra=True, sem_paragrafo=True))
         plano = RI.plano(nova)["total"]
-        self.assertEqual((plano["novos"], plano["sem_par"], plano["com_texto_sem_par"]), (2, 2, 2))
+        # 2.18: os blocos nascem vazios; só o da página 1, que o setor escreveu, tem texto
+        self.assertEqual((plano["novos"], plano["sem_par"], plano["com_texto_sem_par"]), (2, 2, 1))
         RI.reimportar(nova, self.admin)
         self.assertEqual(Bloco.objects.filter(secao__ciclo=self.c).count(), n + 2)   # nada foi apagado
         par = Bloco.objects.get(pk=self.par.pk)
@@ -178,7 +179,7 @@ class ReimportacaoTests(TestCase):
 
     def test_pareamento_por_texto_quando_a_caixa_anda_muito(self):
         # caixa longe do lugar antigo, mas com o mesmo texto (bloco ainda não editado)
-        outro = Bloco.objects.get(secao__ciclo=self.c, pagina__numero=2, conteudo__contains="resultados do ano")
+        outro = Bloco.objects.get(secao__ciclo=self.c, pagina__numero=2, config__referencia_pdf__icontains="resultados do ano")
         nova = self.ler(pdf_com(y_paragrafo=0.2))
         RI.reimportar(nova, self.admin)
         outro.refresh_from_db()

@@ -18,7 +18,7 @@
         <button type="button" class="btn btn-sm btn-cont js-cont-sug" title="Alterações no texto"><span>0 alterações</span></button>
         <button type="button" class="btn btn-sm btn-cont js-cont-com" title="Comentários abertos"><span>0 comentários</span></button>
       </span>
-      <a class="btn btn-sm btn-outline-secondary" href="{% static 'referencia/RG'|add:ano_ref_txt|add:'.pdf' %}" target="_blank" rel="noopener" title="O relatório do ano passado, para consultar ao lado"><i class="bi bi-file-earmark-pdf"></i> RG {{ ano_ref }}</a>
+      {% if url_pdf_ref %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_pdf_ref }}" target="_blank" rel="noopener" title="O relatório do ano passado, para consultar ao lado"><i class="bi bi-file-earmark-pdf"></i> {% if "pdf-anterior" in url_pdf_ref %}Relatório anterior{% else %}RG {{ ano_ref }}{% endif %}</a>{% endif %}
       <a class="btn btn-sm btn-outline-secondary" href="{% url 'ler' ciclo.ano %}" title="O texto final, sem marcas"><i class="bi bi-book"></i> Ver como fica</a>
     </div>
     <div class="doc-barra js-barra" data-ativa="0">
@@ -80,6 +80,7 @@
   <span class="bb-n js-bb-n" aria-live="polite"></span>
   <button type="button" class="btn btn-sm btn-light js-bb-prox" title="Ir ao próximo trecho pendente" aria-label="Próximo trecho pendente"><i class="bi bi-chevron-right"></i></button>
   <span class="bb-sep"></span>
+  <button type="button" class="btn btn-sm btn-light js-bb-ref" title="Ver o texto que estava no PDF neste lugar (ano anterior)"><i class="bi bi-file-earmark-text"></i> Ano anterior</button>
   <button type="button" class="btn btn-sm btn-light js-bb-versoes" title="Ver as versões anteriores e voltar a uma delas"><i class="bi bi-clock-history"></i> Versões</button>
   <button type="button" class="btn btn-sm btn-light js-bb-imagem" title="Inserir ou trocar a imagem"><i class="bi bi-image"></i> Imagem</button>
   <button type="button" class="btn btn-sm btn-success js-bb-concluir" title="Marcar este trecho como pronto"><i class="bi bi-check2-circle"></i> Concluí</button>

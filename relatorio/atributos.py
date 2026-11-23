@@ -60,8 +60,36 @@ def e_grande(caixa):
     return w >= GRANDE_LARGURA and h >= GRANDE_ALTURA and w * h >= GRANDE_AREA
 
 
-def anotar(bloco, setores_da_secao, caixa=None):
-    """Dicionário com tudo o que a tela mostra sobre os atributos do bloco."""
+LOREM = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et "
+         "dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
+         "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat "
+         "nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit "
+         "anim id est laborum. ")
+_XXX = "xxxx xxx xxxxxx xx xxxxx xxxxxxx xxx xxxx xx xxxxxx xxxxx xxx "
+
+
+def tamanho_do_enchimento(bloco, caixa=None):
+    """Quantos caracteres o texto de enchimento ocupa: o máximo do bloco, o tamanho do texto do PDF ou a área."""
+    if bloco.max_caracteres:
+        return min(bloco.max_caracteres, 4000)
+    ref = (bloco.config or {}).get("referencia_pdf")
+    if ref:
+        return min(max(contar_caracteres(ref), 12), 4000)
+    if caixa and caixa.get("w") and caixa.get("h"):
+        return int(min(max(caixa["w"] * caixa["h"] / 70, 12), 4000))
+    return 300
+
+
+def enchimento(modo, n):
+    """Texto de enchimento (só na tela, em cinza) com cerca de n caracteres, cortado no fim de uma palavra."""
+    base = LOREM if modo == "lorem" else _XXX
+    t = (base * (n // len(base) + 1))[:n]
+    return (t.rsplit(" ", 1)[0] if " " in t[-12:] else t).strip()
+
+
+def anotar(bloco, setores_da_secao, caixa=None, modo="orientacao"):
+    """Dicionário com tudo o que a tela mostra sobre os atributos do bloco. `modo`: como aparece o bloco vazio
+    (Ciclo.exibicao_vazio): nada, a orientação, lorem ipsum ou "xxx" ocupando a área."""
     setores = setores_do_bloco(bloco, setores_da_secao)
     siglas = ", ".join(s.sigla for s in setores)
     limites = frase_dos_limites(bloco.min_caracteres, bloco.max_caracteres)
@@ -72,4 +100,8 @@ def anotar(bloco, setores_da_secao, caixa=None):
         "descricao": bloco.descricao.strip(), "min": bloco.min_caracteres, "max": bloco.max_caracteres,
         "limites": limites, "dica": dica, "grande": e_grande(caixa),
         "guia": bool(bloco.descricao.strip() or limites),
+        "modo": modo or "orientacao",
+        "enchimento": enchimento(modo, tamanho_do_enchimento(bloco, caixa)) if modo in ("lorem", "xxx") else "",
+        "referencia": bool((bloco.config or {}).get("referencia_pdf")),
+        "fixo": bool((bloco.config or {}).get("fixo")),
     }

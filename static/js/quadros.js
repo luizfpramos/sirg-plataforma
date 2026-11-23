@@ -138,7 +138,7 @@
     var novo = valorDe(el);
     var anterior = el.dataset.anterior !== undefined ? el.dataset.anterior : el.defaultValue;
     if (novo === anterior && !justificativa) return Promise.resolve();
-    if (el.dataset.travada === "1" && !justificativa) {
+    if (el.dataset.travada === "1" && !justificativa && anterior !== "") {     // 2.18: o 1º preenchimento do histórico não pede
       return pedirJustificativa("Este ano já foi publicado. Explique por que o valor está sendo alterado (fica registrado no histórico).", "")
         .then(function (t) {
           if (t === null) { el.value = anterior; return; }

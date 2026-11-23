@@ -2,8 +2,10 @@
 
 - Cria o RG 2026 com a estrutura do RG 2025 publicado. Os números de 2021 a 2025 entram
   como histórico (colunas travadas) e os textos de 2025 entram como ponto de partida.
-- Não mantém o ciclo 2025 na plataforma: o foco é só 2026. Se uma instalação antiga ainda
-  tiver o ciclo 2025 (ou outro anterior), ele é removido depois de um backup automático.
+- Não mantém o ciclo 2025 na plataforma: ao criar o RG 2026, o ciclo que serviu de base sai.
+- Desde a 2.18, só mexe no RG 2026 "automático" (o montado a partir do RG 2025). Ciclos montados pela
+  tela (Montar o relatório) nunca são criados, alterados nem apagados por aqui, e um RG 2026 excluído
+  pela tela não é recriado.
 
 Pode ser executado mais de uma vez: o que já está pronto não é refeito.
 """
@@ -33,12 +35,19 @@ class Command(BaseCommand):
         self.verbosidade = o.get("verbosity", 1)
         from relatorio.dados_iniciais import rg2025
         criar_setores_iniciais()
-        antigos = Ciclo.objects.filter(ano__lt=ANO)
-        if antigos.exists() and Ciclo.objects.filter(ano=ANO).exists() and not o["sem_backup"]:
-            self._backup()
+        rg = Ciclo.objects.filter(ano=ANO).first()
+        if rg is None and Ciclo.history.filter(ano=ANO).exists():
+            # Já houve um RG 2026 e ele foi excluído pela tela: não é recriado.
+            self.dizer("Não há RG 2026 automático: os relatórios são montados pela tela (Montar o relatório). "
+                       "Nada a preparar.")
+            return
+        if rg is not None and not rg.automatico:
+            self.dizer(f"O {rg.titulo} foi montado pela tela: a preparação automática não o altera.")
+            return
+        criando = rg is None
         temporario = None   # ciclo 2025 carregado só para servir de base (não conta como "removido")
         with transaction.atomic():
-            if not Ciclo.objects.filter(ano=ANO).exists():
+            if criando:
                 base = Ciclo.objects.filter(ano=2025).first()
                 if base is None:
                     base = rg2025.carregar()
@@ -47,7 +56,8 @@ class Command(BaseCommand):
                     self._backup()
                 novo = copiar_ciclo(base, ANO, f"Relatório de Gestão {ANO}")
                 novo.situacao = Ciclo.COLETA
-                novo.save(update_fields=["situacao"])
+                novo.automatico = True
+                novo.save(update_fields=["situacao", "automatico"])
                 self.dizer(self.style.SUCCESS(
                     f"{novo.titulo} criado: {novo.secoes.count()} seções e {novo.quadros.count()} quadros. "
                     f"Os números de anos anteriores vieram do RG 2025 publicado e estão travados."))
@@ -113,7 +123,13 @@ class Command(BaseCommand):
                            f"criados, {r['titulos']} título(s) de figura, {r['descricoes']} descrição(ões) de quadro e "
                            f"{r['orientacoes']} orientação(ões) de seção.")
             n = 0
-            for c in Ciclo.objects.filter(ano__lt=ANO):
+            # Sai só o ciclo que serviu de base ao RG 2026 automático (ao criá-lo agora, ou numa instalação antiga
+            # em que ele ficou). Ciclos montados pela tela nunca são apagados.
+            rg = Ciclo.objects.get(ano=ANO)
+            base_antiga = (Ciclo.objects.filter(pk=rg.origem_id, ano__lt=ANO) if rg.origem_id else Ciclo.objects.none())
+            if base_antiga.exists() and not criando and not o["sem_backup"]:
+                self._backup()
+            for c in (Ciclo.objects.filter(ano__lt=ANO) if criando else base_antiga):
                 Ciclo.objects.filter(origem=c).update(origem=None)
                 if c.pk != temporario:
                     n += 1

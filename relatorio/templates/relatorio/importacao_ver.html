@@ -40,13 +40,38 @@
       </ul>
       <form method="post" action="{% url 'importacao_reimportar' ciclo.ano imp.pk %}" onsubmit="return confirm('Trocar o fundo e reposicionar os trechos? Os textos escritos não mudam; as posições antigas ficam guardadas numa cópia.')">{% csrf_token %}<button class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Reimportar no ciclo</button></form>
       {% else %}
-      <p class="mini">Confira as páginas abaixo. Ao aplicar, o ciclo passa a ter estas páginas: cada caixa de texto vira um trecho que os setores editam, na seção cujo título vem antes dela no PDF.</p>
-      <form method="post" action="{% url 'importacao_aplicar' ciclo.ano imp.pk %}">{% csrf_token %}<button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Aplicar ao ciclo</button></form>
+      <p class="mini mb-2">O PDF foi lido. Antes de aplicar, confira <a href="#conferencia">a página em que começa cada seção</a> e escolha como os blocos vazios aparecem.</p>
+      <a class="btn btn-primary" href="#conferencia"><i class="bi bi-list-check"></i> Conferir e aplicar</a>
       {% endif %}
     </div></div>
   </div>
+  {% if conferencia and not motivo %}
+  <form method="post" action="{% url 'importacao_aplicar' ciclo.ano imp.pk %}" class="card mb-4" id="conferencia">{% csrf_token %}<input type="hidden" name="conferido" value="1">
+    <div class="card-body">
+      <h2 class="h5 mb-1">Páginas de cada seção</h2>
+      <p class="mini text-secondary">O sistema procurou o título de cada seção no PDF (pela letra grande, sem IA). Corrija a página inicial quando ele errar ou não achar. Deixe em branco se a seção não está no PDF. Cada seção vai da página inicial até o começo da seguinte.</p>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-3">
+        <thead><tr><th>Seção</th><th>Achada</th><th style="width:7rem">Começa na p.</th><th class="text-center" title="Recebe o texto do PDF como está; só o Editor-chefe altera">Conteúdo fixo</th></tr></thead>
+        <tbody>{% for l in conferencia %}
+          <tr><td>{% if l.s.pai_id %}<span class="ms-3">{{ l.s.titulo }}</span>{% else %}<strong>{{ l.s.titulo }}</strong>{% endif %}
+              <span class="mini text-secondary">{% for st in l.s.setores.all %}{% if forloop.first %}· {% endif %}{{ st.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></td>
+            <td class="mini">{% if l.achada %}<a href="?p={{ l.achada }}#pagina-previa">p. {{ l.achada }}</a>{% else %}<span class="text-danger">não achada</span>{% endif %}</td>
+            <td><input class="form-control form-control-sm" type="number" min="1" name="inicio_{{ l.s.pk }}" value="{{ l.pagina|default_if_none:'' }}" aria-label="Página inicial de {{ l.s.titulo }}">{% if l.fora_de_ordem %}<div class="mini text-danger">antes da seção anterior</div>{% endif %}</td>
+            <td class="text-center"><input class="form-check-input" type="checkbox" name="fixo_{{ l.s.pk }}" value="1" {% if l.fixo %}checked{% endif %} aria-label="{{ l.s.titulo }}: conteúdo fixo"></td></tr>
+        {% endfor %}</tbody></table></div>
+      <h2 class="h6 mb-1">Os blocos</h2>
+      <p class="mini text-secondary mb-2">Títulos e seções de conteúdo fixo recebem o texto do PDF. Os demais blocos nascem <strong>vazios</strong>, para os setores escreverem; o texto do PDF fica guardado como consulta (“Ano anterior”) e o tamanho dele sugere o mínimo e o máximo de caracteres. Como o bloco vazio aparece na tela, até alguém escrever:</p>
+      {% for v, r in exibicoes %}<div class="form-check"><input class="form-check-input" type="radio" name="exibicao_vazio" id="ev-{{ v }}" value="{{ v }}" {% if ciclo.exibicao_vazio == v %}checked{% endif %}><label class="form-check-label" for="ev-{{ v }}">{{ r }}</label></div>{% endfor %}
+      <p class="mini text-secondary mt-1">Dá para trocar depois, em Situação e prazo.</p>
+    </div>
+    <div class="card-footer d-flex flex-wrap gap-2">
+      <button class="btn btn-primary" onclick="return confirm('Aplicar este PDF ao ciclo? As páginas e os blocos serão criados com as escolhas acima.')"><i class="bi bi-check2-circle"></i> Aplicar ao ciclo</button>
+      <button class="btn btn-outline-secondary" name="salvar" value="1">Só guardar as escolhas</button>
+    </div>
+  </form>
+  {% endif %}
   {% if pagina %}
-  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2" id="pagina-previa">
     {% if anterior %}<a class="btn btn-sm btn-outline-secondary" href="?p={{ anterior }}"><i class="bi bi-chevron-left"></i> p. {{ anterior }}</a>{% endif %}
     <form method="get" class="d-flex align-items-center gap-1"><label class="mini" for="ir-p">Página</label>
       <select class="form-select form-select-sm" id="ir-p" name="p" onchange="this.form.submit()" style="width:auto">{% for n in numeros %}<option value="{{ n }}" {% if n == pagina.n %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></form>

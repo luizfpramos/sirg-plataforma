@@ -34,6 +34,7 @@
     barra.querySelector(".js-bb-concluir").hidden = concl;
     barra.querySelector(".js-bb-desfazer").hidden = !concl;
     barra.querySelector(".js-bb-versoes").hidden = tipo !== "texto";
+    barra.querySelector(".js-bb-ref").hidden = !atual.hasAttribute("data-tem-ref");
     barra.querySelector(".js-bb-imagem").hidden = tipo !== "imagem" || concl;
     var p = pendentes(), i = p.indexOf(atual);
     barra.querySelector(".js-bb-n").textContent = p.length ? (concl ? p.length + " pendentes" : (i + 1) + " de " + p.length) : "tudo concluído";
@@ -133,6 +134,16 @@
   barra.querySelector(".js-bb-versoes").addEventListener("click", function () {
     var b = atual; if (!b) return;
     Promise.resolve(E.fechar()).then(function () { T.historico(id(b), E.urlVolta(id(b))); });
+  });
+
+  barra.querySelector(".js-bb-ref").addEventListener("click", function () {
+    var b = atual, m = document.getElementById("modal-ref-bloco"); if (!b || !m) return;
+    var corpo = m.querySelector(".js-ref-corpo");
+    corpo.textContent = "Carregando…";
+    bootstrap.Modal.getOrCreateInstance(m).show();
+    T.get(base + "blocos/" + id(b) + "/referencia/").then(function (r) {
+      corpo.innerHTML = r && r.html ? T.limpar(r.html) : "<p class=\"text-secondary\">Sem texto de referência.</p>";
+    });
   });
 
   // ---- imagem do bloco ----------------------------------------------------------------------------

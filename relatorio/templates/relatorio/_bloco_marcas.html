@@ -1,1 +1,1 @@
-{% if editor and d.pode_concluir %} data-pode-concluir="1" data-tipo="{{ d.b.tipo }}"{% endif %}{% if d.concluido %} data-concluido="1"{% endif %}
+{% if editor and d.pode_concluir %} data-pode-concluir="1" data-tipo="{{ d.b.tipo }}"{% endif %}{% if d.concluido %} data-concluido="1"{% endif %}{% if editor and d.pode_concluir and d.atr.referencia %} data-tem-ref="1"{% endif %}

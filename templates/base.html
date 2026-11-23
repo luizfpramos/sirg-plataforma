@@ -47,13 +47,10 @@
         {% if E_ADMIN %}
         <li><hr class="dropdown-divider"></li>
         <li><h6 class="dropdown-header">Administração</h6></li>
-        {% if not CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'ciclo_novo' %}"><i class="bi bi-plus-lg"></i> Criar o relatório</a></li>{% endif %}
+        <li><a class="dropdown-item" href="{% url 'montagem_inicio' %}"><i class="bi bi-hammer"></i> {% if CICLO_MENU %}Montar o relatório{% else %}Criar o relatório{% endif %}</a></li>
         <li><a class="dropdown-item" href="{% url 'usuarios' %}"><i class="bi bi-people"></i> Usuários</a></li>
         <li><a class="dropdown-item" href="{% url 'setores' %}"><i class="bi bi-diagram-2"></i> Setores</a></li>
-        {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'ciclo_editar' CICLO_MENU.ano %}"><i class="bi bi-sliders"></i> Situação e prazo</a></li>{% endif %}
-        {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'blocos_atributos' CICLO_MENU.ano %}"><i class="bi bi-layout-text-window"></i> Atributos dos blocos</a></li>{% endif %}
         {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'editor_inicio' CICLO_MENU.ano %}"><i class="bi bi-bounding-box"></i> Editar blocos nas páginas</a></li>{% endif %}
-        {% if CICLO_MENU %}<li><a class="dropdown-item" href="{% url 'importar_pdf' CICLO_MENU.ano %}"><i class="bi bi-file-earmark-arrow-up"></i> Importar o PDF do relatório</a></li>{% endif %}
         <li><a class="dropdown-item" href="{% url 'instituicao' %}"><i class="bi bi-building"></i> Instituição</a></li>
         <li><a class="dropdown-item" href="{% url 'auditoria' %}"><i class="bi bi-shield-check"></i> Auditoria</a></li>
         <li><a class="dropdown-item" href="{% url 'ciclos' %}"><i class="bi bi-calendar3"></i> Relatórios (anos)</a></li>

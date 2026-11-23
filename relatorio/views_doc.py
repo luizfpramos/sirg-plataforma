@@ -13,12 +13,14 @@ from django.views.decorators.http import require_POST
 
 from contas import permissoes as P
 
+from .html_seguro import limpar
 from . import apresentacao as A
 from . import atributos as AT
 from . import consistencia
 from . import fluxo as F
 from .calculo import Calculadora
 from .models import Bloco, Ciclo, Comentario, Quadro, Secao, Sugestao
+from . import montagem as M
 from . import nome_inst
 from .texto import contar_marcas
 from .views_texto import _json, diff_palavras
@@ -62,8 +64,9 @@ def estrutura(ciclo, calc, user=None, editor=False):
                                **A.tamanho_na_pagina(b))
             A.caixa_na_pagina(b, m)
             if b.tipo in (Bloco.TEXTO, Bloco.IMAGEM):
-                m["atr"] = AT.anotar(b, s.setores.all(), m.get("caixa"))
-                dele = pode if not b.setor_id else (
+                m["atr"] = AT.anotar(b, s.setores.all(), m.get("caixa"), ciclo.exibicao_vazio)
+                dele = F.pode_responder_pelo_bloco(user, b) if (editor and (b.config or {}).get("fixo")) else \
+                    pode if not b.setor_id else (
                     F.pode_responder_pelo_bloco(user, b) if (e_master or b.setor_id in meus_setores) else False)
                 m["pode_concluir"] = bool(editor and dele)                 # quem escreve também conclui e desfaz
                 m["pode_bloco"] = bool(editor and dele and not b.concluido_em)
@@ -97,7 +100,8 @@ def estrutura(ciclo, calc, user=None, editor=False):
             from . import permissoes as RP
             extra_meu = [p for p in extra if RP.pode_editar_quadro(user, p.quadro)]   # de outro setor: não conta
             d["resumo"] = consistencia.resumo(pend.get(s.pk, []) + extra_meu)
-            d["faltam"] = d["resumo"]["faltam"] + d["campos_vazios"]
+            d["blocos_vazios"] = F.blocos_vazios_da_secao(s) if not ciclo.automatico else 0
+            d["faltam"] = d["resumo"]["faltam"] + d["campos_vazios"] + d["blocos_vazios"]
             d["tem_dados"] = any(q.secao_id == s.pk and not A.so_texto(q) for q in calc.quadros.values())
             proprios = sorted([q for q in calc.quadros.values() if q.secao_id == s.pk and not A.so_texto(q)],
                               key=lambda q: (q.ordem, q.pk))
@@ -182,7 +186,7 @@ def escrever(request, ano):
         inicio = alvo["s"].chave if alvo else ""
     return render(request, "relatorio/escrever.html", {
         "ciclo": c, "caps": caps, "seq": seq, "n_editaveis": len(editaveis), "minhas": minhas, "inicio": inicio,
-        "ano_ref": c.ano - 1, "ano_ref_txt": str(c.ano - 1), "tem_referencia": any(x["s"].referencia for x in todas),
+        "ano_ref": c.ano - 1, "ano_ref_txt": str(c.ano - 1), "url_pdf_ref": M.url_pdf_anterior(c), "tem_referencia": any(x["s"].referencia for x in todas),
         "n_marcas": sum(x["marcas"] for x in todas), "n_marcas_minhas": sum(x["marcas"] for x in minhas),
         "e_master": P.e_master(request.user), "modo_coleta": c.situacao == Ciclo.COLETA,
         "n_alt": sum(x["n_alt"] for x in todas), "n_faltam": sum(x["faltam"] for x in editaveis),
@@ -201,6 +205,14 @@ def escrever_estado(request, ano):
             por = b.editando_por.get_full_name() or b.editando_por.username
         out[b.pk] = {"v": b.atualizado_em.isoformat(), "por": por}
     return JsonResponse({"blocos": out})
+
+
+@login_required
+def bloco_referencia(request, ano, pk):
+    """2.18: o texto que estava no PDF importado no lugar deste bloco (referência do ano anterior)."""
+    b = get_object_or_404(Bloco.objects.select_related("secao__ciclo"), pk=pk, secao__ciclo__ano=ano)
+    ref = (b.config or {}).get("referencia_pdf") or ""
+    return JsonResponse({"ok": True, "html": limpar(ref), "titulo": b.secao.titulo})
 
 
 @login_required
@@ -319,7 +331,7 @@ def campo_salvar(request, ano):
         return JsonResponse({"ok": False, "erro": str(ex)}, status=400)
     orig = next((unescape(m.group(2)) for m in CT.CAMPO.finditer(b.conteudo) if m.group(1) == c.chave), "")
     return JsonResponse({"ok": True, "exibido": CT.exibir(orig, c.numero), "vazio": c.numero is None,
-                         "faltam_secao": F.campos_vazios_da_secao(b.secao)})
+                         "faltam_secao": F.campos_vazios_da_secao(b.secao) + F.blocos_vazios_da_secao(b.secao)})
 
 
 @login_required
@@ -398,7 +410,7 @@ def _faltam(user, ciclo, secoes):
     for s in ciclo.secoes.all():
         if not F.pode_editar_texto(user, s) and str(s.pk) not in secoes:
             continue
-        n = pend.get(s.pk, 0) + F.campos_vazios_da_secao(s)
+        n = pend.get(s.pk, 0) + F.campos_vazios_da_secao(s) + F.blocos_vazios_da_secao(s)
         if str(s.pk) in secoes:
             out[str(s.pk)] = n
         if F.pode_editar_texto(user, s):

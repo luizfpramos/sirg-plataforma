@@ -551,6 +551,18 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.18", "novembro de 2026", [
+        "Montar o relatório: o administrador monta o relatório do ano numa tela só, em passos (seções, PDF diagramado, blocos, atributos, quadros, PDF do ano anterior e abertura da coleta), cada um com a situação e o botão para a tela certa.",
+        "Seções: tela própria para criar, ordenar e editar capítulos e seções com os setores, inclusive colando uma lista (o sumário do PDF).",
+        "Importação do PDF: antes de aplicar, o administrador confere e corrige a página em que começa cada seção (o sistema sugere, sem IA) e marca as seções de conteúdo fixo.",
+        "Blocos vazios: os parágrafos do PDF viram blocos vazios para os setores escreverem, com o texto antigo como consulta (botão “Ano anterior”) e o tamanho sugerindo o mínimo e o máximo; títulos e textos curtos ficam como texto fixo do modelo (só o Editor-chefe altera). O bloco vazio pode aparecer em branco, com a orientação, com lorem ipsum ou com “xxx”.",
+        "Editor de blocos: Shift+arrastar seleciona uma área; apagar vários de uma vez; liberar um texto fixo para o setor; textos fixos com número do ano anterior ficam em laranja.",
+        "Quadros de números criados por uma tela simples (linhas e colunas, sem fórmulas), com os anos anteriores já travados; o primeiro preenchimento do histórico não pede justificativa.",
+        "PDF do relatório anterior enviado pela tela, para consulta dos setores.",
+        "O envio ao Editor-chefe exige que não haja bloco vazio (nos relatórios montados a partir do PDF).",
+        "O administrador escolhe qual relatório o menu abre para todos; na homologação, um relatório pode ser excluído para recomeçar do zero.",
+        "A preparação automática de cada instalação não cria, não altera e não apaga mais os relatórios montados pela tela.",
+    ]),
     ("2.17", "novembro de 2026", [
         "O papel “Master” passou a se chamar “Editor-chefe” em todas as telas, mensagens e no manual (as permissões não mudaram).",
         "Menu do alto sempre inteiro na tela: para o administrador, abre em duas colunas em telas largas; em telas baixas, rola e o “Sair” fica sempre à vista.",

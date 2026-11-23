@@ -1,0 +1,5 @@
+<span class="d-flex gap-1 flex-shrink-0">
+  <form method="post" action="{% url 'secao_mover' ciclo.ano s.chave 'subir' %}">{% csrf_token %}<button class="btn btn-sm btn-link p-0 px-1" {% if primeira %}disabled{% endif %} title="Subir" aria-label="Subir {{ s.titulo }}"><i class="bi bi-arrow-up"></i></button></form>
+  <form method="post" action="{% url 'secao_mover' ciclo.ano s.chave 'descer' %}">{% csrf_token %}<button class="btn btn-sm btn-link p-0 px-1" {% if ultima %}disabled{% endif %} title="Descer" aria-label="Descer {{ s.titulo }}"><i class="bi bi-arrow-down"></i></button></form>
+  <a class="btn btn-sm btn-link p-0 px-1" href="{% url 'secao_editar' ciclo.ano s.chave %}?voltar=secoes" title="Editar" aria-label="Editar {{ s.titulo }}"><i class="bi bi-pencil"></i></a>
+</span>

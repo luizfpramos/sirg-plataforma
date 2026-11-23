@@ -7,7 +7,7 @@
 </div>
 <div class="card"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
   <thead><tr><th>Ano-base</th><th>Título</th><th>Situação</th><th>Prazo da coleta</th><th>Origem</th></tr></thead>
-  <tbody>{% for c in ciclos %}<tr><td class="codigo">{{ c.ano }}</td><td><a href="{% url 'ciclo' c.ano %}">{{ c.titulo }}</a></td><td><span class="badge text-bg-{{ c.situacao|situacao_cor }}">{{ c.get_situacao_display }}</span></td><td>{{ c.prazo|date:"d/m/Y"|default:"—" }}</td><td class="mini text-secondary">{{ c.origem.titulo|default:"" }}</td></tr>
+  <tbody>{% for c in ciclos %}<tr><td class="codigo">{{ c.ano }}</td><td><a href="{% if pode_estruturar %}{% url 'montagem' c.ano %}{% else %}{% url 'ciclo' c.ano %}{% endif %}">{{ c.titulo }}</a>{% if c.pk == de_trabalho.pk %} <span class="badge text-bg-primary">de trabalho</span>{% endif %}</td><td><span class="badge text-bg-{{ c.situacao|situacao_cor }}">{{ c.get_situacao_display }}</span></td><td>{{ c.prazo|date:"d/m/Y"|default:"—" }}</td><td class="mini text-secondary">{{ c.origem.titulo|default:"" }}</td></tr>
   {% empty %}<tr><td colspan="5" class="text-center text-secondary py-4">Nenhum ciclo criado.</td></tr>{% endfor %}</tbody>
 </table></div></div>
 {% endblock %}

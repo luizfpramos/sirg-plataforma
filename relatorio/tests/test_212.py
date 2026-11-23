@@ -63,6 +63,7 @@ class DocumentoUnicoTests(Base212):
         b = self.bloco_com_campo()
         self.assertTrue(b.config.get("campos212"))
         n = len(CT.chaves(b.conteudo))
+        self.assertTrue(self.c.automatico)                     # 2.18: o RG 2026 automático continua sendo preparado
         call_command("preparar_rg2026", sem_backup=True, verbosity=0)
         b.refresh_from_db()
         self.assertEqual(len(CT.chaves(b.conteudo)), n)        # roda uma vez só por trecho

@@ -25,7 +25,7 @@ Não há menu lateral. Tudo fica no botão com o seu nome, no **alto, à direita
 | **Cores dos gráficos** | (Editor-chefe, diagramação) As paletas de cores dos gráficos |
 | **Padrão de design** | (Editor-chefe, diagramação) Fonte, tamanho e espaçamentos do texto |
 | **Quadros de números** | (Editor-chefe) Todas as tabelas, em tela cheia, com Excel |
-| **Importar o PDF do relatório**, **Editar blocos nas páginas**, **Atributos dos blocos** | (administrador) Montar o relatório de um novo ano a partir do PDF diagramado |
+| **Montar o relatório**, **Editar blocos nas páginas** | (administrador) Montar o relatório de um novo ano a partir do PDF diagramado, passo a passo |
 | **Manual de uso**, **Sobre**, **Minha conta**, **Trocar senha**, **Sair** | |
 
 No ambiente de **homologação** (testes), a barra do alto fica **laranja** com o selo **HOMOLOGAÇÃO**. O que se faz lá não vale para o relatório oficial.
@@ -112,7 +112,7 @@ Cada bloco tem a cor do setor responsável e, quando está vazio, mostra a orien
 
 ## Enviar ao Editor-chefe
 
-1. Quando o cabeçalho da seção mostrar **Números completos**, clique em **Enviar ao Editor-chefe**. O envio só é liberado sem xxxxx nem números em branco ou para corrigir.
+1. Quando o cabeçalho da seção mostrar **Números completos**, clique em **Enviar ao Editor-chefe**. O envio só é liberado sem xxxxx nem números em branco ou para corrigir e, nos relatórios montados a partir do PDF, sem **bloco vazio** (texto ainda não escrito ou imagem não inserida; os textos fixos do modelo não contam).
 2. O Editor-chefe **aprova** ou **devolve** com um comentário. Se for devolvida, corrija e envie de novo.
 
 ## O que falta
@@ -164,10 +164,21 @@ Em **Cores dos gráficos** ficam as paletas, cada uma com um exemplo. Quem tem o
 
 ### Montar o relatório de um novo ano a partir do PDF
 
-1. **Importar o PDF do relatório:** crie o relatório do ano (ele precisa ter as seções), envie o PDF diagramado e aguarde a leitura (alguns minutos; a tela se atualiza sozinha). Confira as páginas e clique em **Aplicar ao ciclo**: o sistema cria as páginas, o fundo e uma caixa de texto para cada trecho do PDF.
-2. **Editar blocos nas páginas:** em cada página, arraste sobre o fundo para **desenhar um bloco novo** (texto, gráfico, tabela ou imagem). Clique num bloco para **mover** (setas, ou arrastando) e **redimensionar** (alças); com **Shift** selecione vários e **Juntar** num só; **Delete** apaga. No painel lateral definem-se o tipo, a seção, o setor responsável, a descrição do que escrever e o mínimo e o máximo de caracteres. O sistema recusa juntar ou apagar blocos com comentários, sugestões pendentes ou em edição por outra pessoa, e pede confirmação (guardando uma cópia) quando um setor já escreveu no bloco.
-3. **Atributos dos blocos:** a mesma definição de setor, descrição e limites, em tabela, por página ou seção.
-4. **Se o PDF mudar depois que os setores começaram a escrever:** envie o PDF revisado em **Importar o PDF do relatório**. A tela mostra o plano (quantos trechos acompanham a nova posição, quantos são novos, quantos ficam sem par) e **Reimportar no ciclo** troca o fundo e reposiciona os trechos **sem alterar nenhum texto escrito**. As páginas são pareadas pelo número; se uma página foi inserida no meio, confira o plano. Trechos sem caixa no PDF novo ficam onde estavam e são marcados. A posição antiga fica guardada num arquivo na pasta de dados.
+Tudo começa em **Montar o relatório** (menu do administrador). A tela mostra os passos em ordem, cada um com a situação (feito, conferir ou a fazer) e o botão para a tela certa. Em **Outro relatório** troca-se o relatório que se está montando; **Tornar este o relatório de trabalho** define qual relatório o menu abre para todos.
+
+1. **Seções:** crie os capítulos e as seções, com os setores responsáveis. Dá para colar uma lista de uma vez (por exemplo, o sumário do PDF): linha comum vira capítulo, linha começando com **-** vira seção do capítulo acima, e **| SIGLA, SIGLA** no fim da linha define os setores. As setas sobem e descem; o lápis edita. Marque **Conteúdo fixo** nas seções praticamente iguais todo ano.
+2. **PDF diagramado:** envie o PDF e aguarde a leitura (alguns minutos; a tela se atualiza sozinha). Antes de aplicar, confira a **página em que começa cada seção**: o sistema procura o título de cada seção no PDF (pela letra grande, sem IA) e mostra o que achou; corrija o que estiver errado e deixe em branco a seção que não está no PDF. Escolha também como o **bloco vazio** aparece na tela (nada, a orientação, lorem ipsum ou “xxx” ocupando a área; dá para trocar depois em Situação e prazo). Ao aplicar:
+    - os **parágrafos** viram blocos **vazios**, para os setores escreverem. O texto do PDF fica guardado como consulta (botão **Ano anterior**, na barra do trecho) e o tamanho dele sugere o mínimo e o máximo de caracteres;
+    - **títulos**, **textos curtos** (menos de 40 caracteres: rótulos de gráfico, células, infográficos) e as seções de **conteúdo fixo** ficam com o texto do PDF, como **texto fixo do modelo**: só o Editor-chefe altera.
+3. **Blocos nas páginas** (editor): arraste sobre o fundo para **desenhar um bloco novo** (texto, gráfico, tabela ou imagem). Clique num bloco para **mover** (setas, ou arrastando) e **redimensionar** (alças); **Shift+clique** escolhe vários e **Shift+arrastar** seleciona todos os blocos de uma área (por exemplo, os rótulos de um gráfico do PDF), para **Juntar**, **Apagar** ou **Liberar para o setor** de uma vez. **Liberar para o setor** transforma um texto fixo em bloco vazio (para indicadores que mudam todo ano); o texto antigo vira consulta. Textos fixos aparecem com contorno pontilhado; os que têm **número do ano anterior** ficam em **laranja** e a montagem avisa quantos são: troque a área por um bloco de gráfico ou tabela, libere para o setor ou confira o número. O sistema recusa juntar ou apagar blocos com comentários, sugestões pendentes ou em edição por outra pessoa, e pede confirmação (guardando uma cópia) quando um setor já escreveu no bloco.
+4. **Atributos dos blocos:** setor, descrição do que escrever e limites de caracteres, em tabela, por página ou seção.
+5. **Quadros de números:** os quadros que alimentam os blocos de gráfico e de tabela. Em **Novo quadro**, basta o título, a seção, o tipo e as linhas (uma por linha); as colunas são os anos da série histórica ou categorias livres. Os anos anteriores ao ano-base já nascem **travados** para os setores: a DGDI preenche o histórico em **números › Corrigir anos publicados** (o primeiro preenchimento não pede justificativa; alterar um valor já preenchido, sim). Fórmulas e regras ficam em **avançado**.
+6. **PDF do relatório anterior:** o relatório publicado no ano anterior, para os setores consultarem pelo botão no alto do relatório.
+7. **Abrir a coleta:** em **Situação e prazo**, mude para **coleta**.
+
+**Se o PDF mudar depois que os setores começaram a escrever:** envie o PDF revisado em **PDF diagramado**. A tela mostra o plano (quantos trechos acompanham a nova posição, quantos são novos, quantos ficam sem par) e **Reimportar no ciclo** troca o fundo e reposiciona os trechos **sem alterar nenhum texto escrito**. As páginas são pareadas pelo número; se uma página foi inserida no meio, confira o plano. As páginas iniciais escolhidas na conferência continuam valendo. Trechos sem caixa no PDF novo ficam onde estavam e são marcados. A posição antiga fica guardada num arquivo na pasta de dados.
+
+**Recomeçar do zero (só na homologação):** no fim da tela de montagem, **Excluir este relatório** apaga o relatório inteiro (seções, páginas, blocos, quadros e números), depois de digitar o ano-base. Usuários e setores ficam. Na produção, essa opção não existe.
 
 ### Instituição e auditoria
 

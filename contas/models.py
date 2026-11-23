@@ -165,6 +165,7 @@ class EventoAuditoria(models.Model):
         ("setor_alterado", "Setor alterado"),
         ("instituicao_alterada", "Dados da instituição alterados"),
         ("acesso_negado", "Acesso negado"),
+        ("ciclo_excluido", "Relatório (ciclo) excluído na homologação"),
     ]
     quando = models.DateTimeField(default=timezone.now, db_index=True)
     ator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,

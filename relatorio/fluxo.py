@@ -66,7 +66,10 @@ def pode_editar_bloco(user, bloco):
 def pode_responder_pelo_bloco(user, bloco):
     """Pode escrever neste trecho (ou marcá-lo como concluído e desfazer)? Sem setor no bloco, vale o que vale para a seção. Com setor no bloco (definido pelo
     administrador), quem escreve é o pessoal desse setor — mesmo que não seja um dos setores da seção — e o Editor-chefe;
-    a situação do ciclo e da seção continuam valendo."""
+    a situação do ciclo e da seção continuam valendo. Bloco de texto fixo do modelo (título ou seção de conteúdo
+    fixo, 2.18): só o Editor-chefe."""
+    if (bloco.config or {}).get("fixo"):
+        return bloco.secao.ciclo.situacao != Ciclo.ENCERRADO and P.e_master(user)
     if not bloco.setor_id:
         return pode_editar_texto(user, bloco.secao)
     secao = bloco.secao
@@ -86,6 +89,8 @@ def motivo_bloco_bloqueado(user, bloco):
     if bloco.concluido_em and pode_responder_pelo_bloco(user, bloco):
         return "Este trecho está marcado como concluído. Use Desfazer para voltar a editar."
     secao = bloco.secao
+    if (bloco.config or {}).get("fixo") and secao.ciclo.situacao != Ciclo.ENCERRADO:
+        return "Texto fixo do modelo (título ou seção de conteúdo fixo): só o Editor-chefe altera."
     if bloco.setor_id and secao.ciclo.situacao == Ciclo.COLETA and secao.situacao not in (Secao.ENVIADA, Secao.APROVADA):
         return f"Este trecho é de responsabilidade de: {bloco.setor.sigla}."
     return motivo_texto_bloqueado(user, secao) or "Você não pode alterar este texto."
@@ -197,7 +202,8 @@ def salvar_texto(user, bloco, html, titulo=None, versao=None):
         raise Recusado("Com o controle de alterações, o texto original continua no lugar até o Editor-chefe aceitar a "
                        "mudança. Recarregue a página (F5) e escreva de novo.")
     b.conteudo = novo
-    b.config = {k: v for k, v in (b.config or {}).items() if k not in ("herdado_de", "modelo")}
+    # quem salva o texto já conferiu: sai a marca de número do ano anterior (2.18)
+    b.config = {k: v for k, v in (b.config or {}).items() if k not in ("herdado_de", "modelo", "numero_antigo")}
     if titulo is not None:
         b.titulo = titulo.strip()[:255]
     b.atualizado_por = user
@@ -323,6 +329,25 @@ def campos_vazios_da_secao(secao):
     for b in secao.blocos.filter(tipo=Bloco.TEXTO).prefetch_related("campos"):
         valores = CT.valores_do_bloco(b)
         n += sum(1 for ch in CT.chaves(revisao.base(b.conteudo)) if valores.get(ch) is None)
+    return n
+
+
+def blocos_vazios_da_secao(secao):
+    """2.18: blocos que o setor precisa escrever e ainda estão vazios (texto sem nenhum caractere, contando o que
+    espera o aceite do Editor-chefe; imagem sem arquivo). Textos fixos do modelo não contam. Só nos relatórios
+    montados pela tela: o RG 2026 automático segue a regra de antes (só números)."""
+    from . import atributos as AT
+    if secao.ciclo.automatico:
+        return 0
+    n = 0
+    for b in secao.blocos.filter(tipo__in=(Bloco.TEXTO, Bloco.IMAGEM)).only("tipo", "conteudo", "config"):
+        cfg = b.config or {}
+        if cfg.get("fixo"):
+            continue
+        if b.tipo == Bloco.IMAGEM:
+            n += not (cfg.get("imagem") or {}).get("id")
+        else:
+            n += AT.contar_caracteres(b.conteudo) == 0
     return n
 
 
@@ -505,6 +530,10 @@ def acao_secao(user, secao, acao, comentario=""):
                            f"{r['faltam']} a preencher e {r['erros']} erro(s).")
         if not secao.blocos.exists() and not secao.quadros.exists():
             raise Recusado("A seção está vazia.")
+        n_vazios = blocos_vazios_da_secao(secao)
+        if n_vazios:
+            raise Recusado(f"Antes de enviar, escreva {'os' if n_vazios > 1 else 'o'} {n_vazios} bloco"
+                           f"{'s' if n_vazios > 1 else ''} ainda vazio{'s' if n_vazios > 1 else ''} desta seção.")
         n_campos = campos_vazios_da_secao(secao)
         if n_campos:
             raise Recusado(f"Antes de enviar, preencha os {n_campos} número{'s' if n_campos > 1 else ''} do texto que "

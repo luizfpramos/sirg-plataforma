@@ -45,6 +45,8 @@ def serializar(b, setores_da_secao):
         "editado": bool(b.atualizado_por_id and (b.conteudo or "").strip()),
         "travado_por": (b.editando_por.get_full_name() or b.editando_por.username) if trava else "",
         "comentarios": b.comentarios.count(), "sugestoes": b.sugestoes.filter(situacao="pendente").count(),
+        "fixo": bool((b.config or {}).get("fixo")), "numero_antigo": bool((b.config or {}).get("numero_antigo")),
+        "referencia": bool((b.config or {}).get("referencia_pdf")),
     }
 
 
@@ -276,19 +278,67 @@ def juntar(user, pagina, d):
 
 @transaction.atomic
 def apagar(user, pagina, d):
+    """Apaga um bloco (id) ou vários (ids: seleção por área). Tudo ou nada."""
     ciclo = pagina.ciclo
     _checar_ciclo(ciclo)
-    b = _do_ciclo(pagina, d.get("id"))
-    _travado_por_outro(user, b)
-    if b.comentarios.exists() or b.sugestoes.filter(situacao="pendente").exists():
-        raise Recusado("Este bloco tem comentários ou sugestões. Resolva-os antes de apagar.")
-    if b.atualizado_por_id and (b.conteudo or "").strip():
+    ids = d.get("ids") or [d.get("id")]
+    blocos = [_do_ciclo(pagina, i) for i in ids]
+    escritos = []
+    for b in blocos:
+        _travado_por_outro(user, b)
+        if b.comentarios.exists() or b.sugestoes.filter(situacao="pendente").exists():
+            raise Recusado("Um dos blocos tem comentários ou sugestões. Resolva-os antes de apagar." if len(blocos) > 1
+                           else "Este bloco tem comentários ou sugestões. Resolva-os antes de apagar.")
+        if b.atualizado_por_id and (b.conteudo or "").strip():
+            escritos.append(b)
+    if escritos:
         if not d.get("confirmar"):
-            raise Recusado("CONFIRMAR: este bloco tem texto escrito por um setor. Apagar remove o texto da página "
-                           "(uma cópia fica guardada na pasta de dados). Quer apagar?")
-        _guardar_copia(ciclo, [b])
-    b.delete()
-    return [], "Bloco apagado."
+            raise Recusado(f"CONFIRMAR: {len(escritos)} bloco(s) têm texto escrito por um setor. Apagar remove o texto "
+                           "da página (uma cópia fica guardada na pasta de dados). Quer apagar?")
+        _guardar_copia(ciclo, escritos)
+    with transaction.atomic():
+        for b in blocos:
+            b.delete()
+    return [], "Bloco apagado." if len(blocos) == 1 else f"{len(blocos)} blocos apagados."
 
 
-ACOES = {"criar": criar, "salvar": salvar, "juntar": juntar, "apagar": apagar}
+def definir_fixo(user, pagina, d):
+    """Liberar para o setor (fixo=False): o texto do PDF vira referência e o bloco fica vazio, para o setor escrever.
+    Voltar a fixo (fixo=True): o bloco vazio recebe de volta o texto do PDF, e só o Editor-chefe altera."""
+    from .importador import tamanho_sugerido
+    ciclo = pagina.ciclo
+    _checar_ciclo(ciclo)
+    fixo = bool(d.get("fixo"))
+    blocos = [_do_ciclo(pagina, i) for i in (d.get("ids") or [d.get("id")])]
+    with transaction.atomic():
+        for b in blocos:
+            if b.tipo != Bloco.TEXTO:
+                raise Recusado("Só blocos de texto podem ser fixos ou liberados.")
+            _travado_por_outro(user, b)
+            cfg = dict(b.config or {})
+            if fixo == bool(cfg.get("fixo")):
+                continue
+            if fixo:
+                if (b.conteudo or "").strip() and b.atualizado_por_id:
+                    raise Recusado("Um setor já escreveu neste bloco: ele não volta a ser texto fixo.")
+                b.conteudo = cfg.pop("referencia_pdf", "") or b.conteudo
+                cfg["fixo"] = True
+            else:
+                if (b.conteudo or "").strip():
+                    cfg["referencia_pdf"] = b.conteudo
+                b.conteudo = ""
+                for k in ("fixo", "rotulo", "numero_antigo"):
+                    cfg.pop(k, None)
+                if b.min_caracteres is None and b.max_caracteres is None:
+                    b.min_caracteres, b.max_caracteres = tamanho_sugerido(AT.contar_caracteres(cfg.get("referencia_pdf")))
+            b.config = cfg
+            b.save(update_fields=["conteudo", "config", "min_caracteres", "max_caracteres"])
+    n = len(blocos)
+    if fixo:
+        return [b.pk for b in blocos], "Texto fixo do modelo (só o Editor-chefe altera)." if n == 1 else \
+            f"{n} blocos voltaram a ser texto fixo."
+    return [b.pk for b in blocos], "Liberado para o setor: o bloco ficou vazio e o texto do PDF virou referência." \
+        if n == 1 else f"{n} blocos liberados para o setor."
+
+
+ACOES = {"criar": criar, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo}

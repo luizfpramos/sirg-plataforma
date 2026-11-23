@@ -31,4 +31,5 @@ class Command(BaseCommand):
                 self.stdout.write("O ciclo 2026 já existe: nada a fazer.")
                 return
             n = copiar_ciclo(c, 2026, "Relatório de Gestão 2026")
+            Ciclo.objects.filter(pk=n.pk).update(automatico=True)   # o RG 2026 montado pelo desenvolvedor
             self.stdout.write(self.style.SUCCESS(f"{n.titulo} criado em preparação (anos anteriores travados)."))

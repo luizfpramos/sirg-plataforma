@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Seções — {{ ciclo.titulo }}{% endblock %}
+{% block conteudo %}
+<nav class="mini mb-2"><a href="{% url 'montagem' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Montar o relatório</a></nav>
+<h1 class="mb-1"><i class="bi bi-list-nested"></i> Seções do relatório</h1>
+<p class="text-secondary">{{ ciclo.titulo }}. Os capítulos e as seções, na ordem do relatório, com os setores responsáveis.</p>
+
+<div class="row g-4">
+<div class="col-lg-7">
+{% for cap, filhas in arvore %}
+  <div class="card mb-2"><div class="card-body py-2">
+    <div class="d-flex align-items-center gap-2">
+      <strong class="flex-grow-1">{{ cap.titulo }}</strong>
+      {% include "relatorio/_secao_acoes.html" with s=cap primeira=forloop.first ultima=forloop.last %}
+    </div>
+    {% if cap.setores.all %}<div class="mini text-secondary">{% for st in cap.setores.all %}{{ st.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+    {% if filhas %}<ul class="list-unstyled mb-0 mt-1 ms-3">{% for s in filhas %}
+      <li class="d-flex align-items-center gap-2 border-top py-1">
+        <span class="flex-grow-1">{{ s.titulo }}
+          <span class="mini {% if s.setores.all %}text-secondary{% else %}text-danger{% endif %}">· {% for st in s.setores.all %}{{ st.sigla }}{% if not forloop.last %}, {% endif %}{% empty %}sem setor{% endfor %}{% with n=s.paginas.all|length %}{% if n %} · {{ n }} pág.{% endif %}{% endwith %}{% if s.conteudo_fixo %} · <span class="badge text-bg-secondary">conteúdo fixo</span>{% endif %}</span></span>
+        {% include "relatorio/_secao_acoes.html" with s=s primeira=forloop.first ultima=forloop.last %}
+      </li>{% endfor %}</ul>{% endif %}
+    <a class="mini" href="{% url 'secao_nova' ciclo.ano %}?pai={{ cap.chave }}&voltar=secoes"><i class="bi bi-plus"></i> seção neste capítulo</a>
+  </div></div>
+{% empty %}
+  <div class="card card-body text-secondary">Ainda não há capítulos. Cole a lista ao lado ou crie um por um.</div>
+{% endfor %}
+  <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'secao_nova' ciclo.ano %}?voltar=secoes"><i class="bi bi-plus-lg"></i> Novo capítulo</a>
+</div>
+
+<div class="col-lg-5">
+  <form method="post" class="card"><div class="card-body">{% csrf_token %}
+    <h2 class="h6">Adicionar várias de uma vez</h2>
+    <p class="mini text-secondary mb-2">Uma linha por item. Linha comum vira <strong>capítulo</strong>; linha começando com <strong>-</strong> vira <strong>seção</strong> do capítulo acima. Para os setores, termine a linha com <strong>| SIGLA, SIGLA</strong>. Dá para colar o sumário do PDF e ajustar.</p>
+    <textarea class="form-control font-monospace mb-2" name="lista" rows="12" aria-label="Lista de capítulos e seções" placeholder="Apresentação
+- Mensagem da dirigente | GAB
+- Sobre o relatório | DGDI
+Visão geral organizacional
+- Quem somos | SEGEP"></textarea>
+    <button class="btn btn-primary">Adicionar</button>
+  </div></form>
+</div>
+</div>
+{% endblock %}

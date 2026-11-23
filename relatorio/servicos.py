@@ -27,8 +27,10 @@ def anos_do_quadro(quadro):
 
 
 @transaction.atomic
-def sincronizar_colunas_de_anos(quadro):
-    """Garante uma coluna para cada ano exibido (chave a2025, rótulo 2025). Remove as de fora."""
+def sincronizar_colunas_de_anos(quadro, travar_passado=False):
+    """Garante uma coluna para cada ano exibido (chave a2025, rótulo 2025). Remove as de fora.
+    travar_passado (2.18, telas): as colunas novas de anos anteriores ao ano-base já nascem travadas — o histórico é
+    preenchido pela DGDI (Editor-chefe) e o setor só completa o ano do relatório."""
     if quadro.modo_colunas != Quadro.ANOS:
         return
     anos = anos_do_quadro(quadro)
@@ -36,7 +38,8 @@ def sincronizar_colunas_de_anos(quadro):
     for ordem, ano in enumerate(anos, start=1):
         c = existentes.get(ano)
         if c is None:
-            Coluna.objects.create(quadro=quadro, ordem=ordem, chave=f"a{ano}", rotulo=str(ano), ano=ano)
+            Coluna.objects.create(quadro=quadro, ordem=ordem, chave=f"a{ano}", rotulo=str(ano), ano=ano,
+                                  travada=bool(travar_passado and ano < quadro.ciclo.ano))
         elif c.ordem != ordem:
             c.ordem = ordem
             c.save(update_fields=["ordem"])
@@ -74,7 +77,8 @@ def salvar_valor(user, linha, coluna, entrada, anterior=None, justificativa=""):
     if anterior is not None and _norm(anterior) != _norm(atual) and _norm(novo) != _norm(atual):
         raise Conflito(atual)
     justificativa = (justificativa or "").strip()
-    if coluna.travada and _norm(novo) != _norm(atual) and not justificativa:
+    # 2.18: preencher pela primeira vez um ano anterior vazio (o histórico de um quadro novo) não pede justificativa
+    if coluna.travada and _norm(atual) and _norm(novo) != _norm(atual) and not justificativa:
         raise Recusado("Para alterar um ano já publicado, informe a justificativa.")
     if numero is None and not texto:
         if v is not None:

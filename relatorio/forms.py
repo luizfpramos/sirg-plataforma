@@ -45,9 +45,16 @@ class CicloNovoForm(forms.Form):
 class CicloForm(forms.ModelForm):
     class Meta:
         model = Ciclo
-        fields = ["titulo", "situacao", "prazo", "observacao"]
+        fields = ["titulo", "situacao", "prazo", "observacao", "exibicao_vazio"]
         widgets = {"prazo": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
                    "observacao": forms.Textarea(attrs={"rows": 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["exibicao_vazio"].required = False
+
+    def clean_exibicao_vazio(self):
+        return self.cleaned_data.get("exibicao_vazio") or self.instance.exibicao_vazio or Ciclo.ORIENTACAO
 
 
 class SetoresMultiplos(forms.ModelMultipleChoiceField):
@@ -63,7 +70,7 @@ class SecaoForm(forms.ModelForm):
 
     class Meta:
         model = Secao
-        fields = ["titulo", "pai", "ordem", "chave", "setores", "orientacao"]
+        fields = ["titulo", "pai", "ordem", "chave", "setores", "orientacao", "conteudo_fixo"]
         widgets = {"orientacao": forms.Textarea(attrs={"rows": 4})}
         labels = {"orientacao": "O que escrever aqui"}
         help_texts = {"orientacao": "Uma ou duas frases que aparecem para o setor no alto da seção, no documento."}
