@@ -187,7 +187,7 @@ LOGGING = {
 }
 
 # Versão da plataforma (também força o navegador a buscar CSS/JS novos depois de uma atualização)
-SIRG_VERSAO = "2.18"
+SIRG_VERSAO = "2.19"
 # "hml" na homologacao (faixa laranja no alto e cookies separados da produção, que roda no mesmo computador)
 SIRG_AMBIENTE = env("SIRG_AMBIENTE", "prd").strip().lower()
 if SIRG_AMBIENTE == "hml":

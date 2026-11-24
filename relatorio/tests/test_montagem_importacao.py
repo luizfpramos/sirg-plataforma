@@ -183,8 +183,8 @@ class ConferenciaTests(TestCase):
         rot = Bloco.objects.create(secao=self.apres, pagina=pg, conteudo="<p>4.512 alunos</p>",
                                    config={"caixa": {"x": 1, "y": 1, "w": 50, "h": 10, "css": "", "quebra": False},
                                            "fixo": True, "rotulo": True, "numero_antigo": True})
-        self.assertIn("número do ano anterior", M.passos(self.c)[2]["texto"])
-        self.assertEqual(M.passos(self.c)[2]["situacao"], "aviso")
+        self.assertIn("número do ano anterior", M.passos(self.c)[3]["texto"])
+        self.assertEqual(M.passos(self.c)[3]["situacao"], "aviso")
         url = lambda a: reverse("editor_acao", args=[2030, 1, a])
         r = self.client.post(url("fixo"), json.dumps({"id": rot.pk, "fixo": False}), content_type="application/json")
         self.assertTrue(r.json()["ok"])
@@ -193,7 +193,7 @@ class ConferenciaTests(TestCase):
         self.assertIn("4.512", rot.config["referencia_pdf"])
         self.assertNotIn("fixo", rot.config)
         self.assertTrue(F.pode_editar_bloco(self.ana, rot))
-        self.assertEqual(M.passos(self.c)[2]["situacao"], "feito")
+        self.assertEqual(M.passos(self.c)[3]["situacao"], "feito")
         self.client.post(url("fixo"), json.dumps({"id": rot.pk, "fixo": True}), content_type="application/json")
         rot.refresh_from_db()
         self.assertIn("4.512", rot.conteudo)

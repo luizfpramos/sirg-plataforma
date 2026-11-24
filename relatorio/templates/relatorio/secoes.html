@@ -5,6 +5,12 @@
 <h1 class="mb-1"><i class="bi bi-list-nested"></i> Seções do relatório</h1>
 <p class="text-secondary">{{ ciclo.titulo }}. Os capítulos e as seções, na ordem do relatório, com os setores responsáveis.</p>
 
+{% if faltam %}
+<div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 py-2">
+  <span><i class="bi bi-exclamation-triangle"></i> Setor(es) da lista que não existem. Ao criar, o setor já entra nas seções que o citaram.</span>
+  {% for sg in faltam %}<a class="btn btn-sm btn-warning" href="{% url 'setor_novo' %}?sigla={{ sg|urlencode }}&next={{ voltar|urlencode }}"><i class="bi bi-plus-lg"></i> Criar {{ sg }}</a>{% endfor %}
+</div>
+{% endif %}
 <div class="row g-4">
 <div class="col-lg-7">
 {% for cap, filhas in arvore %}

@@ -7,7 +7,7 @@
 <div class="row g-3">
   {% if form %}
   <div class="col-xl-6">
-    <form method="post" class="card">{% csrf_token %}<div class="card-body">
+    <form method="post" class="card">{% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}<div class="card-body">
       <div class="row">
         <div class="col-md-4">{% include "contas/_campo.html" with f=form.sigla %}</div>
         <div class="col-md-8">{% include "contas/_campo.html" with f=form.nome %}</div>
