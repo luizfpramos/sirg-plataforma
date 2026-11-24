@@ -1,6 +1,6 @@
 # SiRG — contexto do projeto
 
-Atualizado em 23/11/2026, versão **2.18**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
+Atualizado em 24/11/2026, versão **2.20**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
 
 ## 1. O que é
 
@@ -115,6 +115,13 @@ Atualizado em 23/11/2026, versão **2.18**. O código fica no GitHub; ver `docs/
 - **Importação:** conferência seção → página inicial (`importador.conferencia`, escolhas em `ImportacaoPDF.resumo["inicios"]`, usadas também na reimportação). `conteudo_da_caixa`: parágrafo → bloco vazio com `config["referencia_pdf"]` e mínimo/máximo sugeridos; título, texto curto (< 40 caracteres, `config["rotulo"]`, com `numero_antigo` se tem número) e `Secao.conteudo_fixo` → `config["fixo"]` (só o Editor-chefe altera). No RG 2026 automático, como antes (texto com xxxxx).
 - **`Ciclo.exibicao_vazio`:** como o bloco vazio aparece na tela (nada, orientação, lorem, xxx); só exibição.
 - **Envio:** `fluxo.blocos_vazios_da_secao` bloqueia o envio com bloco vazio (fora do RG 2026 automático).
+
+## 4c. Grade e guias de diagramação (2.20)
+
+- **`Ciclo.grade`** (JSON, em pt): margens, colunas e medianiz, editados em Padrão de design (`contas/views.py`, `_salvar_grade`). Vazio: sem grade.
+- **`Pagina.guias`** (JSON, `{"v": [...], "h": [...]}` em pt): guias só daquela página, para as exceções. Somam-se à grade.
+- **`relatorio/grade.py`:** conferência dos valores, linhas da grade, `fora_da_grade` (bordas esquerda e direita numa linha; dentro das margens de cima e de baixo ou numa guia horizontal da página) e a lista de páginas para copiar ("3, 5-8", "todas").
+- **Editor:** ações `guias` e `copiar_guias`; cada bloco traz `fora`. O encaixe é só na tela (JS, tolerância de 6 px na tela); nada move blocos sozinho.
 
 ## 5. Limitações conhecidas e próximos passos possíveis
 

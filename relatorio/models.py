@@ -55,6 +55,9 @@ class Ciclo(models.Model):
     automatico = models.BooleanField("mantido pela preparação automática", default=False,
                                      help_text="Só o RG 2026 montado a partir do RG 2025 pelo desenvolvedor. Ciclos "
                                                "montados pela tela nunca são alterados pela preparação automática.")
+    grade = models.JSONField("grade das páginas", default=dict, blank=True,
+                             help_text="Margens, colunas e medianiz (em pontos) que guiam o editor de páginas. "
+                                       "Vazio: sem grade.")
     criado_em = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
@@ -298,6 +301,9 @@ class Pagina(models.Model):
     secao = models.ForeignKey(Secao, on_delete=models.SET_NULL, null=True, blank=True, related_name="paginas",
                               help_text="Seção que começa ou ocupa a página (para o sumário).")
     fixos = models.TextField("textos fixos (rodapé, número da página)", blank=True, default="")
+    guias = models.JSONField("guias desta página", default=dict, blank=True,
+                             help_text='Guias próprias da página, em pontos: {"v": [x, ...], "h": [y, ...]}. '
+                                       "Somam-se à grade do ciclo.")
 
     class Meta:
         ordering = ["numero"]

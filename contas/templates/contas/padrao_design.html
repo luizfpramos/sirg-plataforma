@@ -25,4 +25,65 @@
     </div></div>
   </div>
 </div>
+
+<h2 class="h5 mt-4 mb-1" id="grade"><i class="bi bi-grid-3x3"></i> Grade das páginas</h2>
+<div class="subtitulo mb-3">Margens e colunas que guiam o editor de páginas. O bloco encaixa na grade e a tela aponta o que fica fora dela. Os blocos que já existem não são movidos.</div>
+{% if ciclo_grade %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <form method="post" class="card" id="form-grade"><div class="card-body">{% csrf_token %}
+      <label class="form-label" for="g-ciclo">Relatório</label>
+      <select class="form-select mb-3" id="g-ciclo" name="ciclo" onchange="window.location.search='?ciclo='+this.value+'#grade'">{% for c in ciclos_grade %}<option value="{{ c.ano }}"{% if c.pk == ciclo_grade.pk %} selected{% endif %}>{{ c.titulo }}</option>{% endfor %}</select>
+      <p class="mini text-secondary">Medidas em pontos (pt), como no PDF. Página de {{ grade_dados.largura|floatformat:1 }} × {{ grade_dados.altura|floatformat:1 }} pt.</p>
+      <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-sup">Margem de cima</label><input class="form-control form-control-sm js-grade" id="g-sup" name="margem_sup" type="number" step="0.5" min="0" value="{{ grade.margem_sup|default_if_none:''|stringformat:'s' }}"></div>
+        <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-inf">Margem de baixo</label><input class="form-control form-control-sm js-grade" id="g-inf" name="margem_inf" type="number" step="0.5" min="0" value="{{ grade.margem_inf|default_if_none:''|stringformat:'s' }}"></div>
+        <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-esq">Margem esquerda</label><input class="form-control form-control-sm js-grade" id="g-esq" name="margem_esq" type="number" step="0.5" min="0" value="{{ grade.margem_esq|default_if_none:''|stringformat:'s' }}"></div>
+        <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-dir">Margem direita</label><input class="form-control form-control-sm js-grade" id="g-dir" name="margem_dir" type="number" step="0.5" min="0" value="{{ grade.margem_dir|default_if_none:''|stringformat:'s' }}"></div>
+        <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-col">Colunas</label><input class="form-control form-control-sm js-grade" id="g-col" name="colunas" type="number" min="1" max="{{ max_colunas }}" value="{{ grade.colunas|default_if_none:''|stringformat:'s' }}"></div>
+        <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-med">Medianiz</label><input class="form-control form-control-sm js-grade" id="g-med" name="medianiz" type="number" step="0.5" min="0" value="{{ grade.medianiz|default_if_none:''|stringformat:'s' }}"></div>
+      </div>
+      <p class="mini text-secondary">Medianiz é o espaço entre as colunas.</p>
+      <div class="d-flex gap-2">{% if ciclo_grade.situacao == "encerrado" %}<span class="mini text-secondary">O ciclo está encerrado.</span>{% else %}<button class="btn btn-primary" name="acao" value="grade">Salvar a grade</button>{% if grade %}<button class="btn btn-outline-secondary" name="acao" value="grade_limpar">Tirar a grade</button>{% endif %}{% endif %}</div>
+    </div></form>
+  </div>
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body">
+      <h2 class="h6">Como fica</h2>
+      <svg id="g-previa" class="border rounded bg-white w-100" viewBox="0 0 {{ grade_dados.largura|stringformat:'.1f' }} {{ grade_dados.altura|stringformat:'.1f' }}" role="img" aria-label="Prévia da grade na página"></svg>
+      <p class="mini text-secondary mt-3 mb-0">Exceções ficam nas guias de cada página, criadas no editor de páginas ao arrastar a partir da régua.</p>
+    </div></div>
+  </div>
+</div>
+{{ grade_dados|json_script:"dados-grade" }}
+{% else %}
+<p class="text-secondary">Ainda não há relatório para receber a grade.</p>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var el = document.getElementById("dados-grade"), svg = document.getElementById("g-previa");
+  if (!el || !svg) return;
+  var D = JSON.parse(el.textContent), NS = "http://www.w3.org/2000/svg";
+  function v(id) { var n = parseFloat(document.getElementById(id).value); return isNaN(n) ? 0 : n; }
+  function ret(x, y, w, h, cor, ench) {
+    var r = document.createElementNS(NS, "rect");
+    r.setAttribute("x", x); r.setAttribute("y", y); r.setAttribute("width", Math.max(0, w)); r.setAttribute("height", Math.max(0, h));
+    r.setAttribute("fill", ench || "none"); r.setAttribute("stroke", cor); r.setAttribute("stroke-width", "1.5");
+    svg.appendChild(r);
+  }
+  function desenhar() {
+    svg.innerHTML = "";
+    var col = Math.max(1, Math.round(v("g-col")) || 1), m = v("g-med"), e = v("g-esq"), d = D.largura - v("g-dir");
+    var t = v("g-sup"), b = D.altura - v("g-inf"), larg = (d - e - m * (col - 1)) / col;
+    var algum = ["g-sup", "g-inf", "g-esq", "g-dir", "g-col", "g-med"].some(function (id) { return document.getElementById(id).value !== ""; });
+    if (!algum) return;
+    ret(e, t, d - e, b - t, "#c2185b");
+    for (var i = 0; i < col; i++) ret(e + i * (larg + m), t, larg, b - t, "#7b1fa2", "rgba(123,31,162,.07)");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".js-grade"), function (i) { i.addEventListener("input", desenhar); });
+  desenhar();
+})();
+</script>
 {% endblock %}

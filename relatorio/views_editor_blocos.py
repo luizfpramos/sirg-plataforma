@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from . import editor_blocos as E
+from . import grade as G
 from .models import Ciclo, Pagina
 from .views_atributos import pode_definir_atributos
 
@@ -27,9 +28,10 @@ def editor_pagina(request, ano, n):
     i = numeros.index(pg.numero)
     dados = {"pagina": pg.numero, "largura": pg.largura, "altura": pg.altura,
              "blocos": E.blocos_da_pagina(pg), "opcoes": E.opcoes(c), "secao_da_pagina": pg.secao_id,
-             "ano": c.ano, "somente_leitura": c.situacao == Ciclo.ENCERRADO}
+             "ano": c.ano, "somente_leitura": c.situacao == Ciclo.ENCERRADO, "guias": G.guias(pg)}
+    from contas import permissoes as P
     return render(request, "relatorio/editor_pagina.html", {
-        "ciclo": c, "pg": pg, "numeros": numeros, "dados": dados,
+        "ciclo": c, "pode_grade": P.cuida_das_cores(request.user), "pg": pg, "numeros": numeros, "dados": dados,
         "anterior": numeros[i - 1] if i > 0 else None, "proxima": numeros[i + 1] if i + 1 < len(numeros) else None})
 
 
@@ -51,7 +53,7 @@ def editor_acao(request, ano, n, acao):
             return JsonResponse({"ok": False, "confirmar": texto[len("CONFIRMAR: "):]}, status=409)
         return JsonResponse({"ok": False, "erro": texto}, status=400)
     return JsonResponse({"ok": True, "mensagem": mensagem, "selecionar": selecionar,
-                         "blocos": E.blocos_da_pagina(pg)})
+                         "blocos": E.blocos_da_pagina(pg), "guias": G.guias(pg)})
 
 
 @login_required
