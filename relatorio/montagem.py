@@ -44,6 +44,20 @@ def passos(ciclo):
     def p(titulo, texto, situacao, url, botao):
         return {"titulo": titulo, "texto": texto, "situacao": situacao, "url": url, "botao": botao}
 
+    from django.db.models import Count, Q
+    ativos = list(Setor.objects.filter(ativo=True).annotate(
+        n=Count("vinculos", filter=Q(vinculos__fim__isnull=True, vinculos__usuario__is_active=True))))
+    vazios = [st.sigla for st in ativos if not st.n]
+    if not ativos:
+        s_set = p("Setores e pessoas", "Cadastre os setores que respondem pelo relatório e as pessoas de cada um.",
+                  "falta", reverse("setores"), "Cadastrar os setores")
+    else:
+        txt = (f"{len(ativos)} setor(es) ativo(s). Os setores valem para todos os anos: confira se surgiu algum, "
+               f"se algum deixou de existir e se cada um tem pessoas cadastradas.")
+        if vazios:
+            txt += f" Sem ninguém cadastrado: {', '.join(vazios[:8])}{'…' if len(vazios) > 8 else ''}."
+        s_set = p("Setores e pessoas", txt, "aviso" if vazios else "feito", reverse("setores"), "Conferir os setores")
+
     if not (caps or secs):
         s_sec = p("Seções", "Crie os capítulos e as seções. Dá para colar o sumário do PDF de uma vez.", "falta",
                   reverse("secoes_lista", args=[ano]), "Criar as seções")
@@ -98,7 +112,7 @@ def passos(ciclo):
               f"Situação: {ciclo.get_situacao_display().split(' (')[0].lower()}."
               + ("" if aberto else " Quando tudo estiver pronto, mude para “coleta” para os setores começarem."),
               "feito" if aberto else "falta", reverse("ciclo_editar", args=[ano]), "Situação e prazo")
-    return [s_sec, s_pdf, s_blo, s_atr, s_qua, s_ant, s_col]
+    return [s_set, s_sec, s_pdf, s_blo, s_atr, s_qua, s_ant, s_col]
 
 
 # --- seções ------------------------------------------------------------------------------------------------------
@@ -117,14 +131,14 @@ def _chave_livre(ciclo, titulo):
 def adicionar_em_lote(ciclo, texto):
     """Uma linha por item. Linha comum = capítulo; linha que começa com "-" (ou com recuo) = seção do capítulo
     acima. No fim da linha, opcional: "| SIGLA, SIGLA" com os setores responsáveis.
-    Devolve (capítulos, seções, avisos)."""
+    Devolve (capítulos, seções, avisos, {sigla que não existe: [pk das seções que a pediram]})."""
     if ciclo.situacao == Ciclo.ENCERRADO:
         raise Recusado("O ciclo está encerrado.")
     siglas = {s.sigla.upper(): s for s in Setor.objects.all()}
     cap_atual = ciclo.secoes.filter(pai__isnull=True).order_by("-ordem", "-id").first()
     ordem_cap = (cap_atual.ordem if cap_atual else 0)
     n_caps = n_secs = 0
-    avisos = []
+    avisos, faltando = [], []
     for n, bruta in enumerate((texto or "").splitlines(), start=1):
         if not bruta.strip():
             continue
@@ -142,7 +156,9 @@ def adicionar_em_lote(ciclo, texto):
                     setores.append(s)
                 else:
                     avisos.append(f"Linha {n}: setor “{sg}” não existe.")
+                    faltando.append((sg.upper(), None))
         if not linha:
+            faltando = [(sg, pk) for sg, pk in faltando if pk]      # sigla numa linha sem título: só o aviso
             continue
         titulo = linha[:255]
         if e_secao:
@@ -161,7 +177,11 @@ def adicionar_em_lote(ciclo, texto):
             n_caps += 1
         if setores:
             s.setores.set(setores)
-    return n_caps, n_secs, avisos
+        faltando = [(sg, pk or s.pk) for sg, pk in faltando]
+    por_sigla = {}
+    for sg, pk in faltando:
+        por_sigla.setdefault(sg, []).append(pk)
+    return n_caps, n_secs, avisos, por_sigla
 
 
 @transaction.atomic

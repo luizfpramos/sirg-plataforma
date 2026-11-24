@@ -12,7 +12,7 @@ from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.http import urlencode
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
 from . import permissoes as P
@@ -390,13 +390,30 @@ def setor(request, pk):
 @login_required
 @P.admin_obrigatorio
 def setor_novo(request):
-    form = SetorForm(request.POST or None, initial={"ativo": True, "ordem": (Setor.objects.count() + 1) * 10})
+    form = SetorForm(request.POST or None, initial={"ativo": True, "ordem": (Setor.objects.count() + 1) * 10,
+                                                    "sigla": (request.GET.get("sigla") or "")[:30]})
+    seguinte = request.POST.get("next") or request.GET.get("next") or ""
+    if not url_has_allowed_host_and_scheme(seguinte, allowed_hosts={request.get_host()},
+                                           require_https=request.is_secure()):
+        seguinte = ""
     if request.method == "POST" and form.is_valid():
         s = form.save()
         S.registrar("setor_criado", request.user, setor=s, descricao=s.rotulo, request=request)
-        messages.success(request, f"Setor {s.sigla} criado.")
-        return redirect("setor", pk=s.pk)
-    return render(request, "contas/setor.html", {"form": form, "novo": True})
+        # 2.19: seções da lista colada (Montar o relatório) que citaram esta sigla antes de ela existir
+        pedidos = request.session.get("setores_pedidos", {})
+        pks = pedidos.pop(s.sigla.upper(), [])
+        n = 0
+        if pks:
+            from relatorio.models import Secao
+            for sec in Secao.objects.filter(pk__in=pks):
+                sec.setores.add(s)
+                n += 1
+            request.session["setores_pedidos"] = pedidos
+        messages.success(request, f"Setor {s.sigla} criado"
+                         + (f" e incluído em {n} seção(ões)" if n else "") + "."
+                         + (" Agora cadastre as pessoas dele em Usuários." if seguinte else ""))
+        return redirect(seguinte or "setor", **({} if seguinte else {"pk": s.pk}))
+    return render(request, "contas/setor.html", {"form": form, "novo": True, "next": seguinte})
 
 
 # --- Instituição e auditoria ------------------------------------------------------
@@ -551,6 +568,10 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.19", "novembro de 2026", [
+        "Montar o relatório começa por Setores e pessoas: conferir os setores (que valem para todos os anos) e ver quais não têm ninguém cadastrado, antes de criar as seções.",
+        "Na tela de seções, uma sigla da lista colada que ainda não existe ganha o botão para criar o setor, que volta para as seções depois.",
+    ]),
     ("2.18", "novembro de 2026", [
         "Montar o relatório: o administrador monta o relatório do ano numa tela só, em passos (seções, PDF diagramado, blocos, atributos, quadros, PDF do ano anterior e abertura da coleta), cada um com a situação e o botão para a tela certa.",
         "Seções: tela própria para criar, ordenar e editar capítulos e seções com os setores, inclusive colando uma lista (o sumário do PDF).",

@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from . import montagem as M
@@ -68,8 +69,9 @@ def secoes_lista(request, ano):
     _exigir_admin(request.user)
     c = get_object_or_404(Ciclo, ano=ano)
     if request.method == "POST":
+        faltando = {}
         try:
-            caps, secs, avisos = M.adicionar_em_lote(c, request.POST.get("lista", ""))
+            caps, secs, avisos, faltando = M.adicionar_em_lote(c, request.POST.get("lista", ""))
         except M.Recusado as e:
             messages.error(request, str(e))
         else:
@@ -79,8 +81,19 @@ def secoes_lista(request, ano):
                 messages.warning(request, a)
             if not (caps or secs or avisos):
                 messages.error(request, "A lista está vazia.")
-        return redirect("secoes_lista", ano=ano)
-    return render(request, "relatorio/secoes.html", {"ciclo": c, "arvore": M.arvore(c)})
+        if faltando:      # ao criar o setor pelo botão, ele já entra nas seções que o pediram (contas.views.setor_novo)
+            pend = request.session.get("setores_pedidos", {})
+            for sg, pks in faltando.items():
+                pend[sg] = sorted(set(pend.get(sg, [])) | set(pks))
+            request.session["setores_pedidos"] = pend
+        url = reverse("secoes_lista", args=[ano])
+        return redirect(url + ("?faltam=" + ",".join(faltando) if faltando else ""))
+    from contas.models import Setor
+    pedidas = [x for x in (request.GET.get("faltam") or "").split(",") if x][:20]
+    existentes = {x.upper() for x in Setor.objects.values_list("sigla", flat=True)}
+    return render(request, "relatorio/secoes.html", {
+        "ciclo": c, "arvore": M.arvore(c), "faltam": [x for x in pedidas if x.upper() not in existentes],
+        "voltar": request.get_full_path()})
 
 
 @login_required

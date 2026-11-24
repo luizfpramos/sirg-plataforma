@@ -74,16 +74,16 @@ class PassosTests(BaseMontagem):
         r = self.client.get(reverse("montagem", args=[2030]))
         self.assertEqual(r.status_code, 200)
         passos = r.context["passos"]
-        self.assertEqual([p["titulo"] for p in passos], ["Seções", "PDF diagramado", "Blocos nas páginas",
+        self.assertEqual([p["titulo"] for p in passos], ["Setores e pessoas", "Seções", "PDF diagramado", "Blocos nas páginas",
                                                          "Atributos dos blocos", "Quadros de números",
                                                          "PDF do relatório anterior (consulta)", "Abrir a coleta"])
-        self.assertTrue(all(p["situacao"] == "falta" for p in passos))
+        self.assertTrue(all(p["situacao"] == "falta" for p in passos[1:]))
         self.assertContains(r, "Criar as seções")
 
     def test_secao_sem_setor_e_aviso(self):
         cap = secao(self.c, "cap", "Capítulo", ordem=10)
         secao(self.c, "s1", "Seção", pai=cap, ordem=10)
-        p = M.passos(self.c)[0]
+        p = M.passos(self.c)[1]
         self.assertEqual(p["situacao"], "aviso")
         self.assertIn("sem setor", p["texto"])
 
@@ -125,8 +125,34 @@ class SecoesTests(BaseMontagem):
         self.assertEqual(Secao.objects.filter(ciclo=self.c, titulo="Apresentação").count(), 2)
         self.assertEqual(M.arvore(self.c)[-1][0].titulo, "Apresentação")
 
+    def test_setor_que_nao_existe_leva_a_criar(self):
+        self.entrar()
+        r = self.client.post(reverse("secoes_lista", args=[2030]), {"lista": "Cap\n- Seção | NOVO, DGDI"})
+        url = reverse("secoes_lista", args=[2030]) + "?faltam=NOVO"
+        self.assertRedirects(r, url)
+        r = self.client.get(url)
+        self.assertContains(r, "Criar NOVO")
+        r = self.client.get(reverse("setor_novo") + "?sigla=NOVO&next=" + url)
+        self.assertContains(r, 'value="NOVO"')
+        r = self.client.post(reverse("setor_novo"), {"sigla": "NOVO", "nome": "Setor novo", "ativo": "on",
+                                                      "ordem": 999, "descricao": "", "next": url})
+        self.assertRedirects(r, url)
+        self.assertNotContains(self.client.get(url), "Criar NOVO")       # já existe: o aviso some
+        sec = Secao.objects.get(ciclo=self.c, titulo="Seção")
+        self.assertEqual(sorted(x.sigla for x in sec.setores.all()), ["DGDI", "NOVO"])   # já entrou na seção
+        r = self.client.post(reverse("setor_novo"), {"sigla": "OUTRO", "nome": "Outro", "ativo": "on",
+                                                      "ordem": 1000, "descricao": "", "next": "https://exemplo.com/"})
+        self.assertRedirects(r, reverse("setor", args=[Setor.objects.get(sigla="OUTRO").pk]))
+
+    def test_passo_dos_setores(self):
+        p = M.passos(self.c)[0]
+        self.assertEqual(p["titulo"], "Setores e pessoas")
+        self.assertEqual(p["situacao"], "aviso")          # há setores iniciais sem ninguém cadastrado
+        self.assertIn("Sem ninguém cadastrado", p["texto"])
+        self.assertNotIn("DIRGRAD", p["texto"].split("Sem ninguém cadastrado")[1])   # a Ana é do DIRGRAD
+
     def test_secao_sem_capitulo_vira_capitulo(self):
-        caps, secs, avisos = M.adicionar_em_lote(self.c, "- Solta")
+        caps, secs, avisos, _ = M.adicionar_em_lote(self.c, "- Solta")
         self.assertEqual((caps, secs), (1, 0))
         self.assertTrue(avisos)
 
@@ -233,7 +259,7 @@ class QuadrosEPdfAnteriorTests(BaseMontagem):
         cols = list(q.colunas.order_by("ordem"))
         self.assertEqual([c.ano for c in cols], [2026, 2027, 2028, 2029, 2030])
         self.assertEqual([c.travada for c in cols], [True, True, True, True, False])
-        self.assertEqual(M.passos(self.c)[4]["situacao"], "feito")
+        self.assertEqual(M.passos(self.c)[5]["situacao"], "feito")
 
     def test_quadro_por_categorias_e_erros(self):
         from relatorio.models import Quadro
@@ -270,7 +296,7 @@ class QuadrosEPdfAnteriorTests(BaseMontagem):
         r = self.client.post(reverse("pdf_anterior_enviar", args=[2030]),
                              {"pdf": SimpleUploadedFile("RG.pdf", b"%PDF-1.4 teste", content_type="application/pdf")})
         self.assertRedirects(r, reverse("montagem", args=[2030]))
-        self.assertEqual(M.passos(self.c)[5]["situacao"], "feito")
+        self.assertEqual(M.passos(self.c)[6]["situacao"], "feito")
         self.assertEqual(M.url_pdf_anterior(self.c), reverse("pdf_anterior", args=[2030]))
         self.entrar("ana")
         r = self.client.get(reverse("pdf_anterior", args=[2030]))
