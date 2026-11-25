@@ -17,6 +17,9 @@
   var verGuias = document.getElementById("ed-ver-guias"), chkEncaixar = document.getElementById("ed-encaixar");
   var camadaPdf = document.getElementById("ed-pdf"), verPdf = document.getElementById("ed-ver-pdf");
   var PDF = D.pdf || [], pdfSel = [];      // caixas de texto do PDF (2.21) e as escolhidas para virar um bloco
+  // 2.24: ajustes no fundo (apagar uma área, manter o texto do PDF no fundo) e a área sendo marcada
+  var AJ = D.ajustes || [], fundoRasc = null, modoFundo = false;
+  var camadaAj = document.getElementById("ed-ajustes"), chkFundo = document.getElementById("ed-modo-fundo");
   function lembrar(k, v) { try { window.localStorage.setItem(k, v ? "1" : "0"); } catch (e) { /* sem armazenamento */ } }
   function lembrado(k) { try { return window.localStorage.getItem(k) !== "0"; } catch (e) { return true; } }
 
@@ -46,6 +49,10 @@
         if (!r.j.ok) { dizer(r.j.erro || "Não foi possível salvar.", true); return null; }
         blocos = r.j.blocos;
         if (r.j.guias) G = r.j.guias;
+        if (r.j.pdf) PDF = r.j.pdf;
+        if (r.j.ajustes) AJ = r.j.ajustes;
+        if (r.j.fundo_url) pg.style.backgroundImage = 'url("' + r.j.fundo_url + '")';
+        fundoRasc = null;
         sel = (r.j.selecionar || []).filter(function (id) { return achar(id); });
         if (guiaSel && G.pagina[guiaSel.eixo].indexOf(guiaSel.valor) < 0) guiaSel = null;
         rascunho = null;
@@ -68,7 +75,7 @@
     var h = "";
     pdfSel = pdfSel.filter(function (i) { var c = achaPdf(i); return c && !coberta(c); });
     pdfLivres().forEach(function (c) {
-      h += '<div class="ed-pdf-caixa' + (pdfSel.indexOf(c.i) >= 0 ? " sel" : "") + '" data-pdf="' + c.i + '" title="Texto do PDF: clique para criar um bloco aqui" style="left:' + c.x + "px;top:" + c.y + "px;width:" + c.w + "px;height:" + c.h + 'px">' +
+      h += '<div class="ed-pdf-caixa' + (pdfSel.indexOf(c.i) >= 0 ? " sel" : "") + (c.quebra ? " q" : "") + '" data-pdf="' + c.i + '" title="Texto do PDF: clique para criar um bloco aqui" style="left:' + c.x + "px;top:" + c.y + "px;width:" + c.w + "px;height:" + c.h + 'px">' +
         '<div class="ed-pdf-txt" style="' + esc(c.css) + '">' + c.html + "</div></div>";
     });
     camadaPdf.innerHTML = h;
@@ -91,13 +98,74 @@
     }).map(function (c) { return c.i; });
   }
 
+  function desenharAjustes() {
+    if (!camadaAj) return;
+    var h = "";
+    AJ.forEach(function (a, i) {
+      h += '<div class="ed-ajuste ' + a.tipo + '" style="left:' + a.x + "px;top:" + a.y + "px;width:" + a.w + "px;height:" + a.h + 'px"><span class="ed-ajuste-n">' + (i + 1) + "</span></div>";
+    });
+    if (fundoRasc) h += '<div class="ed-ajuste novo" style="left:' + fundoRasc.x + "px;top:" + fundoRasc.y + "px;width:" + fundoRasc.w + "px;height:" + fundoRasc.h + 'px"></div>';
+    camadaAj.innerHTML = h;
+  }
+  function mudarModoFundo(v) {
+    modoFundo = !!v;
+    raiz.classList.toggle("ed-modo-fundo", modoFundo);
+    if (chkFundo) chkFundo.checked = modoFundo;
+    sel = []; rascunho = null; pdfSel = []; fundoRasc = null; guiaSel = null;
+    desenhar(); desenharGuias(); montarPainel();
+  }
+  function salvarFundo(lista, msg) { return enviar("fundo", { ajustes: lista, mensagem: msg }); }
+  var NOME_AJUSTE = { apagar: "Apagada", manter: "Texto do PDF no fundo" };
+  function painelFundo() {
+    var h = '<h2 class="h6">Fundo da página ' + D.pagina + "</h2>" +
+      '<p class="mini text-secondary">Arraste sobre a página para marcar uma área. A imagem original não muda: cada ajuste pode ser desfeito.</p>';
+    if (fundoRasc) {
+      h += '<div class="border rounded p-2 mb-3"><p class="mini mb-2"><strong>Área marcada</strong> · ' + num(fundoRasc.w) + " × " + num(fundoRasc.h) + " pt</p>" +
+        '<button class="btn btn-sm btn-primary w-100 mb-1" id="b-fundo-apagar"><i class="bi bi-eraser"></i> Apagar do fundo</button>' +
+        '<p class="mini text-secondary mb-2">Cobre a área com a cor que está em volta dela. Para traços de grifo, sublinhados de link e logos antigos.</p>';
+      if (D.pdf_original) h += '<button class="btn btn-sm btn-outline-primary w-100 mb-1" id="b-fundo-manter"><i class="bi bi-image"></i> Manter o texto do PDF no fundo</button>' +
+        '<p class="mini text-secondary mb-2">Devolve a esta área o texto do PDF, como imagem, e o tira da lista de texto do PDF. Para organogramas e figuras cujo texto não muda.</p>';
+      else h += '<p class="mini text-secondary mb-2">Esta página não tem o PDF de origem; só dá para apagar.</p>';
+      h += '<button class="btn btn-sm btn-outline-secondary" id="b-fundo-cancelar">Cancelar</button></div>';
+    }
+    if (AJ.length) {
+      h += '<h3 class="h6">Ajustes desta página</h3><ol class="mini ps-3 mb-2">';
+      AJ.forEach(function (a, i) {
+        h += '<li class="mb-1"><span class="ed-leg ed-leg-' + a.tipo + '"></span> ' + NOME_AJUSTE[a.tipo] + ' <span class="text-secondary">(' + num(a.w) + " × " + num(a.h) + " pt)</span>" +
+          ' <button class="btn btn-sm btn-link text-danger p-0 align-baseline" data-aj-remover="' + i + '" title="Desfazer este ajuste" aria-label="Desfazer o ajuste ' + (i + 1) + '"><i class="bi bi-x-lg"></i></button></li>';
+      });
+      h += '</ol><button class="btn btn-sm btn-link text-danger p-0 mb-2" id="b-fundo-limpar"><i class="bi bi-arrow-counterclockwise"></i> Desfazer todos os ajustes</button>';
+    } else h += '<p class="mini text-secondary">Nenhum ajuste nesta página.</p>';
+    h += '<div><button class="btn btn-sm btn-outline-secondary mt-2" id="b-fundo-sair"><i class="bi bi-arrow-left"></i> Voltar aos blocos</button></div>';
+    painel.innerHTML = h;
+    var novo = function (tipo) {
+      var r = fundoRasc, msg = tipo === "apagar" ? "Área apagada do fundo." : "Texto do PDF mantido no fundo.";
+      if (tipo === "manter") {
+        var cobertos = blocos.filter(function (b) { var cx = b.x + b.w / 2, cy = b.y + b.h / 2; return b.tipo === "texto" && cx >= r.x && cx <= r.x + r.w && cy >= r.y && cy <= r.y + r.h; }).length;
+        if (cobertos && !window.confirm("Há " + qtd(cobertos, "bloco de texto", "blocos de texto") + " nesta área. O texto do PDF no fundo ficaria por baixo deles, em dobro. Continuar?")) return;
+      }
+      salvarFundo(AJ.concat([{ tipo: tipo, x: r.x, y: r.y, w: r.w, h: r.h }]), msg);
+    };
+    if ($("#b-fundo-apagar")) $("#b-fundo-apagar").onclick = function () { novo("apagar"); };
+    if ($("#b-fundo-manter")) $("#b-fundo-manter").onclick = function () { novo("manter"); };
+    if ($("#b-fundo-cancelar")) $("#b-fundo-cancelar").onclick = function () { fundoRasc = null; desenharAjustes(); painelFundo(); };
+    painel.querySelectorAll("[data-aj-remover]").forEach(function (bt) {
+      bt.onclick = function () { var i = parseInt(bt.dataset.ajRemover, 10); salvarFundo(AJ.filter(function (_, k) { return k !== i; }), "Ajuste desfeito."); };
+    });
+    if ($("#b-fundo-limpar")) $("#b-fundo-limpar").onclick = function () {
+      if (window.confirm("Desfazer todos os ajustes do fundo desta página?")) salvarFundo([], "Fundo da página como no PDF.");
+    };
+    $("#b-fundo-sair").onclick = function () { mudarModoFundo(false); };
+  }
+
   function desenhar() {
     desenharPdf();
+    desenharAjustes();
     caixas.innerHTML = "";
     blocos.forEach(function (b) {
       var e = document.createElement("div");
       e.className = "ed-bloco ed-" + b.tipo + (sel.indexOf(b.id) >= 0 ? " sel" : "") + (b.fixo ? " ed-fixo" : "") +
-        (b.numero_antigo ? " ed-numero" : "");
+        (b.numero_antigo ? " ed-numero" : "") + (b.quebra ? " q" : "");
       e.dataset.id = b.id;
       e.style.cssText = "left:" + b.x + "px;top:" + b.y + "px;width:" + b.w + "px;height:" + b.h + "px;--cor:" + b.cor;
       var h = '<div class="ed-conteudo"' + (b.tipo === "texto" ? ' style="' + esc(b.css) + '"' : "") + ">";
@@ -265,6 +333,7 @@
       painel.innerHTML = '<p class="mini text-secondary">O ciclo está encerrado: somente leitura.</p>';
       return;
     }
+    if (modoFundo) { painelFundo(); return; }
     if (guiaSel && !rascunho && !sel.length) {
       var gs = guiaSel;
       painel.innerHTML = '<h2 class="h6">Guia ' + guiaTexto(gs.eixo) + '</h2><label class="form-label mini mb-0" for="f-guia">Posição (pt, a partir ' + (gs.eixo === "v" ? "da esquerda" : "de cima") + ')</label>' +
@@ -446,6 +515,13 @@
       return;
     }
     guiaSel = null;
+    if (modoFundo) {                                 // 2.24: no modo Fundo, arrastar marca a área do ajuste
+      sel = []; rascunho = null; fundoRasc = null;
+      arrasto = { modo: "fundo", ini: p, mexeu: false };
+      desenhar(); montarPainel();
+      pg.setPointerCapture(e.pointerId); e.preventDefault();
+      return;
+    }
     var fan = !alvo && !al && e.target.closest(".ed-pdf-caixa");
     if (fan) {                                       // texto do PDF: clique escolhe; arrastar desenha uma área
       sel = [];
@@ -482,6 +558,11 @@
     var p = ponto(e), dx = p.x - arrasto.ini.x, dy = p.y - arrasto.ini.y;
     if (!arrasto.mexeu && Math.abs(dx) + Math.abs(dy) < 3) return;
     arrasto.mexeu = true;
+    if (arrasto.modo === "fundo") {
+      fundoRasc = { x: num(Math.max(0, Math.min(p.x, arrasto.ini.x))), y: num(Math.max(0, Math.min(p.y, arrasto.ini.y))), w: num(Math.abs(dx)), h: num(Math.abs(dy)) };
+      desenharAjustes();
+      return;
+    }
     if (arrasto.modo === "area") {
       area = { x: num(Math.min(p.x, arrasto.ini.x)), y: num(Math.min(p.y, arrasto.ini.y)), w: num(Math.abs(dx)), h: num(Math.abs(dy)) };
     } else if (arrasto.modo === "novo") {
@@ -520,6 +601,11 @@
     if (!arrasto) return;
     var a = arrasto; arrasto = null;
     if (a.modo === "guia") { soltarGuia(a); return; }
+    if (a.modo === "fundo") {
+      if (!fundoRasc || fundoRasc.w < 2 || fundoRasc.h < 2) fundoRasc = null;
+      desenharAjustes(); montarPainel();
+      return;
+    }
     if (a.modo === "area") {
       if (area) {
         var dentro = blocos.filter(function (b) {     // blocos que tocam a área
@@ -609,6 +695,8 @@
   document.addEventListener("keydown", function (e) {
     if (LEITURA || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""))) return;
     if ((e.key === "t" || e.key === "T") && !e.ctrlKey && !e.metaKey && !e.altKey && verPdf) { mostrarPdf(!verPdf.checked); lembrar("sirg-ed-pdf", verPdf.checked); return; }
+    if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !e.altKey && chkFundo) { mudarModoFundo(!modoFundo); return; }
+    if (e.key === "Escape" && modoFundo) { if (fundoRasc) { fundoRasc = null; desenharAjustes(); montarPainel(); } else mudarModoFundo(false); return; }
     if (e.key === "Escape") { sel = []; rascunho = null; guiaSel = null; pdfSel = []; desenhar(); desenharGuias(); montarPainel(); return; }
     if ((e.key === "g" || e.key === "G") && !e.ctrlKey && !e.metaKey && !e.altKey) { mostrarGuias(!verGuias.checked); lembrar("sirg-ed-guias", verGuias.checked); return; }
     if (guiaSel && !sel.length && e.key === "Delete") {
@@ -641,5 +729,6 @@
   if (chkEncaixar) chkEncaixar.checked = lembrado("sirg-ed-encaixar");
   if (verGuias) verGuias.onchange = function () { mostrarGuias(this.checked); lembrar("sirg-ed-guias", this.checked); };
   if (chkEncaixar) chkEncaixar.onchange = function () { lembrar("sirg-ed-encaixar", this.checked); };
+  if (chkFundo) chkFundo.onchange = function () { mudarModoFundo(this.checked); };
   desenhar(); desenharGuias(); montarPainel();
 })();

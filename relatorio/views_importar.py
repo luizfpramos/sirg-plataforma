@@ -171,3 +171,23 @@ def importacao_arquivo(request, pk, nome):
     r = FileResponse(open(arq, "rb"), content_type="image/jpeg")
     r["Cache-Control"] = "private, max-age=604800"
     return r
+
+
+@login_required
+def fundo_ajustado(request, pk, assinatura):
+    """Imagem de fundo com os ajustes da página (2.24): áreas apagadas e texto do PDF mantido no fundo.
+    Gerada no primeiro pedido; a assinatura no endereço muda quando os ajustes mudam."""
+    from . import fundo as F
+    from .models import Pagina
+    pg = get_object_or_404(Pagina, pk=pk)
+    if not pg.ajustes_fundo or not pg.fundo:
+        raise Http404()
+    if assinatura != F.assinatura(pg):          # endereço antigo: manda para o atual
+        return redirect(pg.fundo_url)
+    try:
+        arq = F.gerar(pg)
+    except (F.Invalido, OSError):
+        return redirect(url_do_fundo(pg.fundo))
+    r = FileResponse(open(arq, "rb"), content_type="image/jpeg")
+    r["Cache-Control"] = "private, max-age=604800"
+    return r

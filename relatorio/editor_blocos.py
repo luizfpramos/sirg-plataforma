@@ -40,7 +40,7 @@ def serializar(b, setores_da_secao, grade=None):
         "min": b.min_caracteres, "max": b.max_caracteres, "titulo": b.titulo,
         "quadro": b.quadro_id, "quadro_titulo": b.quadro.titulo if b.quadro_id else "",
         "x": cx.get("x", 0), "y": cx.get("y", 0), "w": cx.get("w", 0), "h": cx.get("h", 0),
-        "css": cx.get("css", ""), "html": limpar(b.conteudo) if b.tipo == Bloco.TEXTO else "",
+        "css": cx.get("css", ""), "quebra": bool(cx.get("quebra")), "html": limpar(b.conteudo) if b.tipo == Bloco.TEXTO else "",
         "previa": texto_puro(b.conteudo)[:120] if b.tipo == Bloco.TEXTO else "",
         "cor": atr["cor"] if atr else AT.NEUTRA, "siglas": atr["siglas"] if atr else "",
         "caracteres": AT.contar_caracteres(b.conteudo) if b.tipo == Bloco.TEXTO else 0,
@@ -434,5 +434,27 @@ def copiar_guias(user, pagina, d):
     return [], f"Guias copiadas para {n} página{'s' if n > 1 else ''}."
 
 
-ACOES = {"criar": criar, "fixar_textos": fixar_textos, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo,
+@transaction.atomic
+def definir_fundo(user, pagina, d):
+    """Grava os ajustes do fundo da página (2.24): a lista inteira, na ordem em que são aplicados."""
+    from . import fundo as FU
+    _checar_ciclo(pagina.ciclo)
+    try:
+        novos = FU.normalizar(d.get("ajustes"), pagina.largura, pagina.altura)
+    except FU.Invalido as e:
+        raise Recusado(str(e))
+    if any(a["tipo"] == FU.MANTER for a in novos) and FU.pdf_original(pagina) is None:
+        raise Recusado("Não achei o PDF de onde veio esta página; só dá para apagar áreas do fundo.")
+    pagina.ajustes_fundo = novos
+    pagina.save(update_fields=["ajustes_fundo"])
+    try:
+        FU.gerar(pagina)
+    except FU.Invalido as e:
+        raise Recusado(str(e))
+    except OSError:
+        raise Recusado("Não achei a imagem de fundo desta página.")
+    return list(d.get("selecionar") or []), d.get("mensagem") or "Fundo salvo."
+
+
+ACOES = {"fundo": definir_fundo, "criar": criar, "fixar_textos": fixar_textos, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo,
          "guias": definir_guias, "copiar_guias": copiar_guias}
