@@ -878,3 +878,16 @@ main#conteudo:focus { outline: none; }
 .ed-guia-valor { position: absolute; background: #0d6efd; color: #fff; font: 10px/1.2 system-ui, sans-serif; padding: 1px 4px; border-radius: 3px; white-space: nowrap; pointer-events: none; }
 .ed-guia.v .ed-guia-valor { top: 4px; left: 8px; }
 .ed-guia.h .ed-guia-valor { left: 4px; top: 8px; }
+
+/* 2.21 — texto do PDF no editor: a pessoa escolhe o que vira bloco */
+.ed-pdf { position: absolute; inset: 0; z-index: 3; }
+.ed-pdf-caixa { position: absolute; outline: 1px dashed rgba(13, 110, 253, .55); background: rgba(13, 110, 253, .04); cursor: pointer; }
+.ed-pdf-caixa > .ed-pdf-txt { opacity: .55; pointer-events: none; }
+.ed-pdf-caixa:hover { background: rgba(13, 110, 253, .12); outline-style: solid; }
+.ed-pdf-caixa.sel { background: rgba(13, 110, 253, .18); outline: 2px solid #0d6efd; }
+.ed-sem-pdf .ed-pdf { display: none; }
+.ed-leg-pdf { outline: 1px dashed rgba(13, 110, 253, .8); background: rgba(13, 110, 253, .08); }
+.ed-pg .ed-caixas { z-index: 4; pointer-events: none; }
+.ed-pg .ed-caixas > * { pointer-events: auto; }
+.ed-pg .ed-caixas > .ed-rascunho, .ed-pg .ed-caixas > .ed-area-sel { pointer-events: none; }
+.ed-painel legend { font-size: .875rem; font-weight: 600; float: none; }
