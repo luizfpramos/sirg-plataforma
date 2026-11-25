@@ -1,6 +1,6 @@
 # SiRG — contexto do projeto
 
-Atualizado em 25/11/2026, versão **2.21**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
+Atualizado em 25/11/2026, versão **2.22**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
 
 ## 1. O que é
 
@@ -122,6 +122,14 @@ Atualizado em 25/11/2026, versão **2.21**. O código fica no GitHub; ver `docs/
 - **`Pagina.guias`** (JSON, `{"v": [...], "h": [...]}` em pt): guias só daquela página, para as exceções. Somam-se à grade.
 - **`relatorio/grade.py`:** conferência dos valores, linhas da grade, `fora_da_grade` (bordas esquerda e direita numa linha; dentro das margens de cima e de baixo ou numa guia horizontal da página) e a lista de páginas para copiar ("3, 5-8", "todas").
 - **Editor:** ações `guias` e `copiar_guias`; cada bloco traz `fora`. O encaixe é só na tela (JS, tolerância de 6 px na tela); nada move blocos sozinho.
+
+## 4d. Usabilidade e acessibilidade (2.22)
+
+- **Conta única do que falta:** `relatorio/pendentes.py`. `a_preencher(user, ciclo, ...)` soma as pendências "falta" (tabelas e metas do PDI), os xxxxx (`campos_vazios_da_secao`) e os blocos vazios. Escopo: setores da pessoa; Editor-chefe e quem não tem setor veem o relatório inteiro. Usada no Início, no Relatório (e na recontagem ao vivo, `_faltam`), em O que falta, em Quadros de números e em Baixar em Word. Não crie outra conta numa tela nova: use esta.
+- **`secoes_do_fluxo(ciclo)`:** subseções e capítulos com blocos ou quadros. É a base de "seções enviadas/aprovadas" no Início, no Ler e no Word.
+- **Relatório:** o que é de outro setor fica em cinza (CSS em `#doc-corpo`); motivo do envio bloqueado escrito (`.sec-card-motivo`); Reabrir na faixa; "Enviar pelo setor" para o Editor-chefe.
+- **Acessibilidade:** `graficos.descricao()` vira `aria-label` do SVG; xxxxx e números de tabela editáveis com `role="button"`; textos de tela sem "(s)": use `formato.qtd()` no Python e `pluralize` nos modelos.
+- Avaliação completa: documento do Projeto `claude/revisao-usabilidade-2026-11-25.md`.
 
 ## 5. Limitações conhecidas e próximos passos possíveis
 

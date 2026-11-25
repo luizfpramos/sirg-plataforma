@@ -30,7 +30,7 @@
     <div class="col-md-5"><div class="card card-body h-100">
       {% if motivo %}<p class="mini mb-0"><i class="bi bi-info-circle"></i> {{ motivo }}</p>
       {% elif reimportar %}
-      <p class="mini mb-2"><strong>Reimportação.</strong> O ciclo já tem páginas. Ao aplicar, o fundo das páginas é trocado e os trechos são reposicionados conforme o PDF novo. <strong>Nenhum texto escrito é alterado.</strong> As páginas são pareadas pelo número.</p>
+      <p class="mini mb-2"><strong>Reimportação.</strong> O relatório já tem páginas. Ao aplicar, o fundo das páginas é trocado e os trechos são reposicionados conforme o PDF novo. <strong>Nenhum texto escrito é alterado.</strong> As páginas são pareadas pelo número.</p>
       <ul class="mini mb-2 ps-3">
         <li>{{ plano.total.pareados }} trechos acompanham a nova posição</li>
         <li>{{ plano.total.novos }} caixas novas viram trechos novos</li>
@@ -38,7 +38,7 @@
         {% if plano.total.paginas_novas %}<li>{{ plano.total.paginas_novas }} páginas novas</li>{% endif %}
         {% if plano.total.so_no_ciclo %}<li>{{ plano.total.so_no_ciclo|length }} páginas só no ciclo, mantidas como estão ({{ plano.total.so_no_ciclo|slice:":8"|join:", " }}{% if plano.total.so_no_ciclo|length > 8 %}…{% endif %})</li>{% endif %}
       </ul>
-      <form method="post" action="{% url 'importacao_reimportar' ciclo.ano imp.pk %}" onsubmit="return confirm('Trocar o fundo e reposicionar os trechos? Os textos escritos não mudam; as posições antigas ficam guardadas numa cópia.')">{% csrf_token %}<button class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Reimportar no ciclo</button></form>
+      <form method="post" action="{% url 'importacao_reimportar' ciclo.ano imp.pk %}" onsubmit="return confirm('Trocar o fundo e reposicionar os trechos? Os textos escritos não mudam; as posições antigas ficam guardadas numa cópia.')">{% csrf_token %}<button class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Reimportar no relatório</button></form>
       {% else %}
       <p class="mini mb-2">O PDF foi lido. Antes de aplicar, confira <a href="#conferencia">a página em que começa cada seção</a> e escolha como os blocos vazios aparecem.</p>
       <a class="btn btn-primary" href="#conferencia"><i class="bi bi-list-check"></i> Conferir e aplicar</a>
@@ -67,7 +67,7 @@
       <p class="mini text-secondary mt-1">Dá para trocar depois, em Situação e prazo.</p>
     </div>
     <div class="card-footer d-flex flex-wrap gap-2">
-      <button class="btn btn-primary" onclick="return confirm('Aplicar este PDF ao ciclo? As páginas serão criadas com as escolhas acima.')"><i class="bi bi-check2-circle"></i> Aplicar ao ciclo</button>
+      <button class="btn btn-primary" onclick="return confirm('Aplicar este PDF ao relatório? As páginas serão criadas com as escolhas acima.')"><i class="bi bi-check2-circle"></i> Aplicar ao relatório</button>
       <button class="btn btn-outline-secondary" name="salvar" value="1">Só guardar as escolhas</button>
     </div>
   </form>

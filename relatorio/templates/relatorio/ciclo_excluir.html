@@ -5,7 +5,7 @@
 <h1 class="text-danger"><i class="bi bi-trash"></i> Excluir {{ ciclo.titulo }}</h1>
 <div class="card border-danger" style="max-width:640px"><div class="card-body">
   <p>Isto apaga o relatório de ano-base <strong>{{ ciclo.ano }}</strong> e tudo o que é dele:</p>
-  <ul class="mb-3"><li>{{ resumo.secoes }} capítulo(s) e seção(ões);</li><li>{{ resumo.paginas }} página(s) e {{ resumo.blocos }} bloco(s), com o texto escrito;</li><li>{{ resumo.quadros }} quadro(s) de números, com os valores;</li><li>{{ resumo.importacoes }} PDF(s) importado(s).</li></ul>
+  <ul class="mb-3"><li>{{ resumo.secoes }} {% if resumo.secoes == 1 %}capítulo ou seção{% else %}capítulos e seções{% endif %};</li><li>{{ resumo.paginas }} página{{ resumo.paginas|pluralize }} e {{ resumo.blocos }} bloco{{ resumo.blocos|pluralize }}, com o texto escrito;</li><li>{{ resumo.quadros }} quadro{{ resumo.quadros|pluralize }} de números, com os valores;</li><li>{{ resumo.importacoes }} PDF{{ resumo.importacoes|pluralize }} importado{{ resumo.importacoes|pluralize }}.</li></ul>
   <p class="mini text-secondary">Usuários, setores, paletas e o padrão de design continuam como estão. Não há como desfazer pela tela. Isto só existe na homologação.</p>
   <form method="post">{% csrf_token %}
     <label class="form-label" for="confirmacao">Para confirmar, digite o ano-base <strong>{{ ciclo.ano }}</strong></label>

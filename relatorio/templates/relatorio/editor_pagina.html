@@ -20,7 +20,21 @@
   </div>
   {% if pode_grade %}<a class="btn btn-sm btn-link" href="{% url 'padrao_design' %}?ciclo={{ ciclo.ano }}#grade" title="Margens e colunas do relatório">Grade do relatório</a>{% endif %}
   <span class="ed-status mini" id="ed-status" role="status" aria-live="polite"></span>
-  <span class="mini text-secondary ms-auto d-none d-xl-inline">Clique no texto do PDF para criar o bloco · arraste para desenhar uma área · Shift+clique escolhe vários · Shift+arrastar seleciona uma área · arraste da régua para criar uma guia · Alt solta sem encaixar</span>
+  <div class="dropdown ms-auto">
+    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-keyboard"></i> Atalhos</button>
+    <div class="dropdown-menu dropdown-menu-end p-3 mini ed-atalhos" style="min-width:22rem">
+      <dl class="mb-0">
+        <dt>Clique no texto do PDF</dt><dd>cria o bloco do tamanho do texto</dd>
+        <dt>Shift + clique no texto do PDF</dt><dd>junta vários textos num bloco só</dd>
+        <dt>Shift + clique num bloco</dt><dd>escolhe vários blocos (para juntar, apagar ou liberar)</dd>
+        <dt>Arrastar no fundo</dt><dd>desenha a área de um bloco (texto, imagem, gráfico ou tabela)</dd>
+        <dt>Shift + arrastar</dt><dd>seleciona todos os blocos de uma área</dd>
+        <dt>Arrastar da régua</dt><dd>cria uma guia (de cima: horizontal; da esquerda: vertical)</dd>
+        <dt>Alt ao arrastar</dt><dd>solta o bloco sem encaixar na grade</dd>
+        <dt>G · T</dt><dd class="mb-0">mostra ou esconde as guias · o texto do PDF</dd>
+      </dl>
+    </div>
+  </div>
 </div>
 <div class="ed-corpo" id="editor" data-url="{% url 'editor_acao' ciclo.ano pg.numero 'x' %}" data-csrf="{{ csrf_token }}">
   <div class="ed-area" id="ed-area"><div class="ed-escala" id="ed-escala">

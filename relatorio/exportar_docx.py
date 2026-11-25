@@ -706,7 +706,7 @@ def gerar_pacote(ciclo, inst=None, usuario=None):
                 "Os números já estão conferidos pela plataforma. Se precisar alterar algum, peça ao setor responsável",
                 "que corrija no SiRG e gere um novo pacote — assim o texto, as tabelas e os gráficos continuam iguais.", ""]
         if r["erros"] or r["faltam"]:
-            leia.append(f"ATENÇÃO: no momento da geração havia {r['erros']} erro(s) e {r['faltam']} dado(s) a "
+            leia.append(f"ATENÇÃO: no momento da geração havia {r['erros']} {'erro' if r['erros'] == 1 else 'erros'} e {r['faltam']} {'dado' if r['faltam'] == 1 else 'dados'} a "
                         f"preencher no ciclo. Este pacote NÃO é a versão final.")
         z.writestr("LEIA-ME.txt", "\r\n".join(leia).encode("utf-8-sig"))
     return buf.getvalue()

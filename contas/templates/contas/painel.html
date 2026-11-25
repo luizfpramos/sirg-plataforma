@@ -14,7 +14,7 @@
 {% if minhas_secoes %}
 <div class="card mb-3 painel-hero"><div class="card-body d-flex flex-wrap align-items-center gap-3">
   <div class="me-auto">
-    <div class="painel-hero-num">{% if falta_total %}Faltam <strong>{{ falta_total }}</strong> número{{ falta_total|pluralize }}{% else %}<i class="bi bi-check2-circle text-success"></i> Números completos{% endif %}</div>
+    <div class="painel-hero-num">{% if falta_total %}Faltam <strong>{{ falta_total }}</strong> ite{{ falta_total|pluralize:"m,ns" }} a preencher{% else %}<i class="bi bi-check2-circle text-success"></i> Tudo preenchido{% endif %}</div>
     <div class="text-secondary">{{ n_entregues }} de {{ minhas_secoes|length }} seç{{ minhas_secoes|length|pluralize:"ão,ões" }} enviada{{ minhas_secoes|length|pluralize }} ao Editor-chefe</div>
   </div>
   <a class="btn btn-primary btn-lg" href="{% url 'escrever' ciclo.ano %}{% if primeira_minha %}?secao={{ primeira_minha }}{% endif %}"><i class="bi bi-file-earmark-text"></i> Abrir o relatório</a>
@@ -39,8 +39,8 @@
 <div class="card mb-3"><div class="card-header d-flex align-items-center"><i class="bi bi-speedometer2 me-1"></i> Andamento do {{ ciclo.titulo }}<a class="ms-auto mini" href="{% url 'pendencias' ciclo.ano %}?minhas=0">ver o que falta</a></div>
   <div class="card-body pb-1">
     <div class="row g-3 text-center mb-2">
-      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.pct }}%</div><div class="mini text-secondary">dos números preenchidos</div></div>
-      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.escritas }}<span class="fs-6 text-secondary">/{{ andamento.com_texto }}</span></div><div class="mini text-secondary">seções com o texto revisado{% if andamento.marcas %}<br><span class="badge badge-atualizar">{{ andamento.marcas }} trechos marcados</span>{% endif %}</div></div>
+      <div class="col-6 col-lg-3"><div class="cartao-num">{{ falta_total }}</div><div class="mini text-secondary">ite{{ falta_total|pluralize:"m,ns" }} a preencher<br>({{ andamento.pct }}% dos números das tabelas preenchidos)</div></div>
+      <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.escritas }}<span class="fs-6 text-secondary">/{{ andamento.com_texto }}</span></div><div class="mini text-secondary">seções com texto já revisadas{% if andamento.marcas %}<br><span class="badge badge-atualizar">{{ andamento.marcas }} trechos marcados</span>{% endif %}</div></div>
       <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.enviadas }}<span class="fs-6 text-secondary">/{{ andamento.secoes }}</span></div><div class="mini text-secondary">seções enviadas ao Editor-chefe</div></div>
       <div class="col-6 col-lg-3"><div class="cartao-num">{{ andamento.aprovadas }}<span class="fs-6 text-secondary">/{{ andamento.secoes }}</span></div><div class="mini text-secondary">seções aprovadas</div></div>
     </div>

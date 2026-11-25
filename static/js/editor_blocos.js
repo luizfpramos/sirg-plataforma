@@ -21,6 +21,7 @@
   function lembrado(k) { try { return window.localStorage.getItem(k) !== "0"; } catch (e) { return true; } }
 
   function $(s, r) { return (r || document).querySelector(s); }
+  function qtd(n, um, varios) { return n + " " + (n === 1 ? um : varios); }     // 2.22: sem "bloco(s)"
   function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
   function num(v) { return Math.round(v * 10) / 10; }
   function achar(id) { for (var i = 0; i < blocos.length; i++) if (blocos[i].id === id) return blocos[i]; return null; }
@@ -232,7 +233,7 @@
     } else {
       h += '<p class="mini mb-2"><strong>' + esc(b.tipo_nome) + "</strong>" + (b.tipo === "texto" ? " · " + b.caracteres + " caracteres" : "") + (b.editado ? " · <span class=\"text-primary\">tem texto escrito pelos setores</span>" : "") + "</p>";
       if (b.travado_por) h += '<p class="mini text-warning-emphasis mb-2"><i class="bi bi-pencil-fill"></i> ' + esc(b.travado_por) + " está editando este texto agora.</p>";
-      if (b.comentarios || b.sugestoes) h += '<p class="mini mb-2"><i class="bi bi-chat-left-text"></i> ' + b.comentarios + " comentário(s), " + b.sugestoes + " sugestão(ões) pendente(s).</p>";
+      if (b.comentarios || b.sugestoes) h += '<p class="mini mb-2"><i class="bi bi-chat-left-text"></i> ' + qtd(b.comentarios, "comentário", "comentários") + ", " + qtd(b.sugestoes, "sugestão pendente", "sugestões pendentes") + ".</p>";
     }
     h += '<label class="form-label mini mb-0" for="f-secao">Seção</label><select class="form-select form-select-sm mb-2" id="f-secao">' + opcoes(D.opcoes.secoes, g.secao, null, "titulo") + "</select>";
     h += '<label class="form-label mini mb-0" for="f-setor">Setor responsável</label><select class="form-select form-select-sm mb-2" id="f-setor">' + opcoes(D.opcoes.setores, g.setor, "(o da seção)", "sigla") + "</select>";
@@ -291,7 +292,7 @@
     if (rascunho) {
       var temPdf = rascunho.pdf && rascunho.pdf.length;
       h = '<h2 class="h6">Novo bloco</h2>';
-      if (temPdf) h += '<p class="mini mb-2">' + rascunho.pdf.length + " texto(s) do PDF escolhido(s). Shift+clique em outro texto para juntar.</p>" +
+      if (temPdf) h += '<p class="mini mb-2">' + qtd(rascunho.pdf.length, "texto do PDF escolhido", "textos do PDF escolhidos") + ". Shift+clique em outro texto para juntar.</p>" +
         '<fieldset class="mb-2" id="f-texto-box"><legend class="form-label mini mb-1">O texto deste bloco</legend>' +
         '<div class="form-check mini"><input class="form-check-input" type="radio" name="f-texto" id="f-texto-setor" value="setor" checked><label class="form-check-label" for="f-texto-setor"><strong>O setor escreve</strong>: o bloco nasce vazio e o texto do PDF fica como referência do ano anterior.</label></div>' +
         '<div class="form-check mini"><input class="form-check-input" type="radio" name="f-texto" id="f-texto-fixo" value="fixo"><label class="form-check-label" for="f-texto-fixo"><strong>Texto fixo</strong>: fica como está no PDF (títulos, textos que não mudam). Só o Editor-chefe altera.</label></div></fieldset>';
@@ -345,7 +346,7 @@
         enviar("fixo", { ids: sel.filter(function (id) { return achar(id).fixo; }), fixo: false });
       };
     } else {
-      painel.innerHTML = '<h2 class="h6">Blocos da página ' + D.pagina + "</h2><p class=\"mini text-secondary\">" + blocos.length + ' bloco(s). Clique em um bloco para ver e mudar os atributos. Para um bloco novo, clique no texto do PDF ou arraste para desenhar a área (também para imagens e gráficos). <strong>Shift + arrastar</strong> seleciona todos os blocos de uma área (por exemplo, os rótulos de um gráfico).</p>' +
+      painel.innerHTML = '<h2 class="h6">Blocos da página ' + D.pagina + "</h2><p class=\"mini text-secondary\">" + qtd(blocos.length, "bloco", "blocos") + '. Clique em um bloco para ver e mudar os atributos. Para um bloco novo, clique no texto do PDF ou arraste para desenhar a área. Os outros atalhos estão no botão <strong>Atalhos</strong>, no alto.</p>' +
         '<ul class="mini ed-legenda ps-0"><li><span class="ed-leg" style="--cor:#6c757d"></span> a cor do contorno é a do setor do bloco</li>' +
         '<li><span class="ed-leg ed-leg-fixo"></span> texto fixo do modelo (só o Editor-chefe altera)</li>' +
         '<li><span class="ed-leg ed-leg-numero"></span> texto fixo com número do ano anterior: confira</li>' +
@@ -354,20 +355,20 @@
         '<li><span class="ed-leg ed-leg-guia"></span> guia desta página</li>' +
         '<li><span class="ed-leg ed-leg-fora"></span> bloco fora da grade e das guias</li></ul>';
       var fora = blocos.filter(function (b) { return b.fora; });
-      if (fora.length) h = '<div class="alert alert-warning mini py-2">' + fora.length + " bloco(s) fora da grade. " +
+      if (fora.length) h = '<div class="alert alert-warning mini py-2">' + qtd(fora.length, "bloco", "blocos") + " fora da grade. " +
         '<button class="btn btn-sm btn-link p-0 align-baseline" id="b-sel-fora">Selecionar</button></div>';
       else h = "";
       var livres = pdfLivres().length;
       h += '<h2 class="h6 mt-3">Texto do PDF</h2>';
       if (!PDF.length) h += '<p class="mini text-secondary mb-2">Esta página não tem texto do PDF importado.</p>';
       else if (!livres) h += '<p class="mini text-secondary mb-2">Todo o texto do PDF desta página já está em blocos.</p>';
-      else h += '<p class="mini mb-2"><span class="ed-leg ed-leg-pdf"></span> ' + livres + " texto(s) do PDF ainda sem bloco. Clique num texto para criar o bloco; Shift+clique junta vários num só; arrastar desenha uma área e leva os textos de dentro.</p>" +
+      else h += '<p class="mini mb-2"><span class="ed-leg ed-leg-pdf"></span> ' + qtd(livres, "texto", "textos") + " do PDF ainda sem bloco. Clique num texto para criar o bloco; Shift+clique junta vários num só; arrastar desenha uma área e leva os textos de dentro.</p>" +
         '<button class="btn btn-sm btn-outline-secondary mb-2" id="b-fixar-todos" title="Para páginas que não mudam de um ano para o outro"><i class="bi bi-lock"></i> Deixar os ' + livres + " como texto fixo</button>";
       var nv = G.pagina.v.length, nh = G.pagina.h.length;
       h += '<h2 class="h6 mt-3">Grade do relatório</h2>';
       if (!(G.grade && G.grade.colunas)) h += '<p class="mini mb-2">Ainda não definida: sem ela, os blocos só encaixam nas guias e nas bordas da página. ' +
         (D.url_grade ? '<a href="' + esc(D.url_grade) + '">Definir margens e colunas</a>' : "Peça ao administrador para definir.") + "</p>";
-      else h += '<p class="mini text-secondary mb-2">' + G.grade.colunas + " coluna(s), medianiz de " + G.grade.medianiz + " pt; margens " + G.grade.margem_sup + " / " + G.grade.margem_dir + " / " + G.grade.margem_inf + " / " + G.grade.margem_esq + " pt (cima, direita, baixo, esquerda)." +
+      else h += '<p class="mini text-secondary mb-2">' + qtd(G.grade.colunas, "coluna", "colunas") + ", medianiz de " + G.grade.medianiz + " pt; margens " + G.grade.margem_sup + " / " + G.grade.margem_dir + " / " + G.grade.margem_inf + " / " + G.grade.margem_esq + " pt (cima, direita, baixo, esquerda)." +
         (D.url_grade ? ' <a href="' + esc(D.url_grade) + '">Mudar</a>' : "") + "</p>";
       h += '<h2 class="h6 mt-3">Guias desta página</h2>';
       h += '<p class="mini text-secondary mb-2">' + (nv || nh ? "Clique no número para mudar a posição." : "Nenhuma. Crie pelos botões abaixo ou arraste a partir da régua de cima (guia horizontal) ou da esquerda (guia vertical).") + "</p>";
@@ -526,7 +527,7 @@
         }).map(function (b) { return b.id; });
         dentro.forEach(function (id) { if (sel.indexOf(id) < 0) sel.push(id); });
         area = null;
-        if (dentro.length) dizer(dentro.length + " bloco(s) na área.");
+        if (dentro.length) dizer(qtd(dentro.length, "bloco", "blocos") + " na área.");
       }
       desenhar(); montarPainel();
     } else if (a.modo === "novo" && !a.mexeu && a.pdf != null) {

@@ -159,7 +159,7 @@ class ImportadorTests(TestCase):
         self.assertTrue((imp.pasta / "paginas.json").exists())
         r = self.client.get(reverse("importacao_ver", args=[2030, imp.pk]) + "?p=2")
         self.assertContains(r, "Ensino de graduação")
-        self.assertContains(r, "Aplicar ao ciclo")
+        self.assertContains(r, "Aplicar ao relatório")
         self.assertContains(r, reverse("importacao_arquivo", args=[imp.pk, "p002.jpg"]))
         # o fundo é servido a quem está logado
         r = self.client.get(reverse("importacao_arquivo", args=[imp.pk, "p002.jpg"]))

@@ -15,9 +15,15 @@
 
   function aviso(msg, tipo) {
     if (!toast) { alert(msg); return; }
-    toastEl.className = "toast align-items-center border-0 text-bg-" + (tipo || "dark");
+    tipo = tipo || "dark";
+    toastEl.className = "toast align-items-center border-0 text-bg-" + tipo;
     toastEl.querySelector(".toast-body").textContent = msg;
-    toast.show();
+    // 2.22 (S4): X visível no fundo escuro e tempo de leitura proporcional ao texto (4,5 a 10 s)
+    var x = toastEl.querySelector(".btn-close");
+    if (x) x.classList.toggle("btn-close-white", tipo !== "warning" && tipo !== "light");
+    var antes = bootstrap.Toast.getInstance(toastEl);     // a mesma caixa é usada por outros scripts da tela
+    if (antes) antes.dispose();
+    new bootstrap.Toast(toastEl, { delay: Math.max(4500, Math.min(10000, String(msg).length * 60)) }).show();
   }
 
   function postar(sufixo, dados) {

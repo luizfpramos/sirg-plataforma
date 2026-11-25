@@ -1,15 +1,15 @@
 {% extends "base.html" %}{% load static sirg_rel %}
-{% block titulo %}Preencher os números — {{ ciclo.titulo }}{% endblock %}
+{% block titulo %}Quadros de números — {{ ciclo.titulo }}{% endblock %}
 {% block conteudo %}
 <div class="d-flex align-items-start flex-wrap gap-2 mb-3">
   <div>
-    <h1 class="mb-0"><i class="bi bi-table"></i> Preencher os números</h1>
+    <h1 class="mb-0"><i class="bi bi-table"></i> Quadros de números</h1>
     <div class="subtitulo">{{ ciclo.titulo }} · <span class="badge text-bg-{{ ciclo.situacao|situacao_cor }}">{{ ciclo.get_situacao_display }}</span>
       {% if ciclo.prazo %} · prazo: <strong>{{ ciclo.prazo|date:"d/m/Y" }}</strong>{% endif %}</div>
   </div>
   <div class="ms-auto d-flex gap-2 flex-wrap">
     <a class="btn btn-sm btn-outline-secondary" href="{% url 'excel_importar' ciclo.ano %}"><i class="bi bi-file-earmark-excel"></i> Preencher pelo Excel</a>
-    <a class="btn btn-sm btn-outline-primary" href="{% url 'pendencias' ciclo.ano %}{% if so_minhas %}?minhas=1{% endif %}"><i class="bi bi-list-check"></i> O que falta {% include "relatorio/_contagem.html" with erros=resumo.erros avisos=resumo.avisos faltam=resumo.faltam %}</a>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'pendencias' ciclo.ano %}{% if so_minhas %}?minhas=1{% endif %}"><i class="bi bi-list-check"></i> O que falta {% include "relatorio/_contagem.html" with erros=resumo.erros avisos=resumo.avisos faltam=faltam_total %}</a>
     {% if pode_estruturar %}
     <div class="dropdown"><button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-gear"></i> Estrutura</button>
       <ul class="dropdown-menu dropdown-menu-end">
@@ -25,14 +25,14 @@
   <ol>
     <li>Abaixo estão as seções do relatório. {% if tem_setor %}As do seu setor estão marcadas com <i class="bi bi-person-check text-primary" aria-hidden="true"></i><span class="visually-hidden">o ícone “do seu setor”</span>.{% endif %}</li>
     <li>Clique em <strong>Preencher</strong> para abrir as tabelas da seção e digitar os números de {{ ciclo.ano }}. Os anos anteriores já estão preenchidos.</li>
-    <li>A barra mostra quanto já foi preenchido. Quando chegar a 100%, escreva o texto em <a href="{% url 'escrever' ciclo.ano %}">Escrever o relatório</a>.</li>
-    <li>Aqui ficam só os <strong>números</strong>. As metas do PDI (status e justificativa) são preenchidas no próprio texto, em <a href="{% url 'escrever' ciclo.ano %}">Escrever o relatório</a>.</li>
+    <li>A barra mostra quanto já foi preenchido. Quando chegar a 100%, escreva o texto no <a href="{% url 'escrever' ciclo.ano %}">Relatório</a>.</li>
+    <li>Aqui ficam só os <strong>números</strong>. As metas do PDI (status e justificativa) são preenchidas no próprio texto, no <a href="{% url 'escrever' ciclo.ano %}">Relatório</a>.</li>
   </ol>
 </details>
 <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
   <div class="flex-grow-1" style="max-width:420px">
     <div class="mini text-secondary">{% if so_minhas %}Suas seções{% else %}Relatório inteiro{% endif %}: {{ pct_geral }}% dos números preenchidos</div>
-    <div class="progress" style="height:10px" role="progressbar" aria-valuenow="{{ pct_geral }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if pct_geral == 100 %}bg-success{% endif %}" style="width:{{ pct_geral }}%"></div></div>
+    <div class="progress" style="height:10px" role="progressbar" aria-label="Números preenchidos" aria-valuenow="{{ pct_geral }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if pct_geral == 100 %}bg-success{% endif %}" style="width:{{ pct_geral }}%"></div></div>
   </div>
   {% if tem_setor %}
   <div class="btn-group btn-group-sm" role="group" aria-label="Filtro">

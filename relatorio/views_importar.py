@@ -13,6 +13,7 @@ from . import importador as I
 from . import permissoes as RP
 from . import reimportador as RI
 from .html_seguro import limpar
+from .formato import qtd
 from .models import Ciclo, ImportacaoPDF
 from .paginas import _caixa_css, url_do_fundo
 
@@ -117,10 +118,10 @@ def importacao_aplicar(request, ano, pk):
         messages.error(request, str(e))
         return redirect("importacao_ver", ano=ano, pk=pk)
     if c.automatico:
-        messages.success(request, f"{feito['paginas']} páginas e {feito['caixas']} trechos de texto criados no ciclo.")
+        messages.success(request, f"{feito['paginas']} páginas e {feito['caixas']} trechos de texto criados no relatório.")
     elif (imp.resumo or {}).get("blocos") == I.MANUAL:
         messages.success(request, f"{feito['paginas']} páginas criadas"
-                                  + (f", com {feito['fixos']} bloco(s) fixo(s) das seções de conteúdo fixo" if feito['fixos'] else "")
+                                  + (f", com {qtd(feito['fixos'], 'bloco fixo', 'blocos fixos')} das seções de conteúdo fixo" if feito['fixos'] else "")
                                   + ". Agora crie os blocos no editor: clique no texto do PDF ou desenhe a área.")
         return redirect("editor_inicio", ano=ano)
     else:

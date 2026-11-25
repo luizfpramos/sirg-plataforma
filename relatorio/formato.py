@@ -93,3 +93,8 @@ def para_edicao(tipo, numero=None, texto="", casas=2):
         return numero_br(n, 0)
     casas_reais = max(0, -n.as_tuple().exponent)
     return numero_br(n, min(casas_reais, 6))
+
+
+def qtd(n, um, varios):
+    """2.22: "1 bloco", "3 blocos" — no lugar de "bloco(s)" nos textos de tela."""
+    return f"{n} {um if n == 1 else varios}"

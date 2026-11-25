@@ -21,6 +21,8 @@ from . import formato
 from . import permissoes as RP
 from . import servicos as S
 from .calculo import TOTAL, Calculadora
+from .formato import qtd
+from .pendentes import a_preencher
 from .forms import (CicloForm, CicloNovoForm, ColunasFormSet, LinhasFormSet, QuadroForm, RegrasFormSet, SecaoForm,
                     gerar_chave)
 from .models import Bloco, Ciclo, Coluna, Linha, Quadro, Secao, Valor
@@ -78,7 +80,7 @@ def ciclo_editar(request, ano):
     form = CicloForm(request.POST or None, instance=c)
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Ciclo atualizado.")
+        messages.success(request, "Situação e prazo salvos.")
         return redirect("ciclo", ano=c.ano)
     return render(request, "relatorio/ciclo_editar.html", {"form": form, "ciclo": c})
 
@@ -87,9 +89,11 @@ def ciclo_editar(request, ano):
 def ciclo(request, ano):
     c = get_object_or_404(Ciclo, ano=ano)
     calc = Calculadora(c)
-    pend = [p for p in consistencia.verificar(c, calc) if not A.so_texto(p.quadro)]   # só números aqui
+    todas_pend = consistencia.verificar(c, calc)
+    pend = [p for p in todas_pend if not A.so_texto(p.quadro)]   # só números aqui
     meus = set(P.setores_ativos(request.user).values_list("pk", flat=True))
     so_minhas = request.GET.get("minhas", "1" if meus and not P.e_master(request.user) else "0") == "1"
+    conta = a_preencher(request.user, c, calc, todas_pend, todas=not so_minhas)    # 2.22: a mesma conta de O que falta
     # um quadro é "meu" quando o meu setor o preenche (o setor do quadro ou, se não tiver, o da seção)
     resp = {q.pk: {x.pk for x in q.setores_responsaveis()} for q in calc.quadros.values()}
     if so_minhas:
@@ -152,6 +156,7 @@ def ciclo(request, ano):
         arvore = OrderedDict((k, v) for k, v in arvore.items() if v["secoes"] or v.get("item", {}).get("minha"))
     return render(request, "relatorio/ciclo.html", {
         "ciclo": c, "arvore": arvore.values(), "resumo": consistencia.resumo(pend), "so_minhas": so_minhas,
+        "faltam_total": conta["total"],
         "tem_setor": bool(meus), "pct_geral": A.percentual(total_f, total_t),
         "pode_estruturar": RP.pode_estruturar(request.user)})
 
@@ -201,9 +206,9 @@ def secao(request, ano, chave):
     aba = request.GET.get("aba") or ("dados" if blocos else "texto")
     from .fluxo import pendencias_da_secao
     r_envio = consistencia.resumo(pendencias_da_secao(s))
-    envio_falta = (f"Faltam {r_envio['faltam']} número(s)" if r_envio["faltam"] else "") + \
+    envio_falta = (f"Faltam {qtd(r_envio['faltam'], 'número', 'números')}" if r_envio["faltam"] else "") + \
         (" e " if r_envio["faltam"] and r_envio["erros"] else "") + \
-        (f"{r_envio['erros']} correção(ões)" if r_envio["erros"] else "")
+        (qtd(r_envio['erros'], 'correção', 'correções') if r_envio["erros"] else "")
     n_fora = len(F.alteracoes_de_fora(s)) if "enviar" in F.acoes_possiveis(request.user, s) else 0
     if n_fora:
         envio_falta = (envio_falta + " e " if envio_falta else "") + \
@@ -427,7 +432,7 @@ def celula_historico(request, ano, linha, coluna):
 def pendencias(request, ano):
     c = get_object_or_404(Ciclo, ano=ano)
     calc = Calculadora(c)
-    pend = consistencia.verificar(c, calc)
+    pend = todas_pend = consistencia.verificar(c, calc)
     setor_sel = request.GET.get("setor", "")
     sev = request.GET.get("severidade", "")
     tipo = request.GET.get("tipo", "")
@@ -446,7 +451,8 @@ def pendencias(request, ano):
     pend = agrupar_faltas(pend)
     textos = problemas_dos_textos(c, calc, setor_sel, request.user if minhas else None)
     n_atualizar = len(textos)
-    geral["faltam"] += sum(t.get("n_campos", 0) for t in textos)          # os xxxxx do texto
+    # 2.22: a mesma conta das outras telas (tabelas, metas, xxxxx e blocos vazios)
+    geral["faltam"] = a_preencher(request.user, c, calc, todas_pend, todas=not minhas, setor=setor_sel)["total"]
     return render(request, "relatorio/pendencias.html", {
         "ciclo": c, "pendencias": pend, "resumo": consistencia.resumo(pend), "setores": Setor.objects.all(),
         "textos": textos, "tem_setor": bool(meus), "geral": geral, "n_atualizar": n_atualizar,

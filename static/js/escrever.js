@@ -63,6 +63,11 @@
     if (min && n < min) { estado = "pouco"; txt = n + " caracteres — faltam " + (min - n) + " para o mínimo de " + min; }
     else if (max && n > max) { estado = "muito"; txt = n + " caracteres — " + (n - max) + " acima do máximo de " + max; }
     else if (min || max) txt = n + " caracteres (" + (min && max ? "entre " + min + " e " + max : min ? "mínimo " + min : "máximo " + max) + ")";
+    // 2.22 (S5): texto maior que a área do bloco na página cobre o que está embaixo
+    var hc = parseFloat(getComputedStyle(bloco).getPropertyValue("--caixa-h"));
+    var passou = !!hc && Math.max(bloco.scrollHeight, bloco.offsetHeight) > hc + 4;
+    bloco.classList.toggle("passou-da-area", passou);
+    if (passou) { estado = "muito"; txt += " — o texto passou do espaço do bloco na página e pode cobrir o que está embaixo"; }
     el.dataset.estado = estado;
     el.textContent = txt;
     el.hidden = false;
@@ -552,6 +557,8 @@
       setTimeout(function () { td.classList.remove("salvo"); }, 2000);
       status("ok", "Tudo salvo às " + hora());
       var fig = el.closest(".metas-editar");
+      var sec = el.closest("[data-secao]");
+      if (sec) document.dispatchEvent(new CustomEvent("sirg:contar", { detail: [sec.getAttribute("data-secao")] }));
       var faltam = 0;
       if (fig.classList.contains("metas-2026")) {
         fig.querySelectorAll(".meta-card").forEach(function (card) {

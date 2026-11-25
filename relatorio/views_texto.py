@@ -367,8 +367,11 @@ def exportar(request, ano):
         r["Content-Disposition"] = f'attachment; filename="RG{ano}-pacote-diagramacao.zip"'
         return r
     calc = Calculadora(c)
-    pend = consistencia.resumo(consistencia.verificar(c, calc))
-    secoes = c.secoes.filter(pai__isnull=False)
+    from .pendentes import a_preencher, secoes_do_fluxo
+    todas_pend = consistencia.verificar(c, calc)
+    pend = consistencia.resumo(todas_pend)
+    pend["faltam"] = a_preencher(request.user, c, calc, todas_pend, todas=True)["total"]   # 2.22: a mesma conta
+    secoes = secoes_do_fluxo(c)
     n_aprovadas = secoes.filter(situacao=Secao.APROVADA).count()
     from . import revisao
     n_alt = sum(len(revisao.itens(b.conteudo)) for b in Bloco.objects.filter(secao__ciclo=c, tipo=Bloco.TEXTO,
@@ -376,7 +379,8 @@ def exportar(request, ano):
     return render(request, "relatorio/exportar.html", {
         "ciclo": c, "resumo": pend, "n_secoes": secoes.count(), "n_aprovadas": n_aprovadas, "n_alt": n_alt,
         "n_graficos": Bloco.objects.filter(secao__ciclo=c, tipo=Bloco.GRAFICO).count(),
-        "n_tabelas": Bloco.objects.filter(secao__ciclo=c, tipo=Bloco.TABELA).count()})
+        "n_tabelas": Bloco.objects.filter(secao__ciclo=c, tipo=Bloco.TABELA).count(),
+        "tem_paginas": c.paginas.exists()})
 
 
 # --- Imagens no texto ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 
 {% if faltam %}
 <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 py-2">
-  <span><i class="bi bi-exclamation-triangle"></i> Setor(es) da lista que não existem. Ao criar, o setor já entra nas seções que o citaram.</span>
+  <span><i class="bi bi-exclamation-triangle"></i> Há setores na lista que não existem. Ao criar, o setor já entra nas seções que o citaram.</span>
   {% for sg in faltam %}<a class="btn btn-sm btn-warning" href="{% url 'setor_novo' %}?sigla={{ sg|urlencode }}&next={{ voltar|urlencode }}"><i class="bi bi-plus-lg"></i> Criar {{ sg }}</a>{% endfor %}
 </div>
 {% endif %}

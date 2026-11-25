@@ -76,7 +76,7 @@ class PassosTests(BaseMontagem):
         passos = r.context["passos"]
         self.assertEqual([p["titulo"] for p in passos], ["Setores e pessoas", "Seções", "PDF diagramado", "Blocos nas páginas",
                                                          "Atributos dos blocos", "Quadros de números",
-                                                         "PDF do relatório anterior (consulta)", "Abrir a coleta"])
+                                                         "PDF do relatório anterior (consulta)", "Situação e prazo"])
         self.assertTrue(all(p["situacao"] == "falta" for p in passos[1:]))
         self.assertContains(r, "Criar as seções")
 
@@ -113,7 +113,7 @@ class SecoesTests(BaseMontagem):
         lista = ("Apresentação\n- Mensagem da dirigente | GAB\n- Sobre o relatório | DGDI, SEGEP\n\n"
                  "Visão geral\n  Quem somos | XYZ\n")
         r = self.client.post(reverse("secoes_lista", args=[2030]), {"lista": lista}, follow=True)
-        self.assertContains(r, "2 capítulo(s) e 3 seção(ões) criados")
+        self.assertContains(r, "2 capítulos e 3 seções criados")
         self.assertContains(r, "setor “XYZ” não existe")
         arv = M.arvore(self.c)
         self.assertEqual([c.titulo for c, _ in arv], ["Apresentação", "Visão geral"])

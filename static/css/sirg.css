@@ -891,3 +891,21 @@ main#conteudo:focus { outline: none; }
 .ed-pg .ed-caixas > * { pointer-events: auto; }
 .ed-pg .ed-caixas > .ed-rascunho, .ed-pg .ed-caixas > .ed-area-sel { pointer-events: none; }
 .ed-painel legend { font-size: .875rem; font-weight: 600; float: none; }
+
+/* 2.22 (S1): no Relatório, só o que a pessoa preenche fica em destaque. O que é de outro setor fica discreto:
+   xxxxx em cinza e sem a barra colorida do setor. */
+#doc-corpo .pg .sirg-campo.vazio:not(.pode),
+#doc-corpo .pg .sirg-num.pendente:not([data-pode="1"]):not([data-meu]) { background: #e9ecef; color: #5c636a; }
+#doc-corpo .pg-cx.com-setor:not(.pode):not(.concluido) { box-shadow: none; }
+#doc-corpo .pg .sirg-campo.vazio.pode, #doc-corpo .pg .sirg-num.pendente[data-pode="1"] { outline: 1px solid #c99a00; outline-offset: 0; }
+/* 2.22 (S2): o motivo de o envio estar bloqueado fica escrito, não só na dica do mouse */
+.sec-card-motivo { font-size: .8rem; color: #5c636a; margin-right: .4rem; }
+/* 2.22 (S5): o bloco cujo texto passou da área prevista na página */
+#doc-corpo .pg-cx.passou-da-area { outline: 2px dashed #c0392b; outline-offset: 1px; }
+/* 2.22 (M4): botões liga/desliga do editor de páginas com o estado escrito, não só pela cor */
+.ed-barra .btn-check:checked + .btn::after, .btn-check:checked + label.btn[for^="ed-"]::after { content: " ✓"; }
+.ed-atalhos dt { font-weight: 600; }
+.ed-atalhos dd { margin-bottom: .4rem; color: #5c636a; }
+/* 2.22 (WCAG 1.4.3): contraste mínimo de 4,5:1 */
+.pg mark.nome-inst { color: #1f2328; }                 /* texto branco das páginas escuras ficava ilegível no amarelo */
+.btn-outline-secondary { --bs-btn-color: #565e64; --bs-btn-border-color: #8a939b; }
