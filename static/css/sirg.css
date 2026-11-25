@@ -875,3 +875,6 @@ main#conteudo:focus { outline: none; }
 .passo-nav-atual { font-size: .875rem; font-weight: 600; color: var(--bs-secondary-color); }
 .passo-nav-setas { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
 @media (max-width: 576px) { .passo-nav-setas { margin-left: 0; width: 100%; } .passo-nav-setas .btn { flex: 1 1 0; } }
+.ed-guia-valor { position: absolute; background: #0d6efd; color: #fff; font: 10px/1.2 system-ui, sans-serif; padding: 1px 4px; border-radius: 3px; white-space: nowrap; pointer-events: none; }
+.ed-guia.v .ed-guia-valor { top: 4px; left: 8px; }
+.ed-guia.h .ed-guia-valor { left: 4px; top: 8px; }

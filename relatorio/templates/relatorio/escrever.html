@@ -128,5 +128,5 @@
   usuario: {id: {{ user.pk }}, nome: "{{ user.get_full_name|default:user.username|escapejs }}"}, rastreioPadrao: false,
   rastreioObrigatorio: {{ e_master|yesno:'false,true' }}, preencher: true};</script>
 <script src="{% static 'vendor/dompurify/purify.min.js' %}"></script>
-<script src="{% static 'js/texto_comum.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/revisao.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/escrever.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/escrever_barra.js' %}?v={{ VERSAO }}"></script>
-<script src="{% static 'js/quadros.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/preencher.js' %}?v={{ VERSAO }}"></script>{% endblock %}
+<script src="{% static 'js/texto_comum.js' %}?v={% carimbo 'js/texto_comum.js' %}"></script><script src="{% static 'js/revisao.js' %}?v={% carimbo 'js/revisao.js' %}"></script><script src="{% static 'js/escrever.js' %}?v={% carimbo 'js/escrever.js' %}"></script><script src="{% static 'js/escrever_barra.js' %}?v={% carimbo 'js/escrever_barra.js' %}"></script>
+<script src="{% static 'js/quadros.js' %}?v={% carimbo 'js/quadros.js' %}"></script><script src="{% static 'js/preencher.js' %}?v={% carimbo 'js/preencher.js' %}"></script>{% endblock %}

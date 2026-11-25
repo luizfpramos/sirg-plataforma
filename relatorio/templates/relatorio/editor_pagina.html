@@ -37,4 +37,4 @@
 </div>
 {{ dados|json_script:"dados-editor" }}
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/editor_blocos.js' %}"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'js/editor_blocos.js' %}?v={% carimbo 'js/editor_blocos.js' %}"></script>{% endblock %}

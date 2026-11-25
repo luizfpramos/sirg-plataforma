@@ -58,4 +58,4 @@
 {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/filtros.js' %}?v={{ VERSAO }}"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'js/filtros.js' %}?v={% carimbo 'js/filtros.js' %}"></script>{% endblock %}

@@ -118,7 +118,7 @@
       });
     });
     if (arrasto && arrasto.modo === "guia") {
-      h += '<div class="ed-guia nova ' + arrasto.eixo + '" style="' + (arrasto.eixo === "v" ? "left:" : "top:") + arrasto.valor + 'px"></div>';
+      if (arrasto.valor >= 0) h += '<div class="ed-guia nova ' + arrasto.eixo + '" style="' + (arrasto.eixo === "v" ? "left:" : "top:") + arrasto.valor + 'px"><span class="ed-guia-valor">' + arrasto.valor + " pt</span></div>";
     }
     camadaGuias.innerHTML = h;
   }
@@ -227,16 +227,18 @@
       painel.innerHTML = '<h2 class="h6">Guia ' + guiaTexto(gs.eixo) + '</h2><label class="form-label mini mb-0" for="f-guia">Posição (pt, a partir ' + (gs.eixo === "v" ? "da esquerda" : "de cima") + ')</label>' +
         '<input class="form-control form-control-sm mb-2" id="f-guia" type="number" step="0.5" min="0" max="' + (gs.eixo === "v" ? D.largura : D.altura) + '" value="' + gs.valor + '">' +
         '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" id="b-guia-ok"><i class="bi bi-check-lg"></i> Salvar</button><button class="btn btn-sm btn-outline-danger ms-auto" id="b-guia-apagar"><i class="bi bi-trash"></i> Apagar</button></div>' +
-        '<p class="mini text-secondary mt-3 mb-0">Também dá para arrastar a guia na página. Arrastar para fora da página apaga.</p>';
+        '<p class="mini text-secondary mt-3 mb-2">Também dá para arrastar a guia na página. Arrastar para fora da página apaga.</p>' +
+        '<button class="btn btn-sm btn-link p-0" id="b-guia-voltar"><i class="bi bi-arrow-left"></i> Todas as guias da página</button>';
       var ok = function () {
-        var v = parseFloat($("#f-guia").value);
-        if (isNaN(v)) return;
+        var v = parseFloat($("#f-guia").value), lim = gs.eixo === "v" ? D.largura : D.altura;
+        if (isNaN(v) || v < 0 || v > lim) { dizer("Digite uma posição entre 0 e " + num(lim) + " pt.", true); return; }
         v = num(v);
         var l = G.pagina[gs.eixo].filter(function (x) { return x !== gs.valor; });
         l.push(v); G.pagina[gs.eixo] = l; guiaSel = { eixo: gs.eixo, valor: v };
         salvarGuias("Guia movida.");
       };
       $("#b-guia-ok").onclick = ok;
+      $("#b-guia-voltar").onclick = function () { guiaSel = null; desenharGuias(); montarPainel(); };
       $("#f-guia").onkeydown = function (e) { if (e.key === "Enter") ok(); };
       $("#b-guia-apagar").onclick = function () {
         G.pagina[gs.eixo] = G.pagina[gs.eixo].filter(function (x) { return x !== gs.valor; });
@@ -302,9 +304,26 @@
         '<button class="btn btn-sm btn-link p-0 align-baseline" id="b-sel-fora">Selecionar</button></div>';
       else h = "";
       var nv = G.pagina.v.length, nh = G.pagina.h.length;
+      h += '<h2 class="h6 mt-3">Grade do relatório</h2>';
+      if (!(G.grade && G.grade.colunas)) h += '<p class="mini mb-2">Ainda não definida: sem ela, os blocos só encaixam nas guias e nas bordas da página. ' +
+        (D.url_grade ? '<a href="' + esc(D.url_grade) + '">Definir margens e colunas</a>' : "Peça ao administrador para definir.") + "</p>";
+      else h += '<p class="mini text-secondary mb-2">' + G.grade.colunas + " coluna(s), medianiz de " + G.grade.medianiz + " pt; margens " + G.grade.margem_sup + " / " + G.grade.margem_dir + " / " + G.grade.margem_inf + " / " + G.grade.margem_esq + " pt (cima, direita, baixo, esquerda)." +
+        (D.url_grade ? ' <a href="' + esc(D.url_grade) + '">Mudar</a>' : "") + "</p>";
       h += '<h2 class="h6 mt-3">Guias desta página</h2>';
-      if (!(G.grade && G.grade.colunas)) h += '<p class="mini text-secondary mb-2">O relatório ainda não tem grade (margens e colunas).</p>';
-      h += '<p class="mini text-secondary mb-2">' + (nv || nh ? nv + " vertical(is) e " + nh + " horizontal(is). Clique numa guia para mudar a posição." : "Nenhuma. Arraste a partir da régua de cima (horizontal) ou da esquerda (vertical) para criar uma.") + "</p>";
+      h += '<p class="mini text-secondary mb-2">' + (nv || nh ? "Clique no número para mudar a posição." : "Nenhuma. Crie pelos botões abaixo ou arraste a partir da régua de cima (guia horizontal) ou da esquerda (guia vertical).") + "</p>";
+      if (nv || nh) {
+        h += '<ul class="list-unstyled mini ed-lista-guias mb-2">';
+        ["v", "h"].forEach(function (eixo) {
+          G.pagina[eixo].forEach(function (val) {
+            h += '<li class="d-flex align-items-center gap-2 mb-1"><span class="ed-leg ed-leg-guia"></span><span style="min-width:5.5rem">' + (eixo === "v" ? "Vertical" : "Horizontal") + '</span>' +
+              '<button class="btn btn-sm btn-link p-0" data-guia-ir="' + eixo + '" data-valor="' + val + '">' + val + " pt</button>" +
+              '<button class="btn btn-sm btn-link text-danger p-0 ms-auto" data-guia-apagar="' + eixo + '" data-valor="' + val + '" title="Apagar esta guia" aria-label="Apagar a guia ' + (eixo === "v" ? "vertical" : "horizontal") + " em " + val + ' pt"><i class="bi bi-x-lg"></i></button></li>';
+          });
+        });
+        h += "</ul>";
+      }
+      h += '<div class="input-group input-group-sm mb-2"><input class="form-control" id="f-nova-guia" type="number" step="0.5" min="0" placeholder="posição em pt" aria-label="Posição da nova guia, em pontos">' +
+        '<button class="btn btn-outline-primary" id="b-guia-v" title="Guia vertical, medida a partir da esquerda">+ Vertical</button><button class="btn btn-outline-primary" id="b-guia-h" title="Guia horizontal, medida a partir de cima">+ Horizontal</button></div>';
       if (nv || nh) {
         h += '<label class="form-label mini mb-0" for="f-copiar">Copiar estas guias para as páginas</label>' +
           '<div class="input-group input-group-sm mb-1"><input class="form-control" id="f-copiar" placeholder="ex.: 3, 5-8 ou todas"><button class="btn btn-outline-primary" id="b-copiar">Copiar</button></div>' +
@@ -312,6 +331,25 @@
           '<button class="btn btn-sm btn-link text-danger p-0" id="b-limpar-guias"><i class="bi bi-x-lg"></i> Apagar as guias desta página</button>';
       }
       painel.innerHTML += h;
+      var novaGuia = function (eixo) {
+        var v = parseFloat($("#f-nova-guia").value), lim = eixo === "v" ? D.largura : D.altura;
+        if (isNaN(v) || v < 0 || v > lim) { dizer("Digite uma posição entre 0 e " + num(lim) + " pt.", true); $("#f-nova-guia").focus(); return; }
+        v = num(v);
+        if (G.pagina[eixo].indexOf(v) >= 0) { dizer("Já existe uma guia nessa posição.", true); return; }
+        G.pagina[eixo].push(v); mostrarGuias(true); lembrar("sirg-ed-guias", true);
+        guiaSel = null; salvarGuias("Guia " + guiaTexto(eixo) + " criada em " + v + " pt.");
+      };
+      $("#b-guia-v").onclick = function () { novaGuia("v"); };
+      $("#b-guia-h").onclick = function () { novaGuia("h"); };
+      painel.querySelectorAll("[data-guia-ir]").forEach(function (bt) {
+        bt.onclick = function () { guiaSel = { eixo: bt.dataset.guiaIr, valor: parseFloat(bt.dataset.valor) }; mostrarGuias(true); desenharGuias(); montarPainel(); if ($("#f-guia")) { $("#f-guia").focus(); $("#f-guia").select(); } };
+      });
+      painel.querySelectorAll("[data-guia-apagar]").forEach(function (bt) {
+        bt.onclick = function () {
+          var e = bt.dataset.guiaApagar, v = parseFloat(bt.dataset.valor);
+          G.pagina[e] = G.pagina[e].filter(function (x) { return x !== v; }); salvarGuias("Guia apagada.");
+        };
+      });
       if ($("#b-sel-fora")) $("#b-sel-fora").onclick = function () { sel = fora.map(function (b) { return b.id; }); desenhar(); montarPainel(); };
       if ($("#b-copiar")) $("#b-copiar").onclick = function () {
         var t = $("#f-copiar").value.trim();
@@ -443,7 +481,8 @@
     }
     arrasto.valor = num(v);
     var dentro = arrasto.valor >= 0 && arrasto.valor <= (arrasto.eixo === "v" ? D.largura : D.altura);
-    dizer(dentro ? "Guia " + guiaTexto(arrasto.eixo) + " em " + arrasto.valor + " pt" : "Solte fora da página para apagar a guia");
+    dizer(dentro ? "Guia " + guiaTexto(arrasto.eixo) + " em " + arrasto.valor + " pt" :
+      (arrasto.nova ? "Arraste até a página e solte onde a guia deve ficar" : "Solte aqui para apagar a guia"));
     desenharGuias();
   }
   function soltarGuia(a) {
