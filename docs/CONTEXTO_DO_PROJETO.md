@@ -1,6 +1,6 @@
 # SiRG — contexto do projeto
 
-Atualizado em 24/11/2026, versão **2.21**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
+Atualizado em 25/11/2026, versão **2.21**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
 
 ## 1. O que é
 

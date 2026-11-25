@@ -582,6 +582,10 @@ def enviar_producao(request):
 VERSOES = [
     ("2.21", "novembro de 2026", [
         "Montar o relatório: as oito telas dos passos têm a mesma barra no alto, com a volta para a lista de passos, a indicação \"Passo N de 8\" e os botões do passo anterior e do próximo. Setores, Importar o PDF e Atributos dos blocos, que voltavam para lugares diferentes, agora voltam para a montagem.",
+        "Blocos feitos pela pessoa: ao aplicar o PDF, o padrão passa a ser criar só as páginas. No editor, o texto do PDF aparece por cima do fundo (botão Texto do PDF ou tecla T); clicar num texto cria o bloco do tamanho certo, e a pessoa escolhe se o setor escreve (o texto do PDF fica como referência) ou se fica fixo. Shift+clique junta vários textos; desenhar uma área leva os textos de dentro e serve também para imagens e gráficos. \"Deixar como texto fixo\" resolve páginas que não mudam. A sugestão automática de antes continua como opção.",
+        "Seções: depois de aplicar o PDF, a tela de Seções mostra a página em que cada seção começa e deixa corrigir. As páginas e os blocos passam para a seção certa; blocos que alguém pôs em outra seção ficam onde estão.",
+        "Guias: criar, mudar e apagar guias pelo painel do editor, digitando a posição, sem precisar arrastar da régua; o painel mostra a grade do relatório e avisa quando ela ainda não foi definida; ao arrastar, a posição aparece ao lado da guia.",
+        "Os arquivos de tela (JavaScript e CSS) passam a levar a data do arquivo no endereço, para o navegador e o Cloudflare não usarem uma cópia antiga depois de uma atualização. Era o que fazia as guias parecerem não funcionar logo depois da 2.20.",
     ]),
     ("2.20", "novembro de 2026", [
         "Grade das páginas: em Padrão de design, o relatório ganha margens, colunas e medianiz. No editor de páginas, a grade aparece por cima e o bloco encaixa nela ao ser desenhado, movido ou redimensionado (Alt solta livre).",

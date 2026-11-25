@@ -5,6 +5,8 @@ Montar o relatório do ano (2.18): os passos em ordem, as seções do ciclo e o 
   ROTEIRO, navegacao(...)  — títulos e telas dos passos, para a barra "Passo N de 8" de cada tela (2.21)
   adicionar_em_lote(...)   — cria capítulos e seções a partir de uma lista colada (ex.: o sumário do PDF)
   mover_secao(...)         — sobe ou desce uma seção entre as irmãs
+  inicios_das_secoes(...), mudar_inicios(...) — a página em que cada seção começa, corrigível depois de aplicar o
+                             PDF (2.21): as páginas e os blocos passam para a seção certa
   tornar_de_trabalho(...)  — o ciclo que o menu abre para todos
   excluir_ciclo(...)       — só onde a configuração permite (homologação): apaga o ciclo e os arquivos
 """
@@ -96,7 +98,8 @@ def passos(ciclo):
                   reverse("secoes_lista", args=[ano]), "Ver as seções")
 
     if n_pag:
-        s_pdf = p("PDF diagramado", f"{n_pag} páginas aplicadas ao ciclo.", "feito",
+        s_pdf = p("PDF diagramado", f"{n_pag} páginas aplicadas ao ciclo. Seção na página errada? Corrija no "
+                                    f"passo 2, em “Página em que cada seção começa”.", "feito",
                   reverse("importar_pdf", args=[ano]), "Ver a importação")
     elif imp and imp.situacao == ImportacaoPDF.PRONTA:
         s_pdf = p("PDF diagramado", "O PDF foi lido. Confira as páginas de cada seção e aplique ao ciclo.", "aviso",
@@ -109,16 +112,23 @@ def passos(ciclo):
                   reverse("importar_pdf", args=[ano]), "Importar o PDF")
 
     numeros = [b for b in texto.filter(conteudo__gt="").only("config") if (b.config or {}).get("numero_antigo")]
-    if not n_blocos:
-        s_blo = p("Blocos nas páginas", "Os blocos aparecem depois de aplicar o PDF.", "falta",
+    sem_bloco = ciclo.paginas.filter(caixas__isnull=True).count() if n_pag else 0
+    if not n_blocos and n_pag:
+        s_blo = p("Blocos nas páginas", f"{n_pag} página(s) ainda sem blocos. No editor, clique no texto do PDF para "
+                  f"criar cada bloco, ou desenhe a área de imagens e gráficos.", "falta",
+                  reverse("editor_inicio", args=[ano]), "Criar os blocos")
+    elif not n_blocos:
+        s_blo = p("Blocos nas páginas", "Os blocos se criam no editor, depois de aplicar o PDF.", "falta",
                   reverse("editor_inicio", args=[ano]), "Editar os blocos")
     else:
         vazios = texto.filter(conteudo="").count()
         txt = f"{n_blocos} bloco(s) nas páginas, {vazios} vazio(s) para os setores."
+        if sem_bloco:
+            txt += f" {sem_bloco} página(s) ainda sem nenhum bloco."
         if numeros:
             txt += (f" {len(numeros)} texto(s) fixo(s) com número do ano anterior (em laranja no editor): troque a área "
                     f"por um gráfico ou tabela, libere para o setor ou confira.")
-        s_blo = p("Blocos nas páginas", txt, "aviso" if numeros else "feito",
+        s_blo = p("Blocos nas páginas", txt, "aviso" if (numeros or sem_bloco) else "feito",
                   reverse("editor_inicio", args=[ano]), "Editar os blocos")
     s_atr = p("Atributos dos blocos",
               (f"{sem_descricao} bloco(s) vazio(s) sem a descrição do que escrever." if sem_descricao
@@ -234,6 +244,68 @@ def arvore(ciclo):
         if s.pai_id:
             filhas.setdefault(s.pai_id, []).append(s)
     return [(c, sorted(filhas.get(c.pk, []), key=lambda s: (s.ordem, s.pk))) for c in caps]
+
+
+# --- página inicial de cada seção (2.21) --------------------------------------------------------------------------
+def _em_ordem(ciclo):
+    from .importador import _ordem_secao
+    return sorted(ciclo.secoes.select_related("pai"), key=_ordem_secao)
+
+
+def inicios_das_secoes(ciclo):
+    """[(seção, página inicial ou None)] na ordem do relatório. A página inicial é a primeira página da seção."""
+    from django.db.models import Min
+    primeira = dict(ciclo.paginas.filter(secao__isnull=False).values("secao").annotate(n=Min("numero"))
+                    .values_list("secao", "n"))
+    return [(s, primeira.get(s.pk)) for s in _em_ordem(ciclo)]
+
+
+@transaction.atomic
+def mudar_inicios(ciclo, novos):
+    """Corrige onde cada seção começa. `novos`: {pk da seção: número da página ou None (seção fora do PDF)}; seção
+    que não vem em `novos` mantém a página atual. Cada página passa a ser da última seção que começa nela ou antes; os
+    blocos da página que eram da seção antiga da página vão junto. Blocos que a pessoa pôs em outra seção ficam.
+    Páginas antes da primeira seção não mudam. Devolve {"paginas": n, "blocos": n}."""
+    from .models import ImportacaoPDF, Pagina
+    if ciclo.situacao == Ciclo.ENCERRADO:
+        raise Recusado("O ciclo está encerrado.")
+    atuais = inicios_das_secoes(ciclo)
+    numeros = set(ciclo.paginas.values_list("numero", flat=True))
+    marcos, ultima, anterior = [], None, None
+    for ordem, (s, atual) in enumerate(atuais):
+        n = novos.get(s.pk, atual) if s.pk in novos else atual
+        if n is None:
+            continue
+        if n not in numeros:
+            raise Recusado(f"A página {n} não existe (seção “{s.titulo}”).")
+        if ultima is not None and n < ultima:
+            raise Recusado(f"“{s.titulo}” começaria na página {n}, antes de “{anterior}” (página {ultima}). "
+                           f"As seções seguem a ordem do relatório; mude a ordem em Seções, se for o caso.")
+        marcos.append((n, ordem, s))
+        ultima, anterior = n, s.titulo
+    feito = {"paginas": 0, "blocos": 0}
+    for pg in Pagina.objects.select_for_update().filter(ciclo=ciclo).order_by("numero"):
+        dono = None
+        for n, _o, s in marcos:
+            if n <= pg.numero:
+                dono = s
+            else:
+                break
+        if dono is None or dono.pk == pg.secao_id:
+            continue
+        if pg.secao_id:
+            feito["blocos"] += Bloco.objects.filter(pagina=pg, secao_id=pg.secao_id).update(secao=dono)
+        else:
+            feito["blocos"] += Bloco.objects.filter(pagina=pg, secao__isnull=True).update(secao=dono)
+        Pagina.objects.filter(pk=pg.pk).update(secao=dono)
+        feito["paginas"] += 1
+    # a reimportação usa as páginas iniciais guardadas na importação aplicada
+    imp = ciclo.importacoes.filter(situacao=ImportacaoPDF.APLICADA).order_by("-aplicada_em", "-pk").first()
+    if imp:
+        ini = {str(s.pk): None for s, _ in atuais}
+        ini.update({str(s.pk): n for n, _o, s in marcos})
+        ImportacaoPDF.objects.filter(pk=imp.pk).update(resumo=dict(imp.resumo or {}, inicios=ini))
+    return feito
 
 
 # --- ciclo de trabalho e exclusão ---------------------------------------------------------------------------------

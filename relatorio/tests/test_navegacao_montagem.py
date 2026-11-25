@@ -79,3 +79,12 @@ class NavegacaoDaMontagemTests(TestCase):
         h = self.client.get(reverse("editor_pagina", args=[self.c.ano, 1])).content.decode()
         self.assertNotIn("Passo 4 de 8", h)
         self.assertIn(reverse("escrever", args=[self.c.ano]), h)
+
+
+class CarimboTests(TestCase):
+    def test_arquivo_estatico_leva_versao_e_data_do_arquivo(self):
+        from django.conf import settings
+        from django.template import Context, Template
+        t = Template("{% carimbo 'js/editor_blocos.js' %}").render(Context())
+        self.assertTrue(t.startswith(settings.SIRG_VERSAO + "-"), t)
+        self.assertEqual(Template("{% carimbo 'js/nao_existe.js' %}").render(Context()), settings.SIRG_VERSAO)
