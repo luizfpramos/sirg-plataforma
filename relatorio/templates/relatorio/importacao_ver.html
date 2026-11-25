@@ -49,13 +49,13 @@
   <form method="post" action="{% url 'importacao_aplicar' ciclo.ano imp.pk %}" class="card mb-4" id="conferencia">{% csrf_token %}<input type="hidden" name="conferido" value="1">
     <div class="card-body">
       <h2 class="h5 mb-1">Páginas de cada seção</h2>
-      <p class="mini text-secondary">O sistema procurou o título de cada seção no PDF (pela letra grande, sem IA). Corrija a página inicial quando ele errar ou não achar. Deixe em branco se a seção não está no PDF. Cada seção vai da página inicial até o começo da seguinte.</p>
+      <p class="mini text-secondary">O sistema procurou o título de cada seção no PDF (pela letra grande, sem IA). Quando a lista de seções trouxe a página, ela já vem preenchida e a coluna “Achada” mostra se o título foi encontrado em outra. Corrija a página inicial quando houver erro. Deixe em branco se a seção não está no PDF. Cada seção vai da página inicial até o começo da seguinte.</p>
       <div class="table-responsive"><table class="table table-sm align-middle mb-3">
         <thead><tr><th>Seção</th><th>Achada</th><th style="width:7rem">Começa na p.</th><th class="text-center" title="Recebe o texto do PDF como está; só o Editor-chefe altera">Conteúdo fixo</th></tr></thead>
         <tbody>{% for l in conferencia %}
           <tr><td>{% if l.s.pai_id %}<span class="ms-3">{{ l.s.titulo }}</span>{% else %}<strong>{{ l.s.titulo }}</strong>{% endif %}
               <span class="mini text-secondary">{% for st in l.s.setores.all %}{% if forloop.first %}· {% endif %}{{ st.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></td>
-            <td class="mini">{% if l.achada %}<a href="?p={{ l.achada }}#pagina-previa">p. {{ l.achada }}</a>{% else %}<span class="text-danger">não achada</span>{% endif %}</td>
+            <td class="mini">{% if l.achada %}<a href="?p={{ l.achada }}#pagina-previa">p. {{ l.achada }}</a>{% else %}<span class="{% if l.prevista %}text-secondary{% else %}text-danger{% endif %}">não achada</span>{% endif %}{% if l.prevista %}<div class="text-secondary">prevista: p. {{ l.prevista }}</div>{% endif %}{% if l.difere %}<div class="text-danger"><i class="bi bi-exclamation-triangle"></i> diferente da prevista</div>{% endif %}</td>
             <td><input class="form-control form-control-sm" type="number" min="1" name="inicio_{{ l.s.pk }}" value="{{ l.pagina|default_if_none:'' }}" aria-label="Página inicial de {{ l.s.titulo }}">{% if l.fora_de_ordem %}<div class="mini text-danger">antes da seção anterior</div>{% endif %}</td>
             <td class="text-center"><input class="form-check-input" type="checkbox" name="fixo_{{ l.s.pk }}" value="1" {% if l.fixo %}checked{% endif %} aria-label="{{ l.s.titulo }}: conteúdo fixo"></td></tr>
         {% endfor %}</tbody></table></div>

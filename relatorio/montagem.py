@@ -3,7 +3,8 @@ Montar o relatório do ano (2.18): os passos em ordem, as seções do ciclo e o 
 
   passos(ciclo)            — os passos da montagem, cada um com a situação e a tela onde se faz
   ROTEIRO, navegacao(...)  — títulos e telas dos passos, para a barra "Passo N de 8" de cada tela (2.21)
-  adicionar_em_lote(...)   — cria capítulos e seções a partir de uma lista colada (ex.: o sumário do PDF)
+  ler_lista(...), adicionar_em_lote(...) — lê e grava a lista colada de capítulos e seções (ex.: o sumário do PDF),
+                             com setores e página; título que já existe é atualizado, não duplicado (2.23)
   mover_secao(...)         — sobe ou desce uma seção entre as irmãs
   inicios_das_secoes(...), mudar_inicios(...) — a página em que cada seção começa, corrigível depois de aplicar o
                              PDF (2.21): as páginas e os blocos passam para a seção certa
@@ -158,7 +159,14 @@ def passos(ciclo):
 
 
 # --- seções ------------------------------------------------------------------------------------------------------
-_SETORES = re.compile(r"\s*\|\s*([A-Za-zÀ-ÿ0-9 ,;/-]*)$")
+# Página no fim da linha (2.23), como no sumário do PDF: "Título ........ 51", "Título<Tab>51", "Título, p. 51",
+# "Título p. 51" ou "Título  51" (dois espaços). Um número só com um espaço antes não conta: pode ser parte do título
+# ("Metas do PDI para 2026", "Objetivo 4").
+_PAGINA_NO_TITULO = re.compile(
+    r"^(?P<t>.*?\S)(?:\s*(?:\.{2,}|…+|·{2,}|_{2,})\s*|\t+\s*|\s{2,}|\s*,\s*p(?:ág(?:ina)?)?\.?\s*"
+    r"|\s+p(?:ág(?:ina)?)?\.\s*)(?P<n>\d{1,4})\s*$", re.I)
+# Um trecho depois de "|" só com a página: "| 51", "| p. 51", "| pág. 51".
+_PAGINA_SOZINHA = re.compile(r"^\s*(?:p(?:ág(?:ina)?)?\.?\s*)?(\d{1,4})\s*$", re.I)
 
 
 def _chave_livre(ciclo, titulo):
@@ -169,61 +177,149 @@ def _chave_livre(ciclo, titulo):
     return ch
 
 
-@transaction.atomic
-def adicionar_em_lote(ciclo, texto):
-    """Uma linha por item. Linha comum = capítulo; linha que começa com "-" (ou com recuo) = seção do capítulo
-    acima. No fim da linha, opcional: "| SIGLA, SIGLA" com os setores responsáveis.
-    Devolve (capítulos, seções, avisos, {sigla que não existe: [pk das seções que a pediram]})."""
-    if ciclo.situacao == Ciclo.ENCERRADO:
-        raise Recusado("O ciclo está encerrado.")
-    siglas = {s.sigla.upper(): s for s in Setor.objects.all()}
-    cap_atual = ciclo.secoes.filter(pai__isnull=True).order_by("-ordem", "-id").first()
-    ordem_cap = (cap_atual.ordem if cap_atual else 0)
-    n_caps = n_secs = 0
-    avisos, faltando = [], []
+def _normal(t):
+    """Título para comparar: sem acento, sem caixa e sem espaços repetidos."""
+    import unicodedata
+    t = unicodedata.normalize("NFD", (t or "").lower())
+    return " ".join("".join(ch for ch in t if unicodedata.category(ch) != "Mn").split())
+
+
+def ler_lista(ciclo, texto):
+    """2.23: lê a lista colada sem gravar nada, para a tela mostrar o que vai acontecer antes de confirmar.
+
+    Uma linha por item. Linha comum = capítulo; linha que começa com "-" (ou com recuo) = seção do capítulo acima.
+    Depois de "|", opcional: os setores ("| SIGLA, SIGLA") e a página ("| p. 51"); a página também pode vir no fim
+    do título, como no sumário ("Título ...... 51"). Um título igual ao de um capítulo (ou de uma seção do mesmo
+    capítulo) que já existe atualiza esse item, em vez de criar outro.
+
+    Devolve uma lista de itens {"linha", "tipo" ("capitulo" | "secao"), "titulo", "setores" [Setor], "siglas_faltando"
+    [str], "pagina" (int | None), "existente" (Secao | None), "acao" ("criar" | "atualizar" | "igual"), "avisos"}."""
+    siglas = {x.sigla.upper(): x for x in Setor.objects.all()}
+    caps = {_normal(c.titulo): c for c in ciclo.secoes.filter(pai__isnull=True)}
+    filhas = {}
+    for f in ciclo.secoes.filter(pai__isnull=False).prefetch_related("setores"):
+        filhas.setdefault(f.pai_id, {})[_normal(f.titulo)] = f
+    tem_cap = ciclo.secoes.filter(pai__isnull=True).exists()
+    cap_atual = None            # o capítulo existente da linha de capítulo acima (None se é novo)
+    cap_acima = False           # já houve linha de capítulo nesta lista (ou existe capítulo no relatório)
+    vistos = set()
+    itens = []
     for n, bruta in enumerate((texto or "").splitlines(), start=1):
         if not bruta.strip():
             continue
         e_secao = bool(re.match(r"^(\s+|\s*[-–•*]\s*)", bruta))
-        linha = re.sub(r"^\s*[-–•*]?\s*", "", bruta).strip()
-        setores = []
-        m = _SETORES.search(linha)
-        if m:
-            linha = linha[:m.start()].strip()
-            for sg in re.split(r"[,;/ ]+", m.group(1)):
+        partes = re.sub(r"^\s*[-–•*]?\s*", "", bruta).rstrip().split("|")
+        linha, pagina, setores, faltando, avisos = partes[0].strip(), None, [], [], []
+        for parte in partes[1:]:
+            m = _PAGINA_SOZINHA.match(parte)
+            if m:
+                pagina = int(m.group(1))
+                continue
+            for sg in re.split(r"[,;/ ]+", parte.strip()):
                 if not sg:
                     continue
-                s = siglas.get(sg.upper())
-                if s:
-                    setores.append(s)
+                x = siglas.get(sg.upper())
+                if x:
+                    setores.append(x)
                 else:
+                    faltando.append(sg.upper())
                     avisos.append(f"Linha {n}: setor “{sg}” não existe.")
-                    faltando.append((sg.upper(), None))
+        m = _PAGINA_NO_TITULO.match(linha)
+        if m:
+            linha, pagina = m.group("t").strip(" .·…_-–"), pagina or int(m.group("n"))
         if not linha:
-            faltando = [(sg, pk) for sg, pk in faltando if pk]      # sigla numa linha sem título: só o aviso
+            itens.append({"linha": n, "tipo": None, "titulo": "", "setores": [], "siglas_faltando": faltando,
+                          "pagina": None, "existente": None, "acao": None, "avisos": avisos})
             continue
         titulo = linha[:255]
+        if pagina == 0:
+            avisos.append(f"Linha {n}: página 0 ignorada.")
+            pagina = None
+        if e_secao and not (cap_acima or tem_cap):
+            avisos.append(f"Linha {n}: “{titulo}” é uma seção, mas não há capítulo acima. Fica como capítulo.")
+            e_secao = False
         if e_secao:
-            if cap_atual is None:
-                avisos.append(f"Linha {n}: “{titulo}” é uma seção, mas não há capítulo acima. Ficou como capítulo.")
-                e_secao = False
-        if e_secao:
-            ordem = (cap_atual.filhas.count() + 1) * 10
-            s = Secao.objects.create(ciclo=ciclo, pai=cap_atual, titulo=titulo, ordem=ordem,
-                                     chave=_chave_livre(ciclo, titulo))
-            n_secs += 1
+            pai_existente = cap_atual if cap_acima else (cap_atual or ciclo.secoes.filter(
+                pai__isnull=True).order_by("-ordem", "-id").first())
+            existente = filhas.get(pai_existente.pk, {}).get(_normal(titulo)) if pai_existente else None
         else:
-            ordem_cap += 10
-            s = Secao.objects.create(ciclo=ciclo, titulo=titulo, ordem=ordem_cap, chave=_chave_livre(ciclo, titulo))
+            existente = caps.get(_normal(titulo))
+            cap_atual, cap_acima = existente, True
+        if existente is not None and existente.pk in vistos:
+            avisos.append(f"Linha {n}: “{titulo}” aparece de novo na lista; fica só a primeira.")
+            existente, acao = None, None
+        elif existente is not None:
+            vistos.add(existente.pk)
+            muda_setores = setores and {x.pk for x in setores} != {x.pk for x in existente.setores.all()}
+            muda_pagina = pagina is not None and pagina != existente.pagina_inicio
+            acao = "atualizar" if (muda_setores or muda_pagina) else "igual"
+        else:
+            acao = "criar"
+        itens.append({"linha": n, "tipo": "secao" if e_secao else "capitulo", "titulo": titulo, "setores": setores,
+                      "siglas_faltando": faltando, "pagina": pagina, "existente": existente, "acao": acao,
+                      "avisos": avisos})
+    # páginas fora de ordem (seção começando antes da anterior): só aviso, a pessoa confere
+    maior = 0
+    for it in itens:
+        if it["pagina"]:
+            if it["pagina"] < maior:
+                it["avisos"].append(f"Linha {it['linha']}: página {it['pagina']} vem antes da página da linha anterior "
+                                    f"({maior}). Confira a ordem.")
+            maior = max(maior, it["pagina"])
+    return itens
+
+
+@transaction.atomic
+def adicionar_em_lote(ciclo, texto):
+    """Grava a lista colada (ver `ler_lista`). Cria os capítulos e seções novos, atualiza setores e página dos que
+    já existem e, se o PDF já foi aplicado, passa as páginas para a seção certa (`mudar_inicios`).
+    Devolve {"capitulos", "secoes", "atualizadas", "avisos", "faltando": {sigla: [pk]}, "paginas": {..} | None}."""
+    if ciclo.situacao == Ciclo.ENCERRADO:
+        raise Recusado("Este relatório está encerrado.")
+    itens = ler_lista(ciclo, texto)
+    cap_atual = ciclo.secoes.filter(pai__isnull=True).order_by("-ordem", "-id").first()
+    ordem_cap = (ciclo.secoes.filter(pai__isnull=True).order_by("-ordem").values_list("ordem", flat=True).first() or 0)
+    n_caps = n_secs = n_atu = 0
+    avisos, faltando, paginas = [], {}, {}
+    for it in itens:
+        avisos += it["avisos"]
+        if it["acao"] is None:
+            continue
+        s = it["existente"]
+        if it["acao"] == "criar":
+            if it["tipo"] == "secao":
+                ordem = (cap_atual.filhas.count() + 1) * 10
+                s = Secao.objects.create(ciclo=ciclo, pai=cap_atual, titulo=it["titulo"], ordem=ordem,
+                                         chave=_chave_livre(ciclo, it["titulo"]), pagina_inicio=it["pagina"])
+                n_secs += 1
+            else:
+                ordem_cap += 10
+                s = Secao.objects.create(ciclo=ciclo, titulo=it["titulo"], ordem=ordem_cap,
+                                         chave=_chave_livre(ciclo, it["titulo"]), pagina_inicio=it["pagina"])
+                n_caps += 1
+            if it["setores"]:
+                s.setores.set(it["setores"])
+        elif it["acao"] == "atualizar":
+            if it["setores"]:
+                s.setores.set(it["setores"])
+            if it["pagina"] is not None and it["pagina"] != s.pagina_inicio:
+                s.pagina_inicio = it["pagina"]
+                s.save(update_fields=["pagina_inicio"])
+            n_atu += 1
+        if it["tipo"] == "capitulo":
             cap_atual = s
-            n_caps += 1
-        if setores:
-            s.setores.set(setores)
-        faltando = [(sg, pk or s.pk) for sg, pk in faltando]
-    por_sigla = {}
-    for sg, pk in faltando:
-        por_sigla.setdefault(sg, []).append(pk)
-    return n_caps, n_secs, avisos, por_sigla
+        if it["pagina"] is not None:
+            paginas[s.pk] = it["pagina"]
+        for sg in it["siglas_faltando"]:
+            faltando.setdefault(sg, []).append(s.pk)
+    feito_pag = None
+    if paginas and ciclo.paginas.exists():
+        atuais = dict((x.pk, n) for x, n in inicios_das_secoes(ciclo))
+        mudar = {pk: n for pk, n in paginas.items() if atuais.get(pk) != n}
+        if mudar:
+            feito_pag = mudar_inicios(ciclo, mudar)      # Recusado desfaz tudo (transação): a pessoa corrige e tenta de novo
+    return {"capitulos": n_caps, "secoes": n_secs, "atualizadas": n_atu, "avisos": avisos, "faltando": faltando,
+            "paginas": feito_pag}
 
 
 @transaction.atomic

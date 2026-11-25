@@ -161,8 +161,10 @@ def reimportar(imp, user):
     if not paginas:
         raise I.Recusado("Não há páginas lidas neste PDF.")
     inicios = I.inicios_gravados(ciclo, exceto=imp)
-    if inicios:      # as seções que já não existem saem; as novas ficam com o que o sistema achar
+    if inicios:      # as seções que já não existem saem; as novas ficam com a página prevista ou com o que o sistema achar
         inicios = {k: v for k, v in inicios.items() if ciclo.secoes.filter(pk=k).exists()}
+        for s in ciclo.secoes.filter(pagina_inicio__isnull=False).exclude(pk__in=list(inicios)):
+            inicios[s.pk] = s.pagina_inicio
     try:
         marcos, faltam = I.marcos_com_escolhas(ciclo, paginas, e_fixo, inicios or None)
     except I.Recusado:            # página escolhida antes não existe no PDF novo: volta ao que o sistema achar

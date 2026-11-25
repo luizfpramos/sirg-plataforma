@@ -47,8 +47,9 @@
   </div>
   <details class="px-3 pb-2" open><summary class="mini text-secondary">Por setor (clique no setor para ver o que falta)</summary>
   <div class="table-responsive mt-2"><table class="table table-sm align-middle mb-2">
-    <thead><tr><th>Setor</th><th style="width:30%">Números</th><th>Texto revisado</th><th>Trechos marcados</th><th>Enviadas</th><th>Aprovadas</th></tr></thead>
+    <thead><tr><th>Setor</th><th class="text-end" title="Itens a preencher: números das tabelas, metas do PDI, xxxxx e blocos vazios">A preencher</th><th style="width:26%">Números das tabelas</th><th>Texto revisado</th><th>Trechos marcados</th><th>Enviadas</th><th>Aprovadas</th></tr></thead>
     <tbody>{% for d in por_setor %}<tr><td><a href="{% url 'pendencias' ciclo.ano %}?minhas=0&amp;setor={{ d.setor.sigla|urlencode }}" title="Ver o que falta para {{ d.setor.sigla }}"><span class="badge badge-setor">{{ d.setor.sigla }}</span> <span class="mini">{{ d.setor.nome }}</span></a></td>
+      <td class="text-end">{% if d.falta %}<a class="badge badge-faltam text-decoration-none" href="{% url 'pendencias' ciclo.ano %}?minhas=0&amp;setor={{ d.setor.sigla|urlencode }}" title="Ver o que falta para {{ d.setor.sigla }}">{{ d.falta }}</a>{% else %}<i class="bi bi-check2 text-success" title="Nada a preencher"></i>{% endif %}</td>
       <td>{% if d.t %}<div class="d-flex align-items-center gap-2"><div class="progress flex-grow-1" style="height:6px"><div class="progress-bar {% if d.pct == 100 %}bg-success{% endif %}" style="width:{{ d.pct }}%"></div></div><span class="mini">{{ d.pct }}%</span></div>{% else %}<span class="mini text-secondary">—</span>{% endif %}</td>
       <td class="mini">{{ d.escritas }} de {{ d.com_texto|default:0 }}</td><td class="mini">{% if d.marcas %}<span class="badge badge-atualizar">{{ d.marcas }}</span>{% else %}—{% endif %}</td><td class="mini">{{ d.enviadas }} de {{ d.secoes }}</td><td class="mini">{{ d.aprovadas }} de {{ d.secoes }}</td></tr>{% endfor %}</tbody>
   </table></div></details>

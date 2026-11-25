@@ -52,6 +52,24 @@ def a_preencher(user, ciclo, calc=None, pend=None, todas=False, setor=""):
             "por_secao": por_secao}
 
 
+def por_setor(ciclo, calc=None, pend=None):
+    """{sigla: itens a preencher} de cada setor, numa passada só. Igual a `a_preencher(..., setor=sigla)["total"]`
+    (2.23: coluna "A preencher" do Início do Editor-chefe)."""
+    if pend is None:
+        pend = consistencia.verificar(ciclo, calc or Calculadora(ciclo))
+    out = {}
+    for p in pend:
+        if p.severidade == "falta":
+            for sg in {s.sigla for s in p.setores}:
+                out[sg] = out.get(sg, 0) + 1
+    for s in ciclo.secoes.prefetch_related("setores"):
+        n = F.campos_vazios_da_secao(s) + F.blocos_vazios_da_secao(s)
+        if n:
+            for x in s.setores.all():
+                out[x.sigla] = out.get(x.sigla, 0) + n
+    return out
+
+
 def secoes_do_fluxo(ciclo):
     """As seções que passam pelo fluxo (enviar, aprovar): todas as subseções e os capítulos que têm texto,
     tabela ou gráfico próprios. É a mesma base em todas as contagens de seções enviadas e aprovadas."""

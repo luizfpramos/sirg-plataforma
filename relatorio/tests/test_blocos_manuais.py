@@ -174,7 +174,7 @@ class BlocosManuaisTests(TestCase):
 
     def test_tela_de_secoes_mostra_as_paginas_depois_de_aplicar(self):
         r = self.client.get(reverse("secoes_lista", args=[2030]))
-        self.assertNotContains(r, "Página em que cada seção começa")
+        self.assertContains(r, "Salvar as páginas previstas")      # 2.23: antes do PDF, a página prevista
         self.aplicar()
         r = self.client.get(reverse("secoes_lista", args=[2030]))
         self.assertContains(r, "Página em que cada seção começa")

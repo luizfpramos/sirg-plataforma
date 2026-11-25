@@ -100,6 +100,10 @@ class Secao(models.Model):
                                   help_text="Texto desta seção no relatório anterior (só para consulta).")
     referencia_fonte = models.CharField("origem da referência", max_length=120, blank=True, default="",
                                         help_text="Ex.: RG 2025, p. 50–51.")
+    pagina_inicio = models.PositiveSmallIntegerField(
+        "página prevista no PDF", null=True, blank=True,
+        help_text="Página do PDF diagramado em que a seção começa, como no sumário (2.23). A importação do PDF usa "
+                  "este número na conferência; depois de aplicar, vale a página das páginas do relatório.")
     history = HistoricalRecords(m2m_fields=[setores])
 
     class Meta:

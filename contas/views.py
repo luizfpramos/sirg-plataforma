@@ -207,8 +207,12 @@ def _resumo_relatorio(user):
     for m in minhas:
         m["ultima"] = ultima.get(m["s"].pk)
         m["falta"] = conta_pend["por_secao"].get(m["s"].pk, 0)
+    from relatorio.pendentes import por_setor as falta_por_setor
+    faltas = falta_por_setor(c, calc, pend) if (P.e_master(user) or P.e_admin(user)) else {}
     for d in [geral] + list(por_setor.values()):
         d["pct"] = A.percentual(d["f"], d["t"])
+        if "setor" in d:
+            d["falta"] = faltas.get(d["setor"].sigla, 0)
     acompanha = P.e_master(user) or P.e_admin(user)
     return {"ciclo": c, "minhas_secoes": minhas, "resumo_ciclo": consistencia.resumo(pend),
             "pct_meus": A.percentual(f_tot, t_tot), "n_escritas": sum(1 for m in minhas if m["escrito"]),
@@ -576,6 +580,12 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.23", "novembro de 2026", [
+        "Seções: a lista colada aceita a página em que cada seção começa, como no sumário do PDF (\"Título ...... 51\", \"| p. 51\" ou \"Título, p. 51\"). Antes de gravar, o botão Conferir mostra o que vai ser criado ou atualizado, com setores e páginas, e os avisos. Título que já existe é atualizado (setores e página), não duplicado.",
+        "Página prevista: antes de importar o PDF, a tela de Seções guarda a página em que cada seção começa (também no lápis da seção). A conferência da importação já vem com essas páginas e avisa quando o título foi achado em outra. Depois de aplicar o PDF, a lista com páginas passa as páginas para a seção certa, e a conferência mostra \"hoje: p. …\" antes de gravar.",
+        "Relatório: ao clicar num número de outro setor, aparece de onde ele vem e quem preenche; o aviso de leitura diz de quem é a seção e aparece uma vez por seção; trecho concluído explica como reabrir. Com a caixa de preencher um número aberta, a barra do trecho sai da frente.",
+        "Início do Editor-chefe: coluna A preencher por setor, com o mesmo número que o setor vê, e link para o que falta. Itens do sumário com altura mínima de 24 px (WCAG 2.5.8).",
+    ]),
     ("2.22", "novembro de 2026", [
         "Revisão de usabilidade e acessibilidade (heurísticas de Nielsen e WCAG 2.2 AA): o que falta preencher é contado do mesmo jeito em todas as telas (Início, Relatório, O que falta, Quadros de números e Baixar em Word): números das tabelas, metas do PDI, xxxxx do texto e blocos vazios. O botão Faltam leva também às metas do PDI. As seções enviadas e aprovadas têm a mesma base no Início, no Ler e no Word.",
         "Relatório: os xxxxx e os blocos das seções de outros setores ficam em cinza, sem a barra colorida; o destaque amarelo fica só no que a pessoa preenche. O motivo de o envio estar bloqueado aparece escrito ao lado do botão. A barra do trecho (Concluí, Versões) não cobre mais o texto do bloco vizinho. O bloco cujo texto passou do espaço da página fica com contorno vermelho e aviso. \"Desfazer\" da conclusão passou a se chamar \"Reabrir o trecho\".",

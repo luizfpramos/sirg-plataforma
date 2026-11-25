@@ -23,7 +23,7 @@
     {% if filhas %}<ul class="list-unstyled mb-0 mt-1 ms-3">{% for s in filhas %}
       <li class="d-flex align-items-center gap-2 border-top py-1">
         <span class="flex-grow-1">{{ s.titulo }}
-          <span class="mini {% if s.setores.all %}text-secondary{% else %}text-danger{% endif %}">· {% for st in s.setores.all %}{{ st.sigla }}{% if not forloop.last %}, {% endif %}{% empty %}sem setor{% endfor %}{% with n=s.paginas.all|length %}{% if n %} · {{ n }} pág.{% endif %}{% endwith %}{% if s.conteudo_fixo %} · <span class="badge text-bg-secondary">conteúdo fixo</span>{% endif %}</span></span>
+          <span class="mini {% if s.setores.all %}text-secondary{% else %}text-danger{% endif %}">· {% for st in s.setores.all %}{{ st.sigla }}{% if not forloop.last %}, {% endif %}{% empty %}sem setor{% endfor %}{% with n=s.paginas.all|length %}{% if n %} · {{ n }} pág.{% elif s.pagina_inicio %} · começa na p. {{ s.pagina_inicio }}{% endif %}{% endwith %}{% if s.conteudo_fixo %} · <span class="badge text-bg-secondary">conteúdo fixo</span>{% endif %}</span></span>
         {% include "relatorio/_secao_acoes.html" with s=s primeira=forloop.first ultima=forloop.last %}
       </li>{% endfor %}</ul>{% endif %}
     <a class="mini" href="{% url 'secao_nova' ciclo.ano %}?pai={{ cap.chave }}&voltar=secoes"><i class="bi bi-plus"></i> seção neste capítulo</a>
@@ -35,28 +35,52 @@
 </div>
 
 <div class="col-lg-5">
+  {% if previa %}
+  <form method="post" class="card mb-3 border-primary" id="previa"><div class="card-body">{% csrf_token %}
+    <h2 class="h6">Confira antes de gravar</h2>
+    <p class="mini text-secondary mb-2">{{ previa_n.criar }} para criar · {{ previa_n.atualizar }} para atualizar · {{ previa_n.igual }} já {% if previa_n.igual == 1 %}está{% else %}estão{% endif %} assim. Nada foi gravado ainda.</p>
+    <div class="table-responsive" style="max-height:24rem"><table class="table table-sm align-middle mb-2 mini">
+      <thead class="sticky-top bg-body"><tr><th>Linha</th><th>Item</th><th>Setores</th><th>Página</th><th>O que acontece</th></tr></thead>
+      <tbody>{% for it in previa %}<tr{% if it.avisos %} class="table-warning"{% endif %}>
+        <td class="text-secondary">{{ it.linha }}</td>
+        <td>{% if it.tipo == "secao" %}<span class="ms-2">{{ it.titulo }}</span>{% elif it.tipo %}<strong>{{ it.titulo }}</strong>{% else %}<span class="text-secondary">(sem título)</span>{% endif %}{% for a in it.avisos %}<div class="text-danger">{{ a }}</div>{% endfor %}</td>
+        <td>{% for x in it.setores %}{{ x.sigla }}{% if not forloop.last %}, {% endif %}{% endfor %}{% for sg in it.siglas_faltando %}{% if it.setores or not forloop.first %}, {% endif %}<span class="text-danger" title="Setor que não existe">{{ sg }}</span>{% endfor %}</td>
+        <td>{% if it.pagina %}p. {{ it.pagina }}{% if it.muda_pagina %}<div class="text-primary">hoje: {% if it.pagina_atual %}p. {{ it.pagina_atual }}{% else %}fora do PDF{% endif %}</div>{% endif %}{% else %}—{% endif %}</td>
+        <td>{% if it.acao == "criar" %}<span class="badge text-bg-success">criar {% if it.tipo == "secao" %}seção{% else %}capítulo{% endif %}</span>{% elif it.acao == "atualizar" %}<span class="badge text-bg-primary">atualizar</span>{% elif it.acao == "igual" %}<span class="badge text-bg-light border">já está assim</span>{% else %}<span class="badge text-bg-warning">ignorada</span>{% endif %}</td>
+      </tr>{% endfor %}</tbody></table></div>
+    <textarea name="lista" hidden aria-hidden="true">{{ lista }}</textarea>
+    {% if tem_paginas %}<p class="mini text-secondary mb-2">O PDF já foi aplicado: onde aparece “hoje: p. …”, a seção passa a começar na página da lista, e as páginas e os blocos vão junto.</p>{% endif %}
+    <div class="d-flex gap-2"><button class="btn btn-primary btn-sm" name="acao" value="gravar"><i class="bi bi-check2"></i> Gravar</button><a class="btn btn-outline-secondary btn-sm" href="#lista" onclick="document.getElementById('lista-campo').focus()">Corrigir a lista</a></div>
+  </div></form>
+  {% endif %}
   {% if inicios %}
   <form method="post" action="{% url 'secoes_paginas' ciclo.ano %}" class="card mb-3" id="paginas"><div class="card-body">{% csrf_token %}
     <h2 class="h6">Página em que cada seção começa</h2>
-    <p class="mini text-secondary mb-2">Corrija quando a seção ficou na página errada. Cada seção vai da página inicial até o começo da seguinte; as páginas e os blocos delas passam para a seção certa. Deixe em branco a seção que não está no PDF.</p>
+    {% if tem_paginas %}<p class="mini text-secondary mb-2">Corrija quando a seção ficou na página errada. Cada seção vai da página inicial até o começo da seguinte; as páginas e os blocos delas passam para a seção certa. Deixe em branco a seção que não está no PDF.</p>
+    {% else %}<p class="mini text-secondary mb-2">A página do PDF diagramado em que cada seção começa, como no sumário. Ao importar o PDF, a conferência já vem com estas páginas e mostra quando o título foi achado em outra.</p>{% endif %}
     <div class="table-responsive" style="max-height:28rem"><table class="table table-sm align-middle mb-2">
       <thead class="sticky-top bg-body"><tr><th>Seção</th><th style="width:6.5rem">Começa na p.</th></tr></thead>
       <tbody>{% for s, n in inicios %}<tr>
         <td class="mini">{% if s.pai_id %}<span class="ms-2">{{ s.titulo }}</span>{% else %}<strong>{{ s.titulo }}</strong>{% endif %}</td>
-        <td><div class="input-group input-group-sm"><input class="form-control" type="number" min="1" name="inicio_{{ s.pk }}" value="{{ n|default_if_none:'' }}" aria-label="Página inicial de {{ s.titulo }}">{% if n %}<a class="btn btn-outline-secondary" href="{% url 'editor_pagina' ciclo.ano n %}" title="Abrir a página {{ n }} no editor"><i class="bi bi-box-arrow-up-right"></i></a>{% endif %}</div></td>
+        <td><div class="input-group input-group-sm"><input class="form-control" type="number" min="1" name="inicio_{{ s.pk }}" value="{{ n|default_if_none:'' }}" aria-label="Página inicial de {{ s.titulo }}">{% if n %}{% if tem_paginas %}<a class="btn btn-outline-secondary" href="{% url 'editor_pagina' ciclo.ano n %}" title="Abrir a página {{ n }} no editor"><i class="bi bi-box-arrow-up-right"></i></a>{% endif %}{% endif %}</div></td>
       </tr>{% endfor %}</tbody></table></div>
-    <button class="btn btn-primary btn-sm">Salvar as páginas</button>
+    <button class="btn btn-primary btn-sm">{% if tem_paginas %}Salvar as páginas{% else %}Salvar as páginas previstas{% endif %}</button>
   </div></form>
   {% endif %}
-  <form method="post" class="card"><div class="card-body">{% csrf_token %}
+  <form method="post" class="card" id="lista"><div class="card-body">{% csrf_token %}
     <h2 class="h6">Adicionar várias de uma vez</h2>
-    <p class="mini text-secondary mb-2">Uma linha por item. Linha comum vira <strong>capítulo</strong>; linha começando com <strong>-</strong> vira <strong>seção</strong> do capítulo acima. Para os setores, termine a linha com <strong>| SIGLA, SIGLA</strong>. Dá para colar o sumário do PDF e ajustar.</p>
-    <textarea class="form-control font-monospace mb-2" name="lista" rows="12" aria-label="Lista de capítulos e seções" placeholder="Apresentação
-- Mensagem da dirigente | GAB
-- Sobre o relatório | DGDI
-Visão geral organizacional
-- Quem somos | SEGEP"></textarea>
-    <button class="btn btn-primary">Adicionar</button>
+    <p class="mini text-secondary mb-1">Uma linha por item. Linha comum vira <strong>capítulo</strong>; linha começando com <strong>-</strong> vira <strong>seção</strong> do capítulo acima. Dá para colar o sumário do PDF e ajustar.</p>
+    <ul class="mini text-secondary mb-2 ps-3">
+      <li><strong>Setores:</strong> no fim da linha, <code>| SIGLA, SIGLA</code>.</li>
+      <li><strong>Página:</strong> <code>| p. 51</code>, ou no fim do título, como no sumário: <code>Título ...... 51</code>.</li>
+      <li>Título que já existe é <strong>atualizado</strong> (setores e página), não duplicado.</li>
+    </ul>
+    <textarea class="form-control font-monospace mb-2" id="lista-campo" name="lista" rows="12" aria-label="Lista de capítulos e seções" placeholder="Apresentação ........ 3
+- Mensagem da dirigente | GAB | p. 5
+- Sobre o relatório | DGDI | p. 8
+Visão geral organizacional ...... 10
+- Quem somos | SEGEP | p. 11">{{ lista }}</textarea>
+    <div class="d-flex gap-2"><button class="btn btn-primary" name="acao" value="conferir"><i class="bi bi-eye"></i> Conferir antes de gravar</button><button class="btn btn-outline-secondary" name="acao" value="gravar">Gravar direto</button></div>
   </div></form>
 </div>
 </div>

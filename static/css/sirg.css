@@ -909,3 +909,5 @@ main#conteudo:focus { outline: none; }
 /* 2.22 (WCAG 1.4.3): contraste mínimo de 4,5:1 */
 .pg mark.nome-inst { color: #1f2328; }                 /* texto branco das páginas escuras ficava ilegível no amarelo */
 .btn-outline-secondary { --bs-btn-color: #565e64; --bs-btn-border-color: #8a939b; }
+/* 2.23 (WCAG 2.5.8): itens do sumário com pelo menos 24 px de altura para clicar ou tocar */
+.doc-sumario a { min-height: 24px; }

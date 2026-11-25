@@ -198,8 +198,11 @@ def conferencia(imp):
     linhas, maior = [], 0
     for s in sorted(imp.ciclo.secoes.select_related("pai").prefetch_related("setores"), key=_ordem_secao):
         k = str(s.pk)
-        pagina = escolhas[k] if k in escolhas else achadas.get(s.pk)
-        linhas.append({"s": s, "achada": achadas.get(s.pk), "pagina": pagina, "fixo": s.conteudo_fixo,
+        # 2.23: sem escolha gravada, vale a página prevista na lista de seções; depois, a que o sistema achou
+        pagina = escolhas[k] if k in escolhas else (s.pagina_inicio or achadas.get(s.pk))
+        linhas.append({"s": s, "achada": achadas.get(s.pk), "prevista": s.pagina_inicio, "pagina": pagina,
+                       "difere": bool(s.pagina_inicio and achadas.get(s.pk) and s.pagina_inicio != achadas.get(s.pk)),
+                       "fixo": s.conteudo_fixo,
                        "fora_de_ordem": bool(pagina and pagina < maior)})   # começa antes de uma seção anterior
         maior = max(maior, pagina or 0)
     return linhas
