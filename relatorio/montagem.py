@@ -2,6 +2,7 @@
 Montar o relatório do ano (2.18): os passos em ordem, as seções do ciclo e o ciclo de trabalho.
 
   passos(ciclo)            — os passos da montagem, cada um com a situação e a tela onde se faz
+  ROTEIRO, navegacao(...)  — títulos e telas dos passos, para a barra "Passo N de 8" de cada tela (2.21)
   adicionar_em_lote(...)   — cria capítulos e seções a partir de uma lista colada (ex.: o sumário do PDF)
   mover_secao(...)         — sobe ou desce uma seção entre as irmãs
   tornar_de_trabalho(...)  — o ciclo que o menu abre para todos
@@ -25,6 +26,33 @@ class Recusado(Exception):
 
 
 # --- passos ------------------------------------------------------------------------------------------------------
+# Título curto e tela de cada passo, na ordem. A barra no alto de cada tela (passo anterior, próximo, volta à
+# montagem) sai daqui, e as URLs de passos() também, para as duas nunca divergirem.
+ROTEIRO = [
+    ("Setores e pessoas", lambda ano: reverse("setores") + f"?montagem={ano}"),
+    ("Seções", lambda ano: reverse("secoes_lista", args=[ano])),
+    ("PDF diagramado", lambda ano: reverse("importar_pdf", args=[ano])),
+    ("Blocos nas páginas", lambda ano: reverse("editor_inicio", args=[ano])),
+    ("Atributos dos blocos", lambda ano: reverse("blocos_atributos", args=[ano])),
+    ("Quadros de números", lambda ano: reverse("quadros_lista", args=[ano])),
+    ("PDF do relatório anterior", lambda ano: reverse("pdf_anterior_enviar", args=[ano])),
+    ("Abrir a coleta", lambda ano: reverse("ciclo_editar", args=[ano])),
+]
+
+
+def navegacao(ciclo, n):
+    """Dados da barra de navegação do passo `n` (contado de 1)."""
+    total = len(ROTEIRO)
+    n = max(1, min(int(n), total))
+
+    def item(i):
+        titulo, url = ROTEIRO[i - 1]
+        return {"n": i, "titulo": titulo, "url": url(ciclo.ano)}
+    return {"ciclo": ciclo, "n": n, "total": total, "titulo": ROTEIRO[n - 1][0],
+            "montagem": reverse("montagem", args=[ciclo.ano]),
+            "anterior": item(n - 1) if n > 1 else None, "proximo": item(n + 1) if n < total else None}
+
+
 def passos(ciclo):
     """Os passos da montagem, em ordem. situacao: "feito", "falta" ou "aviso"."""
     from .models import ImportacaoPDF
@@ -50,13 +78,14 @@ def passos(ciclo):
     vazios = [st.sigla for st in ativos if not st.n]
     if not ativos:
         s_set = p("Setores e pessoas", "Cadastre os setores que respondem pelo relatório e as pessoas de cada um.",
-                  "falta", reverse("setores"), "Cadastrar os setores")
+                  "falta", ROTEIRO[0][1](ano), "Cadastrar os setores")
     else:
         txt = (f"{len(ativos)} setor(es) ativo(s). Os setores valem para todos os anos: confira se surgiu algum, "
                f"se algum deixou de existir e se cada um tem pessoas cadastradas.")
         if vazios:
             txt += f" Sem ninguém cadastrado: {', '.join(vazios[:8])}{'…' if len(vazios) > 8 else ''}."
-        s_set = p("Setores e pessoas", txt, "aviso" if vazios else "feito", reverse("setores"), "Conferir os setores")
+        s_set = p("Setores e pessoas", txt, "aviso" if vazios else "feito", ROTEIRO[0][1](ano),
+                  "Conferir os setores")
 
     if not (caps or secs):
         s_sec = p("Seções", "Crie os capítulos e as seções. Dá para colar o sumário do PDF de uma vez.", "falta",

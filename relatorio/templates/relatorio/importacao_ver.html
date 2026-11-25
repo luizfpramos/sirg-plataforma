@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}{{ imp.nome }} — Importar o PDF{% endblock %}
 {% block head %}{% if imp.situacao == "processando" and not imp.interrompida %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'importar_pdf' ciclo.ano %}"><i class="bi bi-arrow-left"></i> PDFs enviados</a></nav>
+{% passo_montagem ciclo 3 %}<nav class="mini mb-2"><a href="{% url 'importar_pdf' ciclo.ano %}"><i class="bi bi-arrow-left"></i> PDFs enviados</a></nav>
 <h1 class="mb-1 h3"><i class="bi bi-file-earmark-pdf"></i> {{ imp.nome }}</h1>
 <p class="mb-3">{% include "relatorio/_importacao_situacao.html" %} <span class="mini text-secondary ms-2">enviado em {{ imp.enviado_em|date:"d/m/Y H:i" }}</span></p>
 

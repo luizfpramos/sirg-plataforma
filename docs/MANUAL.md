@@ -166,7 +166,7 @@ Em **Cores dos gráficos** ficam as paletas, cada uma com um exemplo. Quem tem o
 
 ### Montar o relatório de um novo ano a partir do PDF
 
-Tudo começa em **Montar o relatório** (menu do administrador). A tela mostra os passos em ordem, cada um com a situação (feito, conferir ou a fazer) e o botão para a tela certa. Em **Outro relatório** troca-se o relatório que se está montando; **Tornar este o relatório de trabalho** define qual relatório o menu abre para todos.
+Tudo começa em **Montar o relatório** (menu do administrador). A tela mostra os passos em ordem, cada um com a situação (feito, conferir ou a fazer) e o botão para a tela certa. Cada tela de passo tem, no alto, a mesma barra: **← Montar o relatório** (volta à lista), **Passo N de 8** e os botões do passo anterior e do próximo, para seguir a montagem sem voltar à lista. Em **Outro relatório** troca-se o relatório que se está montando; **Tornar este o relatório de trabalho** define qual relatório o menu abre para todos.
 
 1. **Setores e pessoas:** os setores valem para todos os anos. Confira se surgiu algum setor, se algum deixou de existir (desative) e se cada um tem pessoas cadastradas; a montagem mostra os que estão sem ninguém.
 2. **Seções:** crie os capítulos e as seções, com os setores responsáveis. Dá para colar uma lista de uma vez (por exemplo, o sumário do PDF): linha comum vira capítulo, linha começando com **-** vira seção do capítulo acima, e **| SIGLA, SIGLA** no fim da linha define os setores. As setas sobem e descem; o lápis edita. Marque **Conteúdo fixo** nas seções praticamente iguais todo ano. Se a lista citar uma sigla que não existe, a tela oferece o botão para criar o setor.

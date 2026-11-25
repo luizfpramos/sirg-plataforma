@@ -1,10 +1,11 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static sirg_rel %}
 {% block titulo %}Blocos da página {{ pg.numero }} — {{ ciclo.titulo }}{% endblock %}
 {% block pagina_classe %}pagina-doc{% endblock %}
 {% block conteudo %}
 <div class="ed-topo d-print-none">
-  <a class="btn btn-sm btn-outline-secondary" href="{% url 'escrever' ciclo.ano %}#pg-{{ pg.numero }}"><i class="bi bi-arrow-left"></i> Relatório</a>
+  {% url 'escrever' ciclo.ano as volta_url %}{% passo_montagem ciclo 4 compacto=True senao_url=volta_url senao_texto='Relatório' %}
+  {% if E_ADMIN %}<a class="btn btn-sm btn-link px-1" href="{% url 'escrever' ciclo.ano %}#pg-{{ pg.numero }}" title="Ver esta página no relatório"><i class="bi bi-file-earmark-text"></i></a>{% endif %}
   <div class="btn-group btn-group-sm" role="group" aria-label="Página">
     {% if anterior %}<a class="btn btn-outline-secondary" href="{% url 'editor_pagina' ciclo.ano anterior %}" title="Página anterior"><i class="bi bi-chevron-left"></i></a>{% else %}<span class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-left"></i></span>{% endif %}
     <span class="btn btn-outline-secondary p-0"><select class="form-select form-select-sm border-0" id="ed-ir" aria-label="Ir para a página" style="width:auto">{% for n in numeros %}<option value="{% url 'editor_pagina' ciclo.ano n %}" {% if n == pg.numero %}selected{% endif %}>Página {{ n }}</option>{% endfor %}</select></span>

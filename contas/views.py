@@ -366,7 +366,17 @@ def setores(request):
                                                                      vinculos__usuario__is_active=True)))
     if request.GET.get("inativos") != "1":
         qs = qs.filter(ativo=True)
-    return render(request, "contas/setores.html", {"setores": qs, "mostrar_inativos": request.GET.get("inativos") == "1"})
+    return render(request, "contas/setores.html", {"setores": qs, "mostrar_inativos": request.GET.get("inativos") == "1",
+                                                   **_da_montagem(request)})
+
+
+def _da_montagem(request):
+    """Setores abertos pelo passo 1 de "Montar o relatório" (?montagem=ANO): a tela mostra a barra dos passos
+    e os links internos levam o parâmetro adiante (2.21)."""
+    from relatorio.models import Ciclo
+    ano = request.GET.get("montagem") or request.POST.get("montagem") or ""
+    c = Ciclo.objects.filter(ano=ano).first() if ano.isdigit() else None
+    return {"ciclo_montagem": c, "q_montagem": f"montagem={c.ano}" if c else ""}
 
 
 @login_required
@@ -381,10 +391,12 @@ def setor(request, pk):
             if mudou:
                 S.registrar("setor_alterado", request.user, setor=s, descricao=", ".join(mudou), request=request)
             messages.success(request, f"Setor {s.sigla} salvo.")
-            return redirect("setor", pk=s.pk)
+            m = _da_montagem(request)["q_montagem"]
+            return redirect(reverse("setor", args=[s.pk]) + (f"?{m}" if m else ""))
     vinculos = VinculoSetor.objects.filter(setor=s).select_related("usuario", "incluido_por", "encerrado_por")
     return render(request, "contas/setor.html", {"setor": s, "form": form, "vinculos": vinculos,
-                                                 "membros": [v for v in vinculos if v.ativo and v.usuario.is_active]})
+                                                 "membros": [v for v in vinculos if v.ativo and v.usuario.is_active],
+                                                 **_da_montagem(request)})
 
 
 @login_required
@@ -568,6 +580,9 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.21", "novembro de 2026", [
+        "Montar o relatório: as oito telas dos passos têm a mesma barra no alto, com a volta para a lista de passos, a indicação \"Passo N de 8\" e os botões do passo anterior e do próximo. Setores, Importar o PDF e Atributos dos blocos, que voltavam para lugares diferentes, agora voltam para a montagem.",
+    ]),
     ("2.20", "novembro de 2026", [
         "Grade das páginas: em Padrão de design, o relatório ganha margens, colunas e medianiz. No editor de páginas, a grade aparece por cima e o bloco encaixa nela ao ser desenhado, movido ou redimensionado (Alt solta livre).",
         "Guias da página: arraste a partir da régua para criar guias só daquela página, para as exceções também ficarem alinhadas. Clique na guia para digitar a posição; arraste para fora da página para apagar; copie as guias para outras páginas.",

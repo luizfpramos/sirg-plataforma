@@ -1,0 +1,11 @@
+{% if so_voltar %}{% if senao_url %}{% if compacto %}<a class="btn btn-sm btn-outline-secondary" href="{{ senao_url }}"><i class="bi bi-arrow-left"></i> {{ senao_texto }}</a>{% else %}<nav class="mini mb-2"><a href="{{ senao_url }}"><i class="bi bi-arrow-left"></i> {{ senao_texto }}</a></nav>{% endif %}{% endif %}
+{% elif compacto %}<a class="btn btn-sm btn-outline-secondary" href="{{ montagem }}" title="Voltar à lista de passos"><i class="bi bi-arrow-left"></i> Montar o relatório</a>
+<span class="mini text-secondary text-nowrap">Passo {{ n }} de {{ total }}</span>
+{% else %}<nav class="passo-nav d-print-none" aria-label="Passos da montagem do relatório">
+  <a class="passo-nav-voltar" href="{{ montagem }}"><i class="bi bi-arrow-left"></i> Montar o relatório</a>
+  <span class="passo-nav-atual">Passo {{ n }} de {{ total }} · {{ titulo }}</span>
+  <span class="passo-nav-setas">
+    {% if anterior %}<a class="btn btn-sm btn-outline-secondary" href="{{ anterior.url }}" title="Passo anterior"><i class="bi bi-chevron-left"></i> {{ anterior.n }}. {{ anterior.titulo }}</a>{% endif %}
+    {% if proximo %}<a class="btn btn-sm btn-outline-primary" href="{{ proximo.url }}" title="Próximo passo">{{ proximo.n }}. {{ proximo.titulo }} <i class="bi bi-chevron-right"></i></a>{% endif %}
+  </span>
+</nav>{% endif %}

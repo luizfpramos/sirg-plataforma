@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}PDF do relatório anterior — {{ ciclo.titulo }}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'montagem' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Montar o relatório</a></nav>
+{% passo_montagem ciclo 7 %}
 <h1 class="mb-1"><i class="bi bi-file-earmark-pdf"></i> PDF do relatório anterior</h1>
 <p class="text-secondary" style="max-width:720px">O relatório publicado no ano anterior, para os setores consultarem ao lado do SiRG (botão no alto do relatório). Não muda nada nas páginas nem nos blocos: é só consulta.</p>
 {% if url %}<p class="mini">Hoje: <a href="{{ url }}" target="_blank" rel="noopener">{% if enviado %}o PDF enviado pela tela{% else %}o PDF que vem no sistema (RG {{ ciclo.ano|add:"-1" }}){% endif %}</a>.</p>{% endif %}

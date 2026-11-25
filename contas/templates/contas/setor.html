@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block titulo %}{% if novo %}Novo setor{% else %}{{ setor.sigla }}{% endif %}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'setores' %}"><i class="bi bi-arrow-left"></i> Setores</a></nav>
+<nav class="mini mb-2"><a href="{% url 'setores' %}{% if q_montagem %}?{{ q_montagem }}{% endif %}"><i class="bi bi-arrow-left"></i> Setores</a></nav>
 <h1 class="mb-0">{% if novo %}Novo setor{% else %}{{ setor.sigla }}{% endif %}</h1>
 {% if not novo %}<div class="subtitulo mb-3">{{ setor.nome }}{% if not setor.ativo %} · <span class="badge text-bg-secondary">inativo</span>{% endif %}</div>{% else %}<div class="mb-3"></div>{% endif %}
 <div class="row g-3">

@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}Atributos dos blocos — {{ ciclo.titulo }}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'escrever' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Escrever o relatório</a></nav>
+{% url 'escrever' ciclo.ano as volta_url %}{% passo_montagem ciclo 5 senao_url=volta_url senao_texto='Escrever o relatório' %}
 <h1 class="mb-1"><i class="bi bi-sliders"></i> Atributos dos blocos de texto</h1>
 <p class="text-secondary">Para cada bloco, defina o setor que escreve, o que se espera no texto e o tamanho. Deixe o setor em branco para valer o da seção. Os limites de caracteres só avisam, não impedem de salvar.</p>
 <form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3">
