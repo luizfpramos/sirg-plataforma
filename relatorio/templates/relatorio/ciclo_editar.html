@@ -14,6 +14,6 @@
     {% for v, r in form.fields.exibicao_vazio.choices %}<div class="form-check"><input class="form-check-input" type="radio" name="exibicao_vazio" id="ev-{{ v }}" value="{{ v }}" {% if form.exibicao_vazio.value == v %}checked{% endif %}><label class="form-check-label" for="ev-{{ v }}">{{ r }}</label></div>{% endfor %}
     <div class="form-text">Só na tela, em cinza, até alguém escrever. O bloco continua vazio para as pendências e para o envio.</div>
   </div>
-  <div class="mb-3"><label class="form-label" for="id_observacao">Observação (aparece no topo do ciclo)</label><textarea class="form-control" id="id_observacao" name="observacao" rows="3">{{ form.observacao.value|default_if_none:'' }}</textarea></div>
+  <div class="mb-3"><label class="form-label" for="id_observacao">Observação (aparece no alto do relatório)</label><textarea class="form-control" id="id_observacao" name="observacao" rows="3">{{ form.observacao.value|default_if_none:'' }}</textarea></div>
 </div><div class="card-footer"><button class="btn btn-primary">Salvar</button></div></form>
 {% endblock %}

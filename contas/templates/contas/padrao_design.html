@@ -8,11 +8,11 @@
     <form method="post" class="card"><div class="card-body">{% csrf_token %}
       <label class="form-label" for="fonte_texto">Fonte do texto</label>
       <select class="form-select mb-3" id="fonte_texto" name="fonte_texto">{% for k, n in fontes %}<option value="{{ k }}"{% if inst.fonte_texto == k %} selected{% endif %}>{{ n }}</option>{% endfor %}</select>
-      <label class="form-label" for="tamanho_texto">Tamanho do texto</label>
+      <label class="form-label" for="tamanho_texto">Tamanho do texto <span class="mini text-secondary">(na tela, em px)</span></label>
       <select class="form-select mb-3" id="tamanho_texto" name="tamanho_texto">{% for t in tamanhos %}<option value="{{ t }}"{% if inst.tamanho_texto == t %} selected{% endif %}>{% if t %}{{ t }} px{% else %}Padrão do sistema{% endif %}</option>{% endfor %}</select>
       <label class="form-label" for="espaco_linhas">Espaço entre linhas</label>
       <select class="form-select mb-3" id="espaco_linhas" name="espaco_linhas">{% for l in linhas %}<option value="{{ l }}"{% if inst.espaco_linhas == l %} selected{% endif %}>{% if l %}{{ l }}×{% else %}Padrão do sistema{% endif %}</option>{% endfor %}</select>
-      <label class="form-label" for="espaco_paragrafos">Espaço entre parágrafos</label>
+      <label class="form-label" for="espaco_paragrafos">Espaço entre parágrafos <span class="mini text-secondary">(na tela, em px)</span></label>
       <select class="form-select mb-3" id="espaco_paragrafos" name="espaco_paragrafos">{% for p in paragrafos %}<option value="{{ p }}"{% if inst.espaco_paragrafos == p %} selected{% endif %}>{% if p %}{{ p }} px{% else %}Padrão do sistema{% endif %}</option>{% endfor %}</select>
       <div class="d-flex gap-2"><button class="btn btn-primary">Salvar</button><button class="btn btn-outline-secondary" name="acao" value="restaurar">Voltar ao padrão do sistema</button></div>
     </div></form>
@@ -44,7 +44,7 @@
         <div class="col-6 col-md-3"><label class="form-label mini mb-0" for="g-med">Medianiz</label><input class="form-control form-control-sm js-grade" id="g-med" name="medianiz" type="number" step="0.5" min="0" value="{{ grade.medianiz|default_if_none:''|stringformat:'s' }}"></div>
       </div>
       <p class="mini text-secondary">Medianiz é o espaço entre as colunas.</p>
-      <div class="d-flex gap-2">{% if ciclo_grade.situacao == "encerrado" %}<span class="mini text-secondary">O ciclo está encerrado.</span>{% else %}<button class="btn btn-primary" name="acao" value="grade">Salvar a grade</button>{% if grade %}<button class="btn btn-outline-secondary" name="acao" value="grade_limpar">Tirar a grade</button>{% endif %}{% endif %}</div>
+      <div class="d-flex gap-2">{% if ciclo_grade.situacao == "encerrado" %}<span class="mini text-secondary">Este relatório está encerrado.</span>{% else %}<button class="btn btn-primary" name="acao" value="grade">Salvar a grade</button>{% if grade %}<button class="btn btn-outline-secondary" name="acao" value="grade_limpar">Tirar a grade</button>{% endif %}{% endif %}</div>
     </div></form>
   </div>
   <div class="col-lg-6">

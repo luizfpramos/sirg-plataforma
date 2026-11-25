@@ -76,7 +76,7 @@ def secoes_lista(request, ano):
             messages.error(request, str(e))
         else:
             if caps or secs:
-                messages.success(request, f"{caps} capítulo(s) e {secs} seção(ões) criados.")
+                messages.success(request, f"{caps} {'capítulo' if caps == 1 else 'capítulos'} e {secs} {'seção' if secs == 1 else 'seções'} criados.")
             for a in avisos:
                 messages.warning(request, a)
             if not (caps or secs or avisos):
@@ -121,7 +121,7 @@ def secoes_paginas(request, ano):
         messages.error(request, str(e))
     else:
         if f["paginas"]:
-            messages.success(request, f"{f['paginas']} página(s) mudaram de seção, com {f['blocos']} bloco(s).")
+            messages.success(request, f"{f['paginas']} {'página mudou' if f['paginas'] == 1 else 'páginas mudaram'} de seção, com {f['blocos']} {'bloco' if f['blocos'] == 1 else 'blocos'}.")
         else:
             messages.info(request, "Nenhuma página mudou de seção.")
     return redirect(reverse("secoes_lista", args=[ano]) + "#paginas")

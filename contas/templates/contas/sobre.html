@@ -22,7 +22,7 @@
     <dl class="row mb-0">
       <dt class="col-sm-3">Responsável</dt><dd class="col-sm-9">{% if INST %}{{ INST.unidade_gestora }} ({{ INST.unidade_gestora_sigla }}) — {{ INST.nome }}{% else %}Diretoria de Governança e Desenvolvimento Institucional (DGDI){% endif %}</dd>
       <dt class="col-sm-3">Versão atual</dt><dd class="col-sm-9">{{ VERSAO }}{% if codigo %} <span class="mini text-secondary">· código {{ codigo|slice:":8" }}</span>{% endif %}</dd>
-      <dt class="col-sm-3">Tecnologia</dt><dd class="col-sm-9">Python e Django, banco SQLite, Bootstrap. Funciona no navegador, na rede interna.</dd>
+      <dt class="col-sm-3">Tecnologia</dt><dd class="col-sm-9">Python e Django, banco SQLite, Bootstrap. Funciona no navegador (Chrome, Edge ou Firefox).</dd>
       <dt class="col-sm-3">Dúvidas</dt><dd class="col-sm-9">Consulte o <a href="{% url 'ajuda' %}">Manual de uso</a> ou fale com a {% if INST %}{{ INST.unidade_gestora_sigla }}{% else %}DGDI{% endif %}.</dd>
     </dl>
   </div></div>

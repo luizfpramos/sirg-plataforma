@@ -171,8 +171,14 @@ def renderizar(html, valores, marcar=True, editavel=False):
             return escape(texto)
         classe = "sirg-campo" + (" vazio" if n is None else "") + (" pode" if editavel else "")
         dica = f"No relatório anterior: {orig}" + (". Clique para preencher." if editavel and n is None else ".")
+        # 2.22 (WCAG 4.1.2): quem preenche ouve "botão, preencher número" e o valor do ano anterior
+        acess = ""
+        if editavel:
+            nome = (f"Preencher número. No relatório anterior: {orig}" if n is None
+                    else f"{texto}. Alterar número. No relatório anterior: {orig}")
+            acess = f' role="button" aria-label="{escape(nome, quote=True)}"'
         return (f'<span class="{classe}" data-c="{chave}" data-orig="{escape(orig, quote=True)}" '
-                f'title="{escape(dica, quote=True)}" contenteditable="false">{escape(texto)}</span>')
+                f'title="{escape(dica, quote=True)}" contenteditable="false"{acess}>{escape(texto)}</span>')
     return CAMPO.sub(troca, html or ""), vazios
 
 

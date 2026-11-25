@@ -13,7 +13,7 @@
     <ul class="list-unstyled mb-0">{% for q in qs %}
       <li class="d-flex flex-wrap align-items-center gap-2 border-top py-1">
         <span class="flex-grow-1">{{ q.titulo }}
-          <span class="mini text-secondary">· {{ q.linhas.all|length }} linha(s) · {% if q.modo_colunas == "anos" %}{{ q.anos_exibidos }} ano(s){% else %}{{ q.colunas.all|length }} coluna(s){% endif %} · {{ q.get_tipo_valor_display|lower }}{% if q.setor %} · {{ q.setor.sigla }}{% endif %}{% with n=q.blocos.all|length %}{% if n %} · em {{ n }} bloco(s){% endif %}{% endwith %}</span></span>
+          <span class="mini text-secondary">· {{ q.linhas.all|length }} linha{{ q.linhas.all|length|pluralize }} · {% if q.modo_colunas == "anos" %}{{ q.anos_exibidos }} ano{{ q.anos_exibidos|pluralize }}{% else %}{{ q.colunas.all|length }} coluna{{ q.colunas.all|length|pluralize }}{% endif %} · {{ q.get_tipo_valor_display|lower }}{% if q.setor %} · {{ q.setor.sigla }}{% endif %}{% with n=q.blocos.all|length %}{% if n %} · em {{ n }} bloco(s){% endif %}{% endwith %}</span></span>
         <a class="btn btn-sm btn-link p-0" href="{% url 'secao' ciclo.ano s.chave %}?aba=dados#quadro-{{ q.chave }}">números</a>
         <a class="btn btn-sm btn-link p-0" href="{% url 'quadro_editar' ciclo.ano q.chave %}">avançado</a>
       </li>{% endfor %}</ul>
@@ -41,7 +41,7 @@
     <textarea class="form-control form-control-sm mb-2" id="q-linhas" name="linhas" rows="4" required placeholder="Alunos participantes
 Recursos utilizados (R$)">{{ dados.linhas|default:'' }}</textarea>
     <div class="mini mb-1">Colunas</div>
-    <div class="form-check"><input class="form-check-input" type="radio" name="modo" id="q-modo-anos" value="anos" {% if dados.modo != "categorias" %}checked{% endif %}><label class="form-check-label mini" for="q-modo-anos">Anos (série histórica), terminando em {{ ciclo.ano }}: <input class="form-control form-control-sm d-inline-block" style="width:4.5rem" type="number" min="1" max="15" name="anos" value="{{ dados.anos|default:ciclo.anos_serie }}" aria-label="Quantos anos"> ano(s)</label></div>
+    <div class="form-check"><input class="form-check-input" type="radio" name="modo" id="q-modo-anos" value="anos" {% if dados.modo != "categorias" %}checked{% endif %}><label class="form-check-label mini" for="q-modo-anos">Anos (série histórica), terminando em {{ ciclo.ano }}: <input class="form-control form-control-sm d-inline-block" style="width:4.5rem" type="number" min="1" max="15" name="anos" value="{{ dados.anos|default:ciclo.anos_serie }}" aria-label="Quantos anos"> anos</label></div>
     <div class="form-check mb-1"><input class="form-check-input" type="radio" name="modo" id="q-modo-cat" value="categorias" {% if dados.modo == "categorias" %}checked{% endif %}><label class="form-check-label mini" for="q-modo-cat">Categorias livres (uma por linha):</label></div>
     <textarea class="form-control form-control-sm mb-2" name="colunas" rows="2" aria-label="Categorias" placeholder="Campus I
 Campus II">{{ dados.colunas|default:'' }}</textarea>

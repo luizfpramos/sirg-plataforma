@@ -69,6 +69,6 @@ def editor_inicio(request, ano):
     primeira = c.paginas.order_by("numero").first()
     if primeira is None:
         from django.contrib import messages
-        messages.info(request, "O ciclo ainda não tem páginas. Importe o PDF do relatório primeiro.")
+        messages.info(request, "O relatório ainda não tem páginas. Importe o PDF do relatório primeiro.")
         return redirect("importar_pdf", ano=ano)
     return redirect("editor_pagina", ano=ano, n=primeira.numero)

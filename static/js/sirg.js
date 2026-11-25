@@ -139,3 +139,13 @@
   window.addEventListener("beforeprint", function () { document.querySelectorAll(".pg").forEach(function (p) { p.dataset.z = p.style.zoom; p.style.zoom = 1; }); });
   window.addEventListener("afterprint", ajustar);
 })();
+
+// 2.22 (WCAG 1.3.1): dicas "?" que abrem ao focar ou tocar, não só ao passar o mouse
+(function () {
+  if (!window.bootstrap || !bootstrap.Popover) return;
+  document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) { bootstrap.Popover.getOrCreateInstance(el); });
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest('[data-bs-toggle="popover"]');
+    if (el) { el.focus(); bootstrap.Popover.getOrCreateInstance(el).show(); }
+  });
+})();

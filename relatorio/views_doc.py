@@ -19,6 +19,7 @@ from . import atributos as AT
 from . import consistencia
 from . import fluxo as F
 from .calculo import Calculadora
+from .pendentes import a_preencher, secoes_do_fluxo
 from .models import Bloco, Ciclo, Comentario, Quadro, Secao, Sugestao
 from . import montagem as M
 from . import nome_inst
@@ -31,7 +32,7 @@ def _secoes_do_usuario(user, ciclo):
     return {s.pk for s in ciclo.secoes.prefetch_related("setores") if meus & {x.pk for x in s.setores.all()}}
 
 
-def estrutura(ciclo, calc, user=None, editor=False):
+def estrutura(ciclo, calc, user=None, editor=False, saida=None):
     """Capítulos e seções com os blocos montados, na ordem do documento.
     No modo editor, cada seção traz também o que o usuário pode fazer nela."""
     secoes = list(ciclo.secoes.select_related("pai").prefetch_related("setores").order_by("ordem", "id"))
@@ -51,8 +52,11 @@ def estrutura(ciclo, calc, user=None, editor=False):
             comentarios.setdefault(c.bloco_id or f"s{c.secao_id}", []).append(c)
         minhas = _secoes_do_usuario(user, ciclo)
     pend = {}
+    conta = {"total": 0, "por_secao": {}}
     if editor:
-        for p in consistencia.verificar(ciclo, calc):
+        todas_pend = consistencia.verificar(ciclo, calc)
+        conta = a_preencher(user, ciclo, calc, todas_pend)      # 2.22: a mesma conta de todas as telas
+        for p in todas_pend:
             if not A.so_texto(p.quadro):           # metas (texto) são preenchidas no próprio documento
                 pend.setdefault(p.quadro.secao_id, []).append(p)
 
@@ -101,7 +105,7 @@ def estrutura(ciclo, calc, user=None, editor=False):
             extra_meu = [p for p in extra if RP.pode_editar_quadro(user, p.quadro)]   # de outro setor: não conta
             d["resumo"] = consistencia.resumo(pend.get(s.pk, []) + extra_meu)
             d["blocos_vazios"] = F.blocos_vazios_da_secao(s) if not ciclo.automatico else 0
-            d["faltam"] = d["resumo"]["faltam"] + d["campos_vazios"] + d["blocos_vazios"]
+            d["faltam"] = conta["por_secao"].get(s.pk, 0)
             d["tem_dados"] = any(q.secao_id == s.pk and not A.so_texto(q) for q in calc.quadros.values())
             proprios = sorted([q for q in calc.quadros.values() if q.secao_id == s.pk and not A.so_texto(q)],
                               key=lambda q: (q.ordem, q.pk))
@@ -117,6 +121,8 @@ def estrutura(ciclo, calc, user=None, editor=False):
         return d
 
     caps = []
+    if saida is not None:
+        saida["conta"] = conta
     for cap in [s for s in secoes if s.pai_id is None]:
         c = item(cap)
         c["secoes"] = [item(s) for s in secoes if s.pai_id == cap.pk]
@@ -174,7 +180,8 @@ def em_paginas(ciclo, caps):
 def escrever(request, ano):
     c = get_object_or_404(Ciclo, ano=ano)
     calc = Calculadora(c)
-    caps = estrutura(c, calc, request.user, editor=True)
+    extra = {}
+    caps = estrutura(c, calc, request.user, editor=True, saida=extra)
     seq = em_paginas(c, caps)
     todas = [x for cap in caps for x in [cap] + cap["secoes"]]
     editaveis = [x for x in todas if x["pode"]]
@@ -189,7 +196,7 @@ def escrever(request, ano):
         "ano_ref": c.ano - 1, "ano_ref_txt": str(c.ano - 1), "url_pdf_ref": M.url_pdf_anterior(c), "tem_referencia": any(x["s"].referencia for x in todas),
         "n_marcas": sum(x["marcas"] for x in todas), "n_marcas_minhas": sum(x["marcas"] for x in minhas),
         "e_master": P.e_master(request.user), "modo_coleta": c.situacao == Ciclo.COLETA,
-        "n_alt": sum(x["n_alt"] for x in todas), "n_faltam": sum(x["faltam"] for x in editaveis),
+        "n_alt": sum(x["n_alt"] for x in todas), "n_faltam": extra["conta"]["total"],
         "pode_comentar": F.pode_comentar(request.user, c.secoes.first())
         if c.secoes.exists() else False,
         "tem_outras": tem_outras and any(x["interessa"] for x in todas)})
@@ -268,7 +275,7 @@ def ler(request, ano):
     n_pend = sum(len(d.get("problemas", [])) for cap in caps for x in [cap] + cap["secoes"] for d in x["blocos"])
     n_marcas = sum(x["marcas"] for cap in caps for x in [cap] + cap["secoes"])
     n_alt = sum(x["n_alt"] for cap in caps for x in [cap] + cap["secoes"])
-    secoes = c.secoes.filter(pai__isnull=False)
+    secoes = secoes_do_fluxo(c)          # 2.22: a mesma base de seções da tela Início
     return render(request, "relatorio/ler.html", {
         "ciclo": c, "caps": caps, "seq": seq, "numeros_pendentes": n_pend, "n_marcas": n_marcas, "n_alt": n_alt,
         "n_secoes": secoes.count(), "n_aprovadas": secoes.filter(situacao=Secao.APROVADA).count(),
@@ -400,19 +407,7 @@ def escrever_atualizar(request, ano):
 
 
 def _faltam(user, ciclo, secoes):
-    """Quanto falta preencher em cada seção pedida e, no total, nas seções que a pessoa escreve."""
-    calc = Calculadora(ciclo)
-    pend = {}
-    for p in consistencia.verificar(ciclo, calc):
-        if p.severidade == "falta" and not A.so_texto(p.quadro):     # metas do PDI: contadas na própria tabela
-            pend[p.quadro.secao_id] = pend.get(p.quadro.secao_id, 0) + 1
-    out, total = {}, 0
-    for s in ciclo.secoes.all():
-        if not F.pode_editar_texto(user, s) and str(s.pk) not in secoes:
-            continue
-        n = pend.get(s.pk, 0) + F.campos_vazios_da_secao(s) + F.blocos_vazios_da_secao(s)
-        if str(s.pk) in secoes:
-            out[str(s.pk)] = n
-        if F.pode_editar_texto(user, s):
-            total += n
-    return {"faltam": out, "total": total}
+    """Quanto falta preencher em cada seção pedida e o total da pessoa (a mesma conta de todas as telas)."""
+    conta = a_preencher(user, ciclo)
+    return {"faltam": {str(pk): conta["por_secao"].get(int(pk), 0) for pk in secoes if str(pk).isdigit()},
+            "total": conta["total"]}

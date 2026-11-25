@@ -149,8 +149,9 @@ def _resumo_relatorio(user):
     f_tot = t_tot = 0
     geral = {"f": 0, "t": 0, "secoes": 0, "escritas": 0, "enviadas": 0, "aprovadas": 0}
     por_setor = {}
-    secoes = [x for x in c.secoes.prefetch_related("setores").select_related("pai")
-              if x.pai_id is not None or x.pk in com_texto]
+    from relatorio.pendentes import secoes_do_fluxo
+    do_fluxo = set(secoes_do_fluxo(c).values_list("pk", flat=True))      # 2.22: a mesma base do Ler e do Word
+    secoes = [x for x in c.secoes.prefetch_related("setores").select_related("pai") if x.pk in do_fluxo]
     secoes.sort(key=lambda x: ((x.pai.ordem if x.pai else x.ordem), 0 if x.pai is None else 1, x.ordem))
     for s in secoes:
         if s.situacao == Secao.ENVIADA:
@@ -200,17 +201,12 @@ def _resumo_relatorio(user):
             paradas.append({"s": s, "ultima": ultima.get(s.pk), "setores": list(s.setores.all()),
                             "atrasada": dias is not None and dias < 0})
         paradas.sort(key=lambda d: (d["ultima"] is not None, d["ultima"] or 0))
-    from relatorio import permissoes as RP
-    from relatorio.consistencia import _metas_pdi
+    # 2.22: a mesma conta do que falta em todas as telas (relatorio/pendentes.py)
+    from relatorio.pendentes import a_preencher
+    conta_pend = a_preencher(user, c, calc, pend)
     for m in minhas:
         m["ultima"] = ultima.get(m["s"].pk)
-        # o que falta preencher: números das tabelas, xxxxx do texto e, no apêndice, as metas da unidade
-        m["falta"] = m["faltam"] + F.campos_vazios_da_secao(m["s"])
-        q = calc.quadros.get("pdi_metas")
-        if q is not None and q.secao_id == m["s"].pk:
-            abertas = [c for c in calc.colunas_de(q) if not c.travada]
-            m["falta"] = sum(1 for p in _metas_pdi(calc, q, abertas)
-                             if p.linha is not None and abertas and RP.pode_editar_celula(user, p.linha, abertas[0]))
+        m["falta"] = conta_pend["por_secao"].get(m["s"].pk, 0)
     for d in [geral] + list(por_setor.values()):
         d["pct"] = A.percentual(d["f"], d["t"])
     acompanha = P.e_master(user) or P.e_admin(user)
@@ -219,7 +215,7 @@ def _resumo_relatorio(user):
             "n_com_texto": sum(1 for m in minhas if m["tem_texto"]),
             "n_marcas": sum(m["marcas"] for m in minhas),
             "n_entregues": entregues, "aguardando": aguardando if P.e_master(user) else [],
-            "falta_total": sum(m.get("falta", 0) for m in minhas),
+            "falta_total": conta_pend["total"], "conta_pend": conta_pend,
             "primeira_minha": minhas[0]["s"].chave if minhas else "",
             "andamento": geral if acompanha else None,
             "prazo_dias": dias, "paradas": paradas[:12], "n_paradas": len(paradas),
@@ -422,7 +418,7 @@ def setor_novo(request):
                 n += 1
             request.session["setores_pedidos"] = pedidos
         messages.success(request, f"Setor {s.sigla} criado"
-                         + (f" e incluído em {n} seção(ões)" if n else "") + "."
+                         + (f" e incluído em {n} {'seção' if n == 1 else 'seções'}" if n else "") + "."
                          + (" Agora cadastre as pessoas dele em Usuários." if seguinte else ""))
         return redirect(seguinte or "setor", **({} if seguinte else {"pk": s.pk}))
     return render(request, "contas/setor.html", {"form": form, "novo": True, "next": seguinte})
@@ -580,6 +576,13 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.22", "novembro de 2026", [
+        "Revisão de usabilidade e acessibilidade (heurísticas de Nielsen e WCAG 2.2 AA): o que falta preencher é contado do mesmo jeito em todas as telas (Início, Relatório, O que falta, Quadros de números e Baixar em Word): números das tabelas, metas do PDI, xxxxx do texto e blocos vazios. O botão Faltam leva também às metas do PDI. As seções enviadas e aprovadas têm a mesma base no Início, no Ler e no Word.",
+        "Relatório: os xxxxx e os blocos das seções de outros setores ficam em cinza, sem a barra colorida; o destaque amarelo fica só no que a pessoa preenche. O motivo de o envio estar bloqueado aparece escrito ao lado do botão. A barra do trecho (Concluí, Versões) não cobre mais o texto do bloco vizinho. O bloco cujo texto passou do espaço da página fica com contorno vermelho e aviso. \"Desfazer\" da conclusão passou a se chamar \"Reabrir o trecho\".",
+        "Editor-chefe: botão Reabrir na faixa da seção aprovada, no Relatório; o envio feito por ele aparece como \"Enviar pelo setor\"; o controle de alterações mostra \"ligado\" ou \"desligado\".",
+        "Nomes iguais ao menu: Quadros de números, Baixar em Word (com a descrição do Word no formato das páginas), Conferência dos números e Relatórios (anos), sem \"ciclo\" nas telas. Passo 8 da montagem: Situação e prazo. Plurais sem parênteses (\"3 blocos\", não \"bloco(s)\"). Editor de páginas: atalhos num botão só e o estado dos botões Guias, Texto do PDF e Encaixar visível.",
+        "Acessibilidade: os gráficos têm texto alternativo com o título e os valores; os xxxxx e os números das tabelas são botões para o leitor de tela; os botões Dados dizem de qual gráfico são; a dica \"?\" da seção abre também pelo teclado e no toque; contraste corrigido no texto branco das menções ao CEFET-MG e nos botões cinza; o aviso no canto tem o X visível e fica na tela o tempo de ler.",
+    ]),
     ("2.21", "novembro de 2026", [
         "Montar o relatório: as oito telas dos passos têm a mesma barra no alto, com a volta para a lista de passos, a indicação \"Passo N de 8\" e os botões do passo anterior e do próximo. Setores, Importar o PDF e Atributos dos blocos, que voltavam para lugares diferentes, agora voltam para a montagem.",
         "Blocos feitos pela pessoa: ao aplicar o PDF, o padrão passa a ser criar só as páginas. No editor, o texto do PDF aparece por cima do fundo (botão Texto do PDF ou tecla T); clicar num texto cria o bloco do tamanho certo, e a pessoa escolhe se o setor escreve (o texto do PDF fica como referência) ou se fica fixo. Shift+clique junta vários textos; desenhar uma área leva os textos de dentro e serve também para imagens e gráficos. \"Deixar como texto fixo\" resolve páginas que não mudam. A sugestão automática de antes continua como opção.",
@@ -821,10 +824,10 @@ def _salvar_grade(request):
     c = _ciclo_da_grade(request)
     url = reverse("padrao_design") + (f"?ciclo={c.ano}" if c else "")
     if c is None:
-        messages.error(request, "Não há ciclo para receber a grade.")
+        messages.error(request, "Não há relatório para receber a grade.")
         return redirect(url)
     if c.situacao == Ciclo.ENCERRADO:
-        messages.error(request, "O ciclo está encerrado.")
+        messages.error(request, "Este relatório está encerrado.")
         return redirect(url)
     larg, alt = _medida_da_pagina(c)
     if request.POST.get("acao") == "grade_limpar":
@@ -955,7 +958,7 @@ def paleta_editar(request, chave=None):
             erros.append("A paleta precisa de pelo menos 2 cores.")
         if request.POST.get("acao") == "previa" or importadas or erros:
             if importadas and not erros:
-                messages.info(request, f"{len(importadas[:12])} cor(es) importada(s). Confira a ordem e clique em Salvar.")
+                messages.info(request, f"{len(importadas[:12])} {'cor importada' if len(importadas[:12]) == 1 else 'cores importadas'}. Confira a ordem e clique em Salvar.")
         else:
             if p is None:
                 p = Paleta(chave=_chave_paleta(nome))

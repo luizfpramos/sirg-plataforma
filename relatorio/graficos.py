@@ -20,6 +20,7 @@ Configuração do bloco de gráfico (Bloco.config):
     recentes_primeiro: em barras horizontais por ano, o ano mais recente fica em cima
 """
 import hashlib
+import html
 import io
 import json
 import logging
@@ -226,19 +227,41 @@ def desenhar(calc, quadro, config, titulo="", formato_saida="svg", largura=7.0):
             if extra:
                 extra = (extra[0], extra[1][k:], extra[2], extra[3])
     cores = paletas.cores()
+    rotulo = descricao(quadro, categorias, series, titulo) if formato_saida == "svg" else ""
     chave = _assinatura(categorias, series, tipo, config, titulo, formato_saida, largura, extra,
                         quadro.casas_decimais, cores)
     with _trava:
         if chave in _cache:
             _cache.move_to_end(chave)
-            return _cache[chave], avisos
+            return _com_rotulo(_cache[chave], rotulo), avisos
     conteudo = desenhar_com_cores(cores, categorias, series, tipo, config or {}, titulo, formato_saida, largura,
                                   extra, quadro.casas_decimais)
     with _trava:
         _cache[chave] = conteudo
         while len(_cache) > 300:
             _cache.popitem(last=False)
-    return conteudo, avisos
+    return _com_rotulo(conteudo, rotulo), avisos
+
+
+def descricao(quadro, categorias, series, titulo=""):
+    """2.22 (WCAG 1.1.1): o texto que o leitor de tela lê no lugar do gráfico: título, séries e valores."""
+    from .formato import numero_br
+    casas = quadro.casas_decimais if quadro.casas_decimais is not None else 0
+    partes = [f"Gráfico: {titulo or quadro.titulo}."]
+    for nome, vals in series:
+        pares = [f"{c}: {numero_br(v, casas)}" for c, v in zip(categorias, vals) if v is not None]
+        sem = [str(c) for c, v in zip(categorias, vals) if v is None]
+        txt = (f"{nome}: " if nome else "") + ("; ".join(pares) if pares else "sem valores")
+        if sem:
+            txt += f" (sem valor em {', '.join(sem)})"
+        partes.append(txt + ".")
+    return " ".join(partes)
+
+
+def _com_rotulo(svg, rotulo):
+    if not rotulo or not isinstance(svg, str):
+        return svg
+    return svg.replace('role="img" ', f'role="img" aria-label="{html.escape(rotulo, quote=True)}" ', 1)
 
 
 def desenhar_com_cores(cores, *args, **kw):

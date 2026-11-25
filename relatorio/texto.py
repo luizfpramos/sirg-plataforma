@@ -138,7 +138,8 @@ def _celula_editavel(calc, q, ref, col_chave, user):
     edicao = formato.para_edicao(li.tipo, v.numero, v.texto, q.casas_decimais) if v is not None else ""
     pode = RP.pode_editar_celula(user, li, col)
     return (f' data-l="{li.pk}" data-c="{col.pk}" data-edicao="{escape(edicao, quote=True)}"'
-            + (' data-pode="1"' if pode else "") + meu)
+            + (f' data-pode="1" role="button" aria-label="{escape(li.rotulo + ": preencher na tabela " + q.titulo, quote=True)}"'
+               if pode else "") + meu)
 
 
 # Trechos destacados para atualizar: <mark class="atualizar" data-orig="texto do relatório anterior">

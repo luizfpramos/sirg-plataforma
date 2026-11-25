@@ -19,6 +19,7 @@ from django.urls import reverse
 
 from contas.models import Setor
 
+from .formato import qtd
 from .forms import gerar_chave
 from .models import Bloco, Ciclo, Secao
 
@@ -38,7 +39,7 @@ ROTEIRO = [
     ("Atributos dos blocos", lambda ano: reverse("blocos_atributos", args=[ano])),
     ("Quadros de números", lambda ano: reverse("quadros_lista", args=[ano])),
     ("PDF do relatório anterior", lambda ano: reverse("pdf_anterior_enviar", args=[ano])),
-    ("Abrir a coleta", lambda ano: reverse("ciclo_editar", args=[ano])),
+    ("Situação e prazo", lambda ano: reverse("ciclo_editar", args=[ano])),
 ]
 
 
@@ -82,10 +83,11 @@ def passos(ciclo):
         s_set = p("Setores e pessoas", "Cadastre os setores que respondem pelo relatório e as pessoas de cada um.",
                   "falta", ROTEIRO[0][1](ano), "Cadastrar os setores")
     else:
-        txt = (f"{len(ativos)} setor(es) ativo(s). Os setores valem para todos os anos: confira se surgiu algum, "
+        txt = (f"{qtd(len(ativos), 'setor ativo', 'setores ativos')}. Os setores valem para todos os anos: confira se surgiu algum, "
                f"se algum deixou de existir e se cada um tem pessoas cadastradas.")
         if vazios:
-            txt += f" Sem ninguém cadastrado: {', '.join(vazios[:8])}{'…' if len(vazios) > 8 else ''}."
+            resto = f" e mais {len(vazios) - 8}" if len(vazios) > 8 else ""
+            txt += f" Sem ninguém cadastrado: {', '.join(vazios[:8])}{resto}."
         s_set = p("Setores e pessoas", txt, "aviso" if vazios else "feito", ROTEIRO[0][1](ano),
                   "Conferir os setores")
 
@@ -93,16 +95,16 @@ def passos(ciclo):
         s_sec = p("Seções", "Crie os capítulos e as seções. Dá para colar o sumário do PDF de uma vez.", "falta",
                   reverse("secoes_lista", args=[ano]), "Criar as seções")
     else:
-        aviso = f" {sem_setor} seção(ões) sem setor responsável." if sem_setor else ""
-        s_sec = p("Seções", f"{caps} capítulo(s) e {secs} seção(ões).{aviso}", "aviso" if sem_setor else "feito",
+        aviso = f" {qtd(sem_setor, 'seção', 'seções')} sem setor responsável." if sem_setor else ""
+        s_sec = p("Seções", f"{qtd(caps, 'capítulo', 'capítulos')} e {qtd(secs, 'seção', 'seções')}.{aviso}", "aviso" if sem_setor else "feito",
                   reverse("secoes_lista", args=[ano]), "Ver as seções")
 
     if n_pag:
-        s_pdf = p("PDF diagramado", f"{n_pag} páginas aplicadas ao ciclo. Seção na página errada? Corrija no "
+        s_pdf = p("PDF diagramado", f"{qtd(n_pag, 'página aplicada', 'páginas aplicadas')} ao relatório. Seção na página errada? Corrija no "
                                     f"passo 2, em “Página em que cada seção começa”.", "feito",
                   reverse("importar_pdf", args=[ano]), "Ver a importação")
     elif imp and imp.situacao == ImportacaoPDF.PRONTA:
-        s_pdf = p("PDF diagramado", "O PDF foi lido. Confira as páginas de cada seção e aplique ao ciclo.", "aviso",
+        s_pdf = p("PDF diagramado", "O PDF foi lido. Confira as páginas de cada seção e aplique ao relatório.", "aviso",
                   reverse("importacao_ver", args=[ano, imp.pk]), "Conferir e aplicar")
     elif imp and imp.situacao == ImportacaoPDF.PROCESSANDO:
         s_pdf = p("PDF diagramado", "O sistema está lendo o PDF.", "aviso",
@@ -114,7 +116,7 @@ def passos(ciclo):
     numeros = [b for b in texto.filter(conteudo__gt="").only("config") if (b.config or {}).get("numero_antigo")]
     sem_bloco = ciclo.paginas.filter(caixas__isnull=True).count() if n_pag else 0
     if not n_blocos and n_pag:
-        s_blo = p("Blocos nas páginas", f"{n_pag} página(s) ainda sem blocos. No editor, clique no texto do PDF para "
+        s_blo = p("Blocos nas páginas", f"{qtd(n_pag, 'página', 'páginas')} ainda sem blocos. No editor, clique no texto do PDF para "
                   f"criar cada bloco, ou desenhe a área de imagens e gráficos.", "falta",
                   reverse("editor_inicio", args=[ano]), "Criar os blocos")
     elif not n_blocos:
@@ -122,21 +124,21 @@ def passos(ciclo):
                   reverse("editor_inicio", args=[ano]), "Editar os blocos")
     else:
         vazios = texto.filter(conteudo="").count()
-        txt = f"{n_blocos} bloco(s) nas páginas, {vazios} vazio(s) para os setores."
+        txt = f"{qtd(n_blocos, 'bloco', 'blocos')} nas páginas, {qtd(vazios, 'vazio', 'vazios')} para os setores."
         if sem_bloco:
-            txt += f" {sem_bloco} página(s) ainda sem nenhum bloco."
+            txt += f" {qtd(sem_bloco, 'página', 'páginas')} ainda sem nenhum bloco."
         if numeros:
-            txt += (f" {len(numeros)} texto(s) fixo(s) com número do ano anterior (em laranja no editor): troque a área "
+            txt += (f" {qtd(len(numeros), 'texto fixo', 'textos fixos')} com número do ano anterior (em laranja no editor): troque a área "
                     f"por um gráfico ou tabela, libere para o setor ou confira.")
         s_blo = p("Blocos nas páginas", txt, "aviso" if (numeros or sem_bloco) else "feito",
                   reverse("editor_inicio", args=[ano]), "Editar os blocos")
     s_atr = p("Atributos dos blocos",
-              (f"{sem_descricao} bloco(s) vazio(s) sem a descrição do que escrever." if sem_descricao
+              (f"{qtd(sem_descricao, 'bloco vazio', 'blocos vazios')} sem a descrição do que escrever." if sem_descricao
                else "Todos os blocos de texto têm descrição.") if n_blocos else "Setor, descrição e tamanho de cada bloco.",
               ("aviso" if sem_descricao else "feito") if n_blocos else "falta",
               reverse("blocos_atributos", args=[ano]), "Definir os atributos")
     s_qua = p("Quadros de números",
-              f"{n_quadros} quadro(s). Os gráficos e as tabelas dos blocos vêm daqui; os anos anteriores são "
+              f"{qtd(n_quadros, 'quadro', 'quadros')}. Os gráficos e as tabelas dos blocos vêm daqui; os anos anteriores são "
               f"preenchidos pela DGDI." if n_quadros
               else "As tabelas de números que alimentam os gráficos e as tabelas dos blocos.",
               "feito" if n_quadros else "falta", reverse("quadros_lista", args=[ano]), "Quadros de números")
@@ -144,10 +146,11 @@ def passos(ciclo):
     s_ant = p("PDF do relatório anterior (consulta)",
               "Enviado: os setores abrem pelo botão no alto do relatório." if tem_ant
               else ("Opcional. Os setores consultam o relatório publicado no ano anterior ao lado do SiRG."
-                    + (" Hoje vale o que vem no sistema." if url_pdf_anterior(ciclo) else "")),
+                    + (f" Enquanto nenhum for enviado, os setores consultam o RG {ciclo.ano - 1} que já vem no sistema."
+                       if url_pdf_anterior(ciclo) else "")),
               "feito" if tem_ant else "falta", reverse("pdf_anterior_enviar", args=[ano]),
               "Trocar o PDF" if tem_ant else "Enviar o PDF")
-    s_col = p("Abrir a coleta",
+    s_col = p("Situação e prazo",
               f"Situação: {ciclo.get_situacao_display().split(' (')[0].lower()}."
               + ("" if aberto else " Quando tudo estiver pronto, mude para “coleta” para os setores começarem."),
               "feito" if aberto else "falta", reverse("ciclo_editar", args=[ano]), "Situação e prazo")

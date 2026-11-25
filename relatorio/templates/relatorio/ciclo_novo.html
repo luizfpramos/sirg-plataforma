@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block titulo %}Novo ciclo{% endblock %}
+{% block titulo %}Novo relatório{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'ciclos' %}"><i class="bi bi-arrow-left"></i> Ciclos</a></nav>
-<h1>Novo ciclo do relatório</h1>
+<nav class="mini mb-2"><a href="{% url 'ciclos' %}"><i class="bi bi-arrow-left"></i> Relatórios (anos)</a></nav>
+<h1>Novo relatório</h1>
 <form method="post" class="card" style="max-width:720px">{% csrf_token %}<div class="card-body">
   {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
   <div class="row">
@@ -15,6 +15,6 @@
     <div class="col-md-4">{% include "contas/_campo.html" with f=form.anos_serie %}</div>
     <div class="col-md-4"><div class="mb-3"><label class="form-label" for="id_prazo">Prazo da coleta</label><input type="date" class="form-control" id="id_prazo" name="prazo" value="{{ form.prazo.value|default_if_none:'' }}"></div></div>
   </div>
-  <p class="mini text-secondary mb-0">O ciclo nasce <strong>em preparação</strong>: só administradores e Editor-chefe mexem nele até você abrir a coleta.</p>
-</div><div class="card-footer"><button class="btn btn-primary">Criar ciclo</button></div></form>
+  <p class="mini text-secondary mb-0">O relatório nasce <strong>em preparação</strong>: só administradores e Editor-chefe mexem nele até você abrir a coleta.</p>
+</div><div class="card-footer"><button class="btn btn-primary">Criar o relatório</button></div></form>
 {% endblock %}

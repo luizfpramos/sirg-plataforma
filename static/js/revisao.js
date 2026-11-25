@@ -913,7 +913,7 @@ window.SIRGRevisao = (function () {
     document.querySelectorAll(".js-rastreio").forEach(function (b) {
       b.classList.toggle("on", ligado);
       b.setAttribute("aria-pressed", ligado ? "true" : "false");
-      b.querySelector("span").textContent = ligado ? "Controle de alterações ligado" : "Controlar alterações";
+      b.querySelector("span").textContent = "Controle de alterações: " + (ligado ? "ligado" : "desligado");   // 2.22 (E5): rótulo fixo e o estado
     });
     document.documentElement.classList.toggle("rastreando", ligado);
   }

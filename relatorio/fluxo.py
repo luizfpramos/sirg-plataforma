@@ -87,7 +87,7 @@ def motivo_bloco_bloqueado(user, bloco):
     if pode_editar_bloco(user, bloco):
         return ""
     if bloco.concluido_em and pode_responder_pelo_bloco(user, bloco):
-        return "Este trecho está marcado como concluído. Use Desfazer para voltar a editar."
+        return "Este trecho está marcado como concluído. Use Reabrir o trecho para voltar a editar."
     secao = bloco.secao
     if (bloco.config or {}).get("fixo") and secao.ciclo.situacao != Ciclo.ENCERRADO:
         return "Texto fixo do modelo (título ou seção de conteúdo fixo): só o Editor-chefe altera."
@@ -527,7 +527,7 @@ def acao_secao(user, secao, acao, comentario=""):
         r = consistencia.resumo(ps)
         if r["erros"] or r["faltam"]:
             raise Recusado(f"Antes de enviar, resolva as pendências dos dados desta seção: "
-                           f"{r['faltam']} a preencher e {r['erros']} erro(s).")
+                           f"{r['faltam']} a preencher e {r['erros']} {'erro' if r['erros'] == 1 else 'erros'}.")
         if not secao.blocos.exists() and not secao.quadros.exists():
             raise Recusado("A seção está vazia.")
         n_vazios = blocos_vazios_da_secao(secao)

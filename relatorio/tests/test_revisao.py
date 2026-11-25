@@ -204,7 +204,7 @@ class ComentariosTests(RevisaoBase):
         self.entrar(self.grad)
         h = self.client.get(f"/ciclos/{self.c.ano}/escrever/").content.decode()
         self.assertIn('id="doc-revisao"', h)
-        self.assertIn("Controle de alterações ligado", h)          # para o setor, sempre ligado
+        self.assertIn("Controle de alterações: ligado", h)          # para o setor, sempre ligado
         self.assertIn("rastreioObrigatorio: true", h)
         self.assertIn("js/revisao.js", h)
         self.assertNotIn('id="modo-sugerir"', h)

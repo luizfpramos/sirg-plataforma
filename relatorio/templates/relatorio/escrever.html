@@ -9,11 +9,11 @@
   <div class="doc-ferramentas" role="toolbar" aria-label="Ferramentas do documento">
     <div class="doc-ferramentas-linha">
       <div class="doc-status" aria-live="polite"><span class="js-status"><i class="bi bi-cloud-check"></i> Tudo salvo</span></div>
-      {% if n_editaveis %}<button type="button" class="btn btn-sm btn-faltam js-faltam" title="Ir para o próximo número a preencher nas suas seções"><i class="bi bi-arrow-down-circle"></i> <span>{% if n_faltam %}Faltam {{ n_faltam }}{% else %}Tudo preenchido{% endif %}</span></button>{% endif %}
+      {% if n_editaveis %}<button type="button" class="btn btn-sm btn-faltam js-faltam" title="Ir para o próximo item a preencher nas suas seções"><i class="bi bi-arrow-down-circle"></i> <span>{% if n_faltam %}Faltam {{ n_faltam }}{% else %}Tudo preenchido{% endif %}</span></button>{% endif %}
       {% if n_marcas_minhas %}<span class="badge badge-atualizar" title="Menções ao CEFET-MG em amarelo: clique e escolha manter ou trocar por UFCIMG">{{ n_marcas_minhas }} em amarelo</span>{% endif %}
       <span class="doc-revisao-barra ms-auto">
-        {% if n_editaveis %}{% if e_master %}<button type="button" class="btn btn-sm btn-rastreio js-rastreio" aria-pressed="false" title="Ligado: o que você digitar ou apagar fica marcado, com o seu nome (como no Word)"><i class="bi bi-pencil-square"></i> <span>Controlar alterações</span></button>
-        {% else %}<span class="btn btn-sm btn-rastreio on" title="O que você digita ou apaga fica marcado, com o seu nome, até o Editor-chefe aceitar"><i class="bi bi-pencil-square"></i> Controle de alterações ligado</span>{% endif %}{% endif %}
+        {% if n_editaveis %}{% if e_master %}<button type="button" class="btn btn-sm btn-rastreio js-rastreio" aria-pressed="false" title="Ligado: o que você digitar ou apagar fica marcado, com o seu nome (como no Word)"><i class="bi bi-pencil-square"></i> <span>Controle de alterações: desligado</span></button>
+        {% else %}<span class="btn btn-sm btn-rastreio on" title="O que você digita ou apaga fica marcado, com o seu nome, até o Editor-chefe aceitar"><i class="bi bi-pencil-square"></i> Controle de alterações: ligado</span>{% endif %}{% endif %}
         {% if pode_comentar %}<button type="button" class="btn btn-sm btn-outline-secondary js-comentar-sel" title="Selecione um trecho do texto e clique aqui"><i class="bi bi-chat-left-text"></i> Comentar</button>{% endif %}
         <button type="button" class="btn btn-sm btn-cont js-cont-sug" title="Alterações no texto"><span>0 alterações</span></button>
         <button type="button" class="btn btn-sm btn-cont js-cont-com" title="Comentários abertos"><span>0 comentários</span></button>
@@ -48,7 +48,7 @@
   <div class="doc-corpo" id="doc-corpo">
     <aside class="doc-sumario d-print-none" aria-label="Sumário">
       <div class="doc-sumario-titulo">Sumário</div>
-      {% if tem_outras %}<div class="form-check form-switch doc-filtro-minhas"><input class="form-check-input js-so-minhas" type="checkbox" role="switch" id="so-minhas" checked><label class="form-check-label" for="so-minhas">Só o que eu escrevo</label></div>{% endif %}
+      {% if tem_outras %}<div class="form-check form-switch doc-filtro-minhas"><input class="form-check-input js-so-minhas" type="checkbox" role="switch" id="so-minhas" checked><label class="form-check-label" for="so-minhas" title="Mostra no sumário só as seções que você escreve. As páginas do relatório continuam todas na tela.">Só as minhas seções</label></div>{% endif %}
       <nav class="js-sumario">
         {% for cap in caps %}
         <a href="#sec-{{ cap.s.chave }}" class="cap{% if cap.pode %} pode{% endif %}"{% if cap.interessa and cap.blocos %} data-interessa="1"{% endif %}>{{ cap.s.titulo }}</a>
@@ -84,7 +84,7 @@
   <button type="button" class="btn btn-sm btn-light js-bb-versoes" title="Ver as versões anteriores e voltar a uma delas"><i class="bi bi-clock-history"></i> Versões</button>
   <button type="button" class="btn btn-sm btn-light js-bb-imagem" title="Inserir ou trocar a imagem"><i class="bi bi-image"></i> Imagem</button>
   <button type="button" class="btn btn-sm btn-success js-bb-concluir" title="Marcar este trecho como pronto"><i class="bi bi-check2-circle"></i> Concluí</button>
-  <button type="button" class="btn btn-sm btn-outline-secondary js-bb-desfazer" title="Reabrir este trecho para editar"><i class="bi bi-arrow-counterclockwise"></i> Desfazer</button>
+  <button type="button" class="btn btn-sm btn-outline-secondary js-bb-desfazer" title="Reabrir este trecho para editar"><i class="bi bi-unlock"></i> Reabrir o trecho</button>
 </div>
 <div class="modal fade" id="modal-imagem-bloco" tabindex="-1" aria-labelledby="modal-imagem-bloco-titulo" aria-hidden="true">
   <div class="modal-dialog"><form class="modal-content js-imagem-form" enctype="multipart/form-data">

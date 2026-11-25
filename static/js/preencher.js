@@ -219,6 +219,8 @@
     });
   }
   function secaoDe(el) { var s = el.closest("[data-secao]"); return s ? s.getAttribute("data-secao") : ""; }
+  // 2.22: outras partes da tela (ex.: metas do PDI) pedem a recontagem com o evento "sirg:contar"
+  document.addEventListener("sirg:contar", function (e) { atualizarContagens(e.detail || []); });
   function atualizarContagens(secoes) {
     secoes = (secoes || []).filter(Boolean);
     if (!secoes.length) return;
@@ -245,11 +247,27 @@
       return true;
     });
   }
+  // 2.22: metas do PDI que a pessoa preenche e ainda faltam (situação, justificativa ou evidência), na mesma conta
+  function metasPendentes() {
+    var out = [];
+    document.querySelectorAll(".metas-2026 .meta-card").forEach(function (card) {
+      var sit = card.querySelector("select.meta-sit");
+      if (!sit) return;
+      var v = function (t) { return card.querySelector('[data-tipo="' + t + '"] textarea'); };
+      if (!sit.value) { out.push(sit); return; }
+      var alvo = (sit.value === "Não iniciado" || sit.value === "Interrompido") ? v("justificativa") : v("evidencia");
+      if (alvo && !alvo.value.trim()) out.push(alvo);
+    });
+    return out;
+  }
   function irParaProximo(raiz, depoisDe) {
     raiz = raiz || document;
     var lista = function (sel) { return Array.prototype.concat.apply([], Array.prototype.map.call(document.querySelectorAll(sel), pendentesEm)); };
     var minhas;
-    if (raiz === document) minhas = lista(".sec-card.pode, .pg-cx.pode");
+    if (raiz === document) {
+      minhas = lista(".sec-card.pode, .pg-cx.pode").concat(metasPendentes());
+      minhas.sort(function (a, b) { return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1; });
+    }
     else if (raiz.closest && raiz.closest(".pg")) {          // nas páginas do RG: todas as caixas da mesma seção
       var pk = raiz.getAttribute("data-secao");
       minhas = lista('.pg-cx[data-secao="' + pk + '"], .pg-legado[data-secao="' + pk + '"]');
@@ -259,7 +277,7 @@
       var q = document.querySelector((raiz === document ? "" : '[data-secao="' + (raiz.getAttribute && raiz.getAttribute("data-secao")) + '"] ') +
         ".js-dados-secao .badge-faltam") || document.querySelector(".js-dados-secao .badge-faltam");
       if (q) { abrirGaveta(q.closest(".js-dados-secao").dataset.quadro); return; }
-      T.aviso(raiz === document ? "Não há mais xxxxx nas suas seções. Se ainda faltar algum dado, ele está no botão Dados da seção." : "Nesta seção não há mais xxxxx no texto. Confira o botão Dados, no alto da seção.", "success");
+      T.aviso(raiz === document ? "Não há mais xxxxx nem metas em branco nas suas seções. Se ainda faltar algum dado, ele está no botão Dados da seção." : "Nesta seção não há mais xxxxx no texto. Confira o botão Dados, no alto da seção.", "success");
       return;
     }
     var alvo = null;
@@ -274,7 +292,8 @@
     alvo.classList.add("rev-piscar");
     setTimeout(function () { alvo.classList.remove("rev-piscar"); }, 1600);
     setTimeout(function () {
-      if (alvo.classList.contains("sirg-campo")) abrirCampo(alvo);
+      if (alvo.classList.contains("meta-campo")) { if (alvo.closest(".meta-card").hidden) alvo.closest(".meta-card").hidden = false; alvo.focus(); }
+      else if (alvo.classList.contains("sirg-campo")) abrirCampo(alvo);
       else if (alvo.classList.contains("sirg-num")) { if (alvo.dataset.pode === "1") abrirNumero(alvo); else abrirGaveta(alvo.dataset.quadro); }
       else { var f = alvo.closest(".doc-figura"); if (f) abrirGaveta((alvo.dataset && alvo.dataset.quadro) || (f.dataset.quadros || "").split(",")[0]); }
     }, 450);

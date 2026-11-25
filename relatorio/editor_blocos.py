@@ -246,7 +246,7 @@ def fixar_textos(user, pagina, d):
                                  conteudo=c["html"], config={"caixa": caixa, "criado_no_editor": True,
                                                               "campos212": True, "pdf": [c["i"]], "fixo": True})
         novos.append(b.pk)
-    return novos, f"{len(novos)} texto(s) fixo(s) criado(s)."
+    return novos, f"{len(novos)} {'texto fixo criado' if len(novos) == 1 else 'textos fixos criados'}."
 
 
 @transaction.atomic
@@ -346,7 +346,7 @@ def apagar(user, pagina, d):
             escritos.append(b)
     if escritos:
         if not d.get("confirmar"):
-            raise Recusado(f"CONFIRMAR: {len(escritos)} bloco(s) têm texto escrito por um setor. Apagar remove o texto "
+            raise Recusado(f"CONFIRMAR: {len(escritos)} {'bloco tem' if len(escritos) == 1 else 'blocos têm'} texto escrito por um setor. Apagar remove o texto "
                            "da página (uma cópia fica guardada na pasta de dados). Quer apagar?")
         _guardar_copia(ciclo, escritos)
     with transaction.atomic():

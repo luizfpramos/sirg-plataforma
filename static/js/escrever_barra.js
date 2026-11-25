@@ -22,9 +22,27 @@
     if (r.bottom < topo || r.top > window.innerHeight) { barra.style.visibility = "hidden"; return; }
     barra.style.visibility = "visible";
     var h = barra.offsetHeight, w = barra.offsetWidth;
-    var y = r.top - h - 2;
-    if (y < topo) y = Math.min(r.top + 4, window.innerHeight - h - 4);
     var x = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
+    // 2.22 (S3): a barra não cobre texto. Tenta em cima do trecho e embaixo: primeiro onde não encosta em nada,
+    // depois onde só encosta em gráfico ou imagem (nunca em texto). Sem lugar assim, fica em cima (como antes).
+    var raiz = atual.closest(".pg") || document;       // só os blocos da mesma página (rolagem leve)
+    var rects = function (sel) {
+      return Array.prototype.filter.call(raiz.querySelectorAll(sel), function (b) {
+        return b !== atual && !b.contains(atual) && !atual.contains(b);
+      }).map(function (b) { return b.getBoundingClientRect(); });
+    };
+    var textos = rects(".pg-cx, .doc-bloco:not(.pg-obj)"), todos = textos.concat(rects(".pg-obj"));
+    var cobre = function (lista, yy) {
+      return lista.some(function (o) { return o.width && o.left < x + w && o.right > x && o.top < yy + h && o.bottom > yy; });
+    };
+    var cima = r.top - h - 2, baixo = r.bottom + 2;
+    var cabe = function (yy) { return yy >= topo && yy + h <= window.innerHeight - 4; };
+    var opcoes = [[cima, todos], [baixo, todos], [cima, textos], [baixo, textos]];
+    var y = null;
+    for (var i = 0; i < opcoes.length && y === null; i++) {
+      if (cabe(opcoes[i][0]) && !cobre(opcoes[i][1], opcoes[i][0])) y = opcoes[i][0];
+    }
+    if (y === null) y = cabe(cima) ? cima : Math.min(r.top + 4, window.innerHeight - h - 4);
     barra.style.top = Math.round(y) + "px";
     barra.style.left = Math.round(x) + "px";
   }
@@ -121,7 +139,7 @@
       }
       if (!r.ok) { T.aviso(r.erro || "Não foi possível concluir.", "warning"); return; }
       marcar(b, !!r.concluido);
-      T.aviso(r.concluido ? "Trecho concluído. Use Desfazer se precisar mexer de novo." : "Trecho reaberto para edição.", "dark");
+      T.aviso(r.concluido ? "Trecho concluído. Use Reabrir o trecho se precisar mexer de novo." : "Trecho reaberto para edição.", "dark");
       var proximo = r.concluido ? pendentes()[0] : null;
       if (proximo && barra.querySelector(".js-bb-n").textContent === "tudo concluído") T.aviso("Você concluiu todos os seus trechos.", "success");
     });

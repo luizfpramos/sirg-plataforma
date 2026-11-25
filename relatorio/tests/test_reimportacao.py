@@ -148,7 +148,7 @@ class ReimportacaoTests(TestCase):
     def test_telas_e_permissao(self):
         nova = self.ler(pdf_com(y_paragrafo=0.5))
         r = self.client.get(reverse("importacao_ver", args=[2030, nova.pk]))
-        self.assertContains(r, "Reimportar no ciclo")
+        self.assertContains(r, "Reimportar no relatório")
         self.assertContains(r, "Nenhum texto escrito é alterado")
         self.client.logout()
         self.client.login(username="ana", password=SENHA)
