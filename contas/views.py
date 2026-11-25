@@ -568,6 +568,11 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.20", "novembro de 2026", [
+        "Grade das páginas: em Padrão de design, o relatório ganha margens, colunas e medianiz. No editor de páginas, a grade aparece por cima e o bloco encaixa nela ao ser desenhado, movido ou redimensionado (Alt solta livre).",
+        "Guias da página: arraste a partir da régua para criar guias só daquela página, para as exceções também ficarem alinhadas. Clique na guia para digitar a posição; arraste para fora da página para apagar; copie as guias para outras páginas.",
+        "Blocos fora da grade e das guias ganham uma marca laranja, com o botão Ajustar à grade. Nada se move sozinho quando a grade muda. O botão Guias (ou a tecla G) mostra e esconde a grade.",
+    ]),
     ("2.19", "novembro de 2026", [
         "Montar o relatório começa por Setores e pessoas: conferir os setores (que valem para todos os anos) e ver quais não têm ninguém cadastrado, antes de criar as seções.",
         "Na tela de seções, uma sigla da lista colada que ainda não existe ganha o botão para criar o setor, que volta para as seções depois.",
@@ -734,6 +739,8 @@ def padrao_design(request):
     if not P.cuida_das_cores(request.user):
         raise PermissionDenied
     inst = Instituicao.atual()
+    if request.method == "POST" and request.POST.get("acao") in ("grade", "grade_limpar"):
+        return _salvar_grade(request)
     if request.method == "POST":
         try:
             fonte = request.POST.get("fonte_texto", "")
@@ -756,7 +763,65 @@ def padrao_design(request):
         return redirect("padrao_design")
     return render(request, "contas/padrao_design.html", {
         "inst": inst, "fontes": [(k, v[0]) for k, v in design.FONTES.items()], "tamanhos": design.TAMANHOS,
-        "linhas": design.LINHAS, "paragrafos": design.PARAGRAFOS})
+        "linhas": design.LINHAS, "paragrafos": design.PARAGRAFOS, **_contexto_grade(request)})
+
+
+def _ciclo_da_grade(request):
+    from relatorio.models import Ciclo
+    from relatorio.views import ciclo_atual
+    ano = request.POST.get("ciclo") or request.GET.get("ciclo")
+    if ano and str(ano).isdigit():
+        c = Ciclo.objects.filter(ano=int(ano)).first()
+        if c:
+            return c
+    return ciclo_atual()
+
+
+def _medida_da_pagina(ciclo):
+    """Largura e altura mais comuns das páginas do ciclo (as do RG, se ainda não houver páginas)."""
+    from collections import Counter
+    medidas = Counter(ciclo.paginas.values_list("largura", "altura")) if ciclo else Counter()
+    return medidas.most_common(1)[0][0] if medidas else (935.4, 566.9)
+
+
+def _contexto_grade(request):
+    from relatorio import grade as G
+    from relatorio.models import Ciclo
+    c = _ciclo_da_grade(request)
+    larg, alt = _medida_da_pagina(c)
+    g = (c.grade or {}) if c else {}
+    return {"ciclos_grade": Ciclo.objects.order_by("-ano"), "ciclo_grade": c, "grade": g,
+            "grade_dados": {"largura": larg, "altura": alt, "grade": g,
+                            "linhas": G.linhas_da_grade(g, larg, alt)},
+            "max_colunas": G.MAX_COLUNAS}
+
+
+def _salvar_grade(request):
+    from relatorio import grade as G
+    from relatorio.models import Ciclo
+    c = _ciclo_da_grade(request)
+    url = reverse("padrao_design") + (f"?ciclo={c.ano}" if c else "")
+    if c is None:
+        messages.error(request, "Não há ciclo para receber a grade.")
+        return redirect(url)
+    if c.situacao == Ciclo.ENCERRADO:
+        messages.error(request, "O ciclo está encerrado.")
+        return redirect(url)
+    larg, alt = _medida_da_pagina(c)
+    if request.POST.get("acao") == "grade_limpar":
+        nova = {}
+    else:
+        try:
+            nova = G.normalizar_grade({k: request.POST.get(k, "") for k in G.CAMPOS}, larg, alt)
+        except G.Invalido as e:
+            messages.error(request, str(e))
+            return redirect(url)
+    c.grade = nova
+    c.save(update_fields=["grade"])
+    S.registrar("instituicao_alterada", request.user, descricao=f"grade das páginas do {c.titulo}", request=request)
+    messages.success(request, "Grade salva. Os blocos que já existem não foram movidos." if nova
+                     else "Grade removida. O editor de páginas fica sem grade.")
+    return redirect(url)
 
 
 @login_required

@@ -9,6 +9,7 @@ from django.db import transaction
 
 from . import atributos as AT
 from . import fluxo as F
+from . import grade as G
 from .html_seguro import limpar, texto_puro
 from .models import Bloco, Ciclo, Quadro, Secao
 
@@ -28,7 +29,7 @@ def _caixa(b):
     return (b.config or {}).get("caixa") or {}
 
 
-def serializar(b, setores_da_secao):
+def serializar(b, setores_da_secao, grade=None):
     cx = _caixa(b)
     atr = AT.anotar(b, setores_da_secao, cx) if b.tipo in (Bloco.TEXTO, Bloco.IMAGEM) else None
     trava = F.trava_ativa(b)
@@ -47,13 +48,15 @@ def serializar(b, setores_da_secao):
         "comentarios": b.comentarios.count(), "sugestoes": b.sugestoes.filter(situacao="pendente").count(),
         "fixo": bool((b.config or {}).get("fixo")), "numero_antigo": bool((b.config or {}).get("numero_antigo")),
         "referencia": bool((b.config or {}).get("referencia_pdf")),
+        "fora": G.fora_da_grade(cx, grade) if grade else False,
     }
 
 
 def blocos_da_pagina(pagina):
     qs = (pagina.caixas.select_related("secao", "setor", "editando_por", "quadro", "atualizado_por")
           .prefetch_related("secao__setores").order_by("ordem", "id"))
-    return [serializar(b, b.secao.setores.all()) for b in qs]
+    grade = G.guias(pagina)
+    return [serializar(b, b.secao.setores.all(), grade) for b in qs]
 
 
 def opcoes(ciclo):
@@ -341,4 +344,45 @@ def definir_fixo(user, pagina, d):
         if n == 1 else f"{n} blocos liberados para o setor."
 
 
-ACOES = {"criar": criar, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo}
+def definir_guias(user, pagina, d):
+    """Grava as guias próprias da página ({"v": [...], "h": [...]}, em pontos). Não move nenhum bloco."""
+    _checar_ciclo(pagina.ciclo)
+    try:
+        novas = G.normalizar_guias(d.get("guias"), pagina.largura, pagina.altura)
+    except G.Invalido as e:
+        raise Recusado(str(e))
+    pagina.guias = novas
+    pagina.save(update_fields=["guias"])
+    return list(d.get("selecionar") or []), d.get("mensagem") or "Guias salvas."
+
+
+def copiar_guias(user, pagina, d):
+    """Copia as guias desta página para outras do ciclo. `substituir` troca as guias de lá; senão, soma."""
+    ciclo = pagina.ciclo
+    _checar_ciclo(ciclo)
+    try:
+        numeros = G.paginas_da_lista(d.get("paginas"), ciclo.paginas.values_list("numero", flat=True))
+    except G.Invalido as e:
+        raise Recusado(str(e))
+    numeros = [n for n in numeros if n != pagina.numero]
+    if not numeros:
+        raise Recusado("Indique outras páginas deste relatório, como 3, 5-8 ou “todas”.")
+    origem = G.normalizar_guias(pagina.guias, pagina.largura, pagina.altura)
+    if not (origem["v"] or origem["h"]):
+        raise Recusado("Esta página ainda não tem guias para copiar.")
+    substituir = bool(d.get("substituir"))
+    with transaction.atomic():
+        for outra in ciclo.paginas.filter(numero__in=numeros):
+            atual = {"v": [], "h": []} if substituir else (outra.guias or {})
+            junto = {k: list(atual.get(k) or []) + origem[k] for k in ("v", "h")}
+            try:
+                outra.guias = G.normalizar_guias(junto, outra.largura, outra.altura)
+            except G.Invalido:
+                raise Recusado(f"A página {outra.numero} ficaria com guias demais. Use “substituir”.")
+            outra.save(update_fields=["guias"])
+    n = len(numeros)
+    return [], f"Guias copiadas para {n} página{'s' if n > 1 else ''}."
+
+
+ACOES = {"criar": criar, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo,
+         "guias": definir_guias, "copiar_guias": copiar_guias}

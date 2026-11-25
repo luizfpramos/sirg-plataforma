@@ -838,3 +838,32 @@ main#conteudo:focus { outline: none; }
 .ed-area-sel { position: absolute; border: 1.5px dashed #0d6efd; background: rgba(13, 110, 253, .08); pointer-events: none; z-index: 5; }
 .ed-leg.ed-leg-fixo { border: 2px dotted #8a94a0; }
 .ed-leg.ed-leg-numero { border: 2px dashed #e07b00; }
+
+/* Grade e guias do editor de páginas (2.20) */
+.ed-escala { position: relative; }
+.ed-escala .ed-pg { position: absolute; left: 20px; top: 20px; }
+.ed-regua { position: absolute; background-color: #f6f8fb; color: #5b6573; font: 9px/1 system-ui, sans-serif; overflow: hidden; z-index: 2; user-select: none; touch-action: none; }
+.ed-regua-h { left: 20px; top: 0; height: 20px; border-bottom: 1px solid #c3ccd8; cursor: row-resize; }
+.ed-regua-v { left: 0; top: 20px; width: 20px; border-right: 1px solid #c3ccd8; cursor: col-resize; }
+.ed-regua-canto { position: absolute; left: 0; top: 0; width: 20px; height: 20px; background: #eef1f5; border-right: 1px solid #c3ccd8; border-bottom: 1px solid #c3ccd8; }
+.ed-regua span { position: absolute; pointer-events: none; }
+.ed-regua-h span { top: 2px; padding-left: 2px; border-left: 1px solid #8792a2; height: 18px; }
+.ed-regua-v span { left: 2px; padding-top: 2px; border-top: 1px solid #8792a2; width: 18px; writing-mode: vertical-rl; transform: rotate(180deg); }
+.ed-grade, .ed-guias { position: absolute; inset: 0; pointer-events: none; }
+.ed-guias { z-index: 6; }
+.ed-sem-guias .ed-grade, .ed-sem-guias .ed-guias, .ed-sem-guias .ed-fora-sinal { display: none; }
+.ed-margem { position: absolute; outline: 1px solid rgba(194, 24, 91, .75); }
+.ed-coluna { position: absolute; background: rgba(123, 31, 162, .05); border-left: 1px solid rgba(123, 31, 162, .55); border-right: 1px solid rgba(123, 31, 162, .55); }
+.ed-guia { position: absolute; pointer-events: auto; }
+.ed-guia::after { content: ""; position: absolute; background: #00a3c4; }
+.ed-guia.v { top: 0; bottom: 0; width: 9px; margin-left: -4.5px; cursor: col-resize; }
+.ed-guia.v::after { left: 4px; top: 0; bottom: 0; width: 1px; }
+.ed-guia.h { left: 0; right: 0; height: 9px; margin-top: -4.5px; cursor: row-resize; }
+.ed-guia.h::after { top: 4px; left: 0; right: 0; height: 1px; }
+.ed-guia.sel::after { background: #0d6efd; box-shadow: 0 0 0 1px rgba(13, 110, 253, .35); }
+.ed-guia.nova::after { background: #0d6efd; }
+.ed-leitura .ed-guia { pointer-events: none; }
+.ed-fora-sinal { position: absolute; right: 0; top: 0; width: 0; height: 0; border-style: solid; border-width: 0 9px 9px 0; border-color: transparent #e07b00 transparent transparent; pointer-events: none; }
+.ed-leg.ed-leg-fora { border: 0; width: 0; height: 0; border-style: solid; border-width: 0 10px 10px 0; border-color: transparent #e07b00 transparent transparent; }
+.ed-leg.ed-leg-grade { border: 1px solid rgba(123, 31, 162, .8); background: rgba(123, 31, 162, .08); }
+.ed-leg.ed-leg-guia { border: 0; border-left: 2px solid #00a3c4; }
