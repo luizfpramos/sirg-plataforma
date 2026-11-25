@@ -206,7 +206,8 @@ def copiar_ciclo(origem, ano, titulo, anos_serie=None):
     mapa_pagina = {}
     for p in origem.paginas.all():         # o relatório nas páginas do RG: mesma diagramação no ano seguinte
         mapa_pagina[p.pk] = Pagina.objects.create(ciclo=novo, numero=p.numero, largura=p.largura, altura=p.altura,
-                                                  fundo=p.fundo, secao=mapa_secao.get(p.secao_id), fixos=p.fixos)
+                                                  fundo=p.fundo, secao=mapa_secao.get(p.secao_id), fixos=p.fixos,
+                                                  ajustes_fundo=p.ajustes_fundo)
     for b in Bloco.objects.filter(secao__ciclo=origem).select_related("quadro").order_by("ordem", "id"):
         cfg = dict(b.config or {})
         if b.tipo == Bloco.TEXTO:

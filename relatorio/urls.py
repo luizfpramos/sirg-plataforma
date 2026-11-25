@@ -69,6 +69,7 @@ urlpatterns = [
     path("ciclos/<int:ano>/importar-pdf/<int:pk>/ler-de-novo/", IM.importacao_ler_de_novo,
          name="importacao_ler_de_novo"),
     path("arquivos/importacoes/<int:pk>/<str:nome>", IM.importacao_arquivo, name="importacao_arquivo"),
+    path("arquivos/fundos/<int:pk>/<str:assinatura>.jpg", IM.fundo_ajustado, name="fundo_ajustado"),
     path("ciclos/<int:ano>/blocos/novo/", T.bloco_novo, name="bloco_novo"),
     path("ciclos/<int:ano>/blocos/<int:pk>/travar/", T.bloco_travar, name="bloco_travar"),
     path("ciclos/<int:ano>/blocos/<int:pk>/texto/", T.bloco_texto, name="bloco_texto"),

@@ -49,10 +49,14 @@ def caixas_da_pagina(pagina):
     p, e_fixo = _pagina_lida(pagina)
     if not p:
         return []
+    from .fundo import dentro_de_mantida
+    ajustes = pagina.ajustes_fundo or []
     out = []
     for i, c in enumerate(p["caixas"]):
         if e_fixo(c, p["h"]):
             continue                                  # cabeçalho, rodapé e número da página já estão na página
+        if dentro_de_mantida(c, ajustes):
+            continue                                  # 2.24: o texto desta área ficou no fundo, como imagem
         out.append({"i": i, "x": c["x"], "y": c["y"], "w": c["w"], "h": c["h"], "css": c["css"],
                     "html": limpar(c["html"]), "texto": c["texto"][:200], "quebra": c.get("quebra", False)})
     return out

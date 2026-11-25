@@ -1,6 +1,6 @@
 # SiRG — contexto do projeto
 
-Atualizado em 25/11/2026, versão **2.23**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
+Atualizado em 25/11/2026, versão **2.24**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
 
 ## 1. O que é
 
@@ -137,9 +137,16 @@ Atualizado em 25/11/2026, versão **2.23**. O código fica no GitHub; ver `docs/
 - **`montagem.ler_lista`** lê a lista sem gravar (prévia na tela); **`adicionar_em_lote`** grava e devolve um dicionário. Título igual (sem acento e caixa) atualiza setores e página. Página: `| p. 51`, `| 51`, `Título ...... 51`, `Título<Tab>51`, `Título, p. 51`, `Título  51` (dois espaços); um espaço só não conta. Com o PDF aplicado, chama `mudar_inicios` na mesma transação.
 - **`pendentes.por_setor`**: os itens a preencher de cada setor numa passada (coluna do Início do Editor-chefe).
 
+## 4f. Fundo da página e texto do PDF no editor (2.24)
+
+- **Texto do PDF no editor:** `.ed-pdf-txt` segue as regras de `.pg .pg-texto` (p sem margem, `hyphens: manual`, `font-kerning: none`, sup a 0,6 em). Caixa com `quebra` (cada linha do PDF é um `<p>`) recebe a classe `q` e fica `nowrap`, no texto do PDF e no bloco do editor (`serializar` traz `quebra`). Antes, a margem do `<p>` do Bootstrap (1rem) somava-se a cada linha.
+- **`Pagina.ajustes_fundo`** (migration 0017): lista de `{"tipo": "apagar"|"manter", x, y, w, h}` em pt, aplicada na ordem por `relatorio/fundo.py`. `apagar` cobre com a cor mais comum logo fora da área; `manter` cola a mesma área da página original renderizada com texto (`fundo.pdf_original`: `importacoes/<id>/original.pdf` ou `static/referencia/RG2025.pdf`).
+- **Imagem ajustada:** `MEDIA_ROOT/fundos/<pk>-<assinatura>.jpg`, gerada no primeiro pedido (`fundo_ajustado`, `arquivos/fundos/<pk>/<assinatura>.jpg`). A assinatura junta fundo, tamanho e ajustes; muda a cada alteração e apaga as versões antigas. `Pagina.fundo_url` e `fundo_caminho` já devolvem a ajustada (Relatório, Ler, Word).
+- **Texto mantido no fundo:** `textos_pdf.caixas_da_pagina` deixa de fora as caixas com o centro numa área `manter`. Ação do editor: `fundo` (lista inteira). A cópia do ciclo (`servicos.copiar_ciclo`) leva os ajustes.
+
 ## 5. Limitações conhecidas e próximos passos possíveis
 
-- **Fundo das páginas:** fotos, ícones, o logo do CEFET-MG na capa e os organogramas fazem parte da imagem de fundo e não se editam. A troca de marca para UFCIMG (arquivos em `referencias/`) ainda não foi aplicada nas imagens das páginas.
+- **Fundo das páginas:** fotos, ícones, o logo do CEFET-MG na capa e os organogramas fazem parte da imagem de fundo. Desde a 2.24 dá para apagar áreas e manter o texto do PDF no fundo (botão Fundo do editor), mas não trocar uma imagem por outra. A troca de marca para UFCIMG (arquivos em `referencias/`) ainda não foi aplicada nas imagens das páginas.
 - **Fontes:** a plataforma usa Carlito, que tem as mesmas medidas da Calibri. Os textos pequenos dos painéis usam uma fonte parecida com a original, não idêntica. Alguns parágrafos de letra muito pequena (p. 19–23) podem quebrar diferente do PDF.
 - **Números históricos:** alguns números do texto que se referem a anos anteriores também viraram xxxxx. O botão "Manter" resolve.
 - **Anos no texto:** expressões como "Em 2025, foram…" não mudam sozinhas.

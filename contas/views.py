@@ -580,6 +580,10 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.24", "novembro de 2026", [
+        "Editor de páginas: o texto do PDF que ainda não virou bloco fica onde está no PDF. Antes, cada linha de notas de rodapé, endereços, rótulos de figuras e títulos de duas linhas descia um pouco mais que a anterior, saía da página ou ficava por cima do rodapé e das caixas vizinhas; e rótulos curtos (\"Conselho Diretor\", \"Direção-Geral\") quebravam em duas linhas.",
+        "Fundo da página: novo botão Fundo (tecla F) no editor. Arraste sobre a página para marcar uma área e escolha Apagar do fundo (cobre com a cor em volta: traços de grifo, sublinhados de link, logos antigos) ou Manter o texto do PDF no fundo (devolve o texto à área, como imagem, e o tira da lista de texto do PDF: organogramas, cadeias de valor e figuras cujo texto não muda). A imagem original não muda; cada ajuste pode ser desfeito pelo painel.",
+    ]),
     ("2.23", "novembro de 2026", [
         "Seções: a lista colada aceita a página em que cada seção começa, como no sumário do PDF (\"Título ...... 51\", \"| p. 51\" ou \"Título, p. 51\"). Antes de gravar, o botão Conferir mostra o que vai ser criado ou atualizado, com setores e páginas, e os avisos. Título que já existe é atualizado (setores e página), não duplicado.",
         "Página prevista: antes de importar o PDF, a tela de Seções guarda a página em que cada seção começa (também no lápis da seção). A conferência da importação já vem com essas páginas e avisa quando o título foi achado em outra. Depois de aplicar o PDF, a lista com páginas passa as páginas para a seção certa, e a conferência mostra \"hoje: p. …\" antes de gravar.",

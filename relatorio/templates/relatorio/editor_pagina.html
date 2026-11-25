@@ -18,6 +18,7 @@
     <input type="checkbox" class="btn-check" id="ed-ver-pdf" autocomplete="off" checked><label class="btn btn-outline-secondary" for="ed-ver-pdf" title="Mostrar o texto do PDF que ainda não virou bloco (T)"><i class="bi bi-fonts"></i> Texto do PDF</label>
     <input type="checkbox" class="btn-check" id="ed-encaixar" autocomplete="off" checked><label class="btn btn-outline-secondary" for="ed-encaixar" title="O bloco encaixa na grade e nas guias. Segure Alt para soltar livre."><i class="bi bi-magnet"></i> Encaixar</label>
   </div>
+  <input type="checkbox" class="btn-check" id="ed-modo-fundo" autocomplete="off"><label class="btn btn-sm btn-outline-secondary ms-2" for="ed-modo-fundo" title="Apagar áreas do fundo ou manter o texto do PDF no fundo (F)"><i class="bi bi-eraser"></i> Fundo</label>
   {% if pode_grade %}<a class="btn btn-sm btn-link" href="{% url 'padrao_design' %}?ciclo={{ ciclo.ano }}#grade" title="Margens e colunas do relatório">Grade do relatório</a>{% endif %}
   <span class="ed-status mini" id="ed-status" role="status" aria-live="polite"></span>
   <div class="dropdown ms-auto">
@@ -31,7 +32,8 @@
         <dt>Shift + arrastar</dt><dd>seleciona todos os blocos de uma área</dd>
         <dt>Arrastar da régua</dt><dd>cria uma guia (de cima: horizontal; da esquerda: vertical)</dd>
         <dt>Alt ao arrastar</dt><dd>solta o bloco sem encaixar na grade</dd>
-        <dt>G · T</dt><dd class="mb-0">mostra ou esconde as guias · o texto do PDF</dd>
+        <dt>G · T</dt><dd>mostra ou esconde as guias · o texto do PDF</dd>
+        <dt>F</dt><dd class="mb-0">liga ou desliga o ajuste do fundo (apagar uma área ou manter o texto do PDF no fundo)</dd>
       </dl>
     </div>
   </div>
@@ -45,6 +47,7 @@
       <div class="ed-fixos">{{ pg.fixos|safe }}</div>
       <div class="ed-grade" id="ed-grade" aria-hidden="true"></div>
       <div class="ed-pdf" id="ed-pdf"></div>
+      <div class="ed-ajustes" id="ed-ajustes" aria-hidden="true"></div>
       <div class="ed-caixas" id="ed-caixas"></div>
       <div class="ed-guias" id="ed-guias"></div>
     </div>

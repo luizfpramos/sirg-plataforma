@@ -308,6 +308,9 @@ class Pagina(models.Model):
     guias = models.JSONField("guias desta página", default=dict, blank=True,
                              help_text='Guias próprias da página, em pontos: {"v": [x, ...], "h": [y, ...]}. '
                                        "Somam-se à grade do ciclo.")
+    ajustes_fundo = models.JSONField("ajustes no fundo", default=list, blank=True,
+                                     help_text='Áreas apagadas ou com o texto do PDF mantido no fundo, em pontos: '
+                                               '[{"tipo": "apagar" ou "manter", "x", "y", "w", "h"}].')
 
     class Meta:
         ordering = ["numero"]
@@ -318,12 +321,23 @@ class Pagina(models.Model):
 
     @property
     def fundo_url(self):
+        """Endereço da imagem de fundo; com ajustes (2.24), o da cópia ajustada (gerada ao ser pedida)."""
+        if self.ajustes_fundo and self.fundo and self.pk:
+            from django.urls import reverse
+            from . import fundo as F
+            return reverse("fundo_ajustado", args=[self.pk, F.assinatura(self)])
         from .paginas import url_do_fundo
         return url_do_fundo(self.fundo)
 
     @property
     def fundo_caminho(self):
         from .paginas import caminho_do_fundo
+        if self.ajustes_fundo and self.fundo and self.pk:
+            from . import fundo as F
+            try:
+                return F.gerar(self)
+            except Exception:  # pragma: no cover - PDF ou imagem ausente: fica o fundo original
+                pass
         return caminho_do_fundo(self.fundo)
 
 

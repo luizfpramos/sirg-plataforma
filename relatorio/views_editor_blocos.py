@@ -22,6 +22,12 @@ def _acesso(request, ano, n):
     return c, get_object_or_404(Pagina, ciclo=c, numero=n)
 
 
+def _fundo(pg):
+    from . import fundo as FU
+    return {"fundo_url": pg.fundo_url, "ajustes": pg.ajustes_fundo or [],
+            "pdf_original": FU.pdf_original(pg) is not None}
+
+
 @login_required
 def editor_pagina(request, ano, n):
     c, pg = _acesso(request, ano, n)
@@ -30,7 +36,7 @@ def editor_pagina(request, ano, n):
     dados = {"pagina": pg.numero, "largura": pg.largura, "altura": pg.altura,
              "blocos": E.blocos_da_pagina(pg), "opcoes": E.opcoes(c), "secao_da_pagina": pg.secao_id,
              "ano": c.ano, "somente_leitura": c.situacao == Ciclo.ENCERRADO, "guias": G.guias(pg),
-             "pdf": TP.caixas_da_pagina(pg)}
+             "pdf": TP.caixas_da_pagina(pg), **_fundo(pg)}
     from contas import permissoes as P
     from django.urls import reverse
     if P.cuida_das_cores(request.user):
@@ -58,7 +64,8 @@ def editor_acao(request, ano, n, acao):
             return JsonResponse({"ok": False, "confirmar": texto[len("CONFIRMAR: "):]}, status=409)
         return JsonResponse({"ok": False, "erro": texto}, status=400)
     return JsonResponse({"ok": True, "mensagem": mensagem, "selecionar": selecionar,
-                         "blocos": E.blocos_da_pagina(pg), "guias": G.guias(pg)})
+                         "blocos": E.blocos_da_pagina(pg), "guias": G.guias(pg), "pdf": TP.caixas_da_pagina(pg),
+                         **_fundo(pg)})
 
 
 @login_required
