@@ -1,10 +1,11 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static sirg_rel %}
 {% block titulo %}Blocos da página {{ pg.numero }} — {{ ciclo.titulo }}{% endblock %}
 {% block pagina_classe %}pagina-doc{% endblock %}
 {% block conteudo %}
 <div class="ed-topo d-print-none">
-  <a class="btn btn-sm btn-outline-secondary" href="{% url 'escrever' ciclo.ano %}#pg-{{ pg.numero }}"><i class="bi bi-arrow-left"></i> Relatório</a>
+  {% url 'escrever' ciclo.ano as volta_url %}{% passo_montagem ciclo 4 compacto=True senao_url=volta_url senao_texto='Relatório' %}
+  {% if E_ADMIN %}<a class="btn btn-sm btn-link px-1" href="{% url 'escrever' ciclo.ano %}#pg-{{ pg.numero }}" title="Ver esta página no relatório"><i class="bi bi-file-earmark-text"></i></a>{% endif %}
   <div class="btn-group btn-group-sm" role="group" aria-label="Página">
     {% if anterior %}<a class="btn btn-outline-secondary" href="{% url 'editor_pagina' ciclo.ano anterior %}" title="Página anterior"><i class="bi bi-chevron-left"></i></a>{% else %}<span class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-left"></i></span>{% endif %}
     <span class="btn btn-outline-secondary p-0"><select class="form-select form-select-sm border-0" id="ed-ir" aria-label="Ir para a página" style="width:auto">{% for n in numeros %}<option value="{% url 'editor_pagina' ciclo.ano n %}" {% if n == pg.numero %}selected{% endif %}>Página {{ n }}</option>{% endfor %}</select></span>
@@ -12,13 +13,14 @@
   </div>
   <label class="mini ms-2" for="ed-zoom">Zoom</label>
   <select class="form-select form-select-sm" id="ed-zoom" style="width:auto"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.25">125%</option></select>
-  <div class="btn-group btn-group-sm ms-2" role="group" aria-label="Guias">
+  <div class="btn-group btn-group-sm ms-2" role="group" aria-label="Camadas">
     <input type="checkbox" class="btn-check" id="ed-ver-guias" autocomplete="off" checked><label class="btn btn-outline-secondary" for="ed-ver-guias" title="Mostrar a grade e as guias (G)"><i class="bi bi-grid-3x3"></i> Guias</label>
+    <input type="checkbox" class="btn-check" id="ed-ver-pdf" autocomplete="off" checked><label class="btn btn-outline-secondary" for="ed-ver-pdf" title="Mostrar o texto do PDF que ainda não virou bloco (T)"><i class="bi bi-fonts"></i> Texto do PDF</label>
     <input type="checkbox" class="btn-check" id="ed-encaixar" autocomplete="off" checked><label class="btn btn-outline-secondary" for="ed-encaixar" title="O bloco encaixa na grade e nas guias. Segure Alt para soltar livre."><i class="bi bi-magnet"></i> Encaixar</label>
   </div>
   {% if pode_grade %}<a class="btn btn-sm btn-link" href="{% url 'padrao_design' %}?ciclo={{ ciclo.ano }}#grade" title="Margens e colunas do relatório">Grade do relatório</a>{% endif %}
   <span class="ed-status mini" id="ed-status" role="status" aria-live="polite"></span>
-  <span class="mini text-secondary ms-auto d-none d-xl-inline">Arraste no fundo para desenhar um bloco · Shift+clique escolhe vários · Shift+arrastar seleciona uma área · arraste da régua para criar uma guia · Alt solta sem encaixar</span>
+  <span class="mini text-secondary ms-auto d-none d-xl-inline">Clique no texto do PDF para criar o bloco · arraste para desenhar uma área · Shift+clique escolhe vários · Shift+arrastar seleciona uma área · arraste da régua para criar uma guia · Alt solta sem encaixar</span>
 </div>
 <div class="ed-corpo" id="editor" data-url="{% url 'editor_acao' ciclo.ano pg.numero 'x' %}" data-csrf="{{ csrf_token }}">
   <div class="ed-area" id="ed-area"><div class="ed-escala" id="ed-escala">
@@ -28,6 +30,7 @@
     <div class="pg ed-pg" id="ed-pg" style="width:{{ pg.largura|stringformat:'.1f' }}px;height:{{ pg.altura|stringformat:'.1f' }}px;background-image:url('{{ pg.fundo_url }}')">
       <div class="ed-fixos">{{ pg.fixos|safe }}</div>
       <div class="ed-grade" id="ed-grade" aria-hidden="true"></div>
+      <div class="ed-pdf" id="ed-pdf"></div>
       <div class="ed-caixas" id="ed-caixas"></div>
       <div class="ed-guias" id="ed-guias"></div>
     </div>
@@ -36,4 +39,4 @@
 </div>
 {{ dados|json_script:"dados-editor" }}
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/editor_blocos.js' %}"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'js/editor_blocos.js' %}?v={% carimbo 'js/editor_blocos.js' %}"></script>{% endblock %}

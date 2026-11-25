@@ -294,9 +294,22 @@ def conteudo_da_caixa(c, secao, limite, automatico=False):
     return "", {"referencia_pdf": html}, minimo, maximo, 0
 
 
-def aplicar(imp, user, inicios=None):
+MANUAL, SUGERIDOS = "manual", "sugeridos"
+MODOS_DOS_BLOCOS = [
+    (MANUAL, "Eu crio os blocos no editor (recomendado). A importação cria só as páginas; no editor, o texto do PDF "
+             "aparece por cima do fundo e cada bloco nasce de um clique ou de uma área desenhada. Só as seções "
+             "marcadas como conteúdo fixo já recebem os textos do PDF."),
+    (SUGERIDOS, "O sistema sugere os blocos de texto (como antes): cria um bloco para cada caixa de texto do PDF e "
+                "decide sozinho o que fica fixo. Imagens e gráficos continuam a desenhar à mão."),
+]
+
+
+def aplicar(imp, user, inicios=None, blocos=SUGERIDOS):
     """Cria as páginas e os blocos do ciclo a partir do PDF lido. Só num ciclo sem páginas. `inicios`: as páginas
-    iniciais escolhidas na conferência ({pk da seção: página ou None}); sem elas, vale o que o sistema achou."""
+    iniciais escolhidas na conferência ({pk da seção: página ou None}); sem elas, vale o que o sistema achou.
+    `blocos` (2.21): MANUAL (o padrão da tela) cria só as páginas, mais os blocos fixos das seções de conteúdo fixo; quem
+    decide os demais é a pessoa, no editor. SUGERIDOS cria um bloco por caixa de texto, como até a 2.20. O RG 2026
+    automático segue sempre como antes."""
     from .html_seguro import limpar
     from .paginas import _caixa_css, _coluna
     motivo = motivo_para_nao_aplicar(imp)
@@ -306,6 +319,7 @@ def aplicar(imp, user, inicios=None):
     if not paginas:
         raise Recusado("Não há páginas lidas neste PDF.")
     ciclo = imp.ciclo
+    manual = blocos == MANUAL and not ciclo.automatico
     e_fixo = textos_fixos(paginas)
     limite = limite_de_titulo(paginas)
     marcos, faltam = marcos_com_escolhas(ciclo, paginas, e_fixo, inicios)
@@ -336,6 +350,8 @@ def aplicar(imp, user, inicios=None):
             feito["paginas"] += 1
             for i, c in enumerate(corpo):
                 secao = dono(n, _coluna(c, W), c["y"])
+                if manual and not secao.conteudo_fixo:
+                    continue            # a pessoa cria o bloco no editor, a partir do texto do PDF
                 html, extra, minimo, maximo, campos = conteudo_da_caixa(c, secao, limite, ciclo.automatico)
                 feito["campos"] += campos
                 if extra.get("fixo"):
@@ -348,7 +364,7 @@ def aplicar(imp, user, inicios=None):
                     config={"caixa": {"x": c["x"], "y": c["y"], "w": c["w"], "h": c["h"], "css": c["css"],
                                       "quebra": c["quebra"]}, "importacao": imp.pk, "campos212": True, **extra})
                 feito["caixas"] += 1
-        resumo = dict(imp.resumo or {}, aplicado=feito, secoes_achadas=len(marcos),
+        resumo = dict(imp.resumo or {}, aplicado=feito, blocos=MANUAL if manual else SUGERIDOS, secoes_achadas=len(marcos),
                       secoes_faltando=[s.titulo for s in faltam],
                       inicios={str(m[3].pk): m[0] for m in marcos} | {str(s.pk): None for s in faltam})
         ImportacaoPDF.objects.filter(pk=imp.pk).update(

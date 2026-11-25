@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}{{ ciclo.titulo }} — situação{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'montagem' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Montar o relatório</a></nav>
+{% url 'ciclo' ciclo.ano as volta_url %}{% passo_montagem ciclo 8 senao_url=volta_url senao_texto='O relatório' %}
 <h1>Situação e prazo</h1>
 <form method="post" class="card" style="max-width:720px">{% csrf_token %}<div class="card-body">
   {% include "contas/_campo.html" with f=form.titulo %}

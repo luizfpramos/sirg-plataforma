@@ -95,4 +95,4 @@
 </div>
 </form>
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/formsets.js' %}?v={{ VERSAO }}"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'js/formsets.js' %}?v={% carimbo 'js/formsets.js' %}"></script>{% endblock %}

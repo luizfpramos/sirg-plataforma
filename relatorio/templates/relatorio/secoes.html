@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}Seções — {{ ciclo.titulo }}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'montagem' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Montar o relatório</a></nav>
+{% passo_montagem ciclo 2 %}
 <h1 class="mb-1"><i class="bi bi-list-nested"></i> Seções do relatório</h1>
 <p class="text-secondary">{{ ciclo.titulo }}. Os capítulos e as seções, na ordem do relatório, com os setores responsáveis.</p>
 
@@ -35,6 +35,19 @@
 </div>
 
 <div class="col-lg-5">
+  {% if inicios %}
+  <form method="post" action="{% url 'secoes_paginas' ciclo.ano %}" class="card mb-3" id="paginas"><div class="card-body">{% csrf_token %}
+    <h2 class="h6">Página em que cada seção começa</h2>
+    <p class="mini text-secondary mb-2">Corrija quando a seção ficou na página errada. Cada seção vai da página inicial até o começo da seguinte; as páginas e os blocos delas passam para a seção certa. Deixe em branco a seção que não está no PDF.</p>
+    <div class="table-responsive" style="max-height:28rem"><table class="table table-sm align-middle mb-2">
+      <thead class="sticky-top bg-body"><tr><th>Seção</th><th style="width:6.5rem">Começa na p.</th></tr></thead>
+      <tbody>{% for s, n in inicios %}<tr>
+        <td class="mini">{% if s.pai_id %}<span class="ms-2">{{ s.titulo }}</span>{% else %}<strong>{{ s.titulo }}</strong>{% endif %}</td>
+        <td><div class="input-group input-group-sm"><input class="form-control" type="number" min="1" name="inicio_{{ s.pk }}" value="{{ n|default_if_none:'' }}" aria-label="Página inicial de {{ s.titulo }}">{% if n %}<a class="btn btn-outline-secondary" href="{% url 'editor_pagina' ciclo.ano n %}" title="Abrir a página {{ n }} no editor"><i class="bi bi-box-arrow-up-right"></i></a>{% endif %}</div></td>
+      </tr>{% endfor %}</tbody></table></div>
+    <button class="btn btn-primary btn-sm">Salvar as páginas</button>
+  </div></form>
+  {% endif %}
   <form method="post" class="card"><div class="card-body">{% csrf_token %}
     <h2 class="h6">Adicionar várias de uma vez</h2>
     <p class="mini text-secondary mb-2">Uma linha por item. Linha comum vira <strong>capítulo</strong>; linha começando com <strong>-</strong> vira <strong>seção</strong> do capítulo acima. Para os setores, termine a linha com <strong>| SIGLA, SIGLA</strong>. Dá para colar o sumário do PDF e ajustar.</p>

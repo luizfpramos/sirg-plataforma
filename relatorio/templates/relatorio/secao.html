@@ -101,7 +101,7 @@
 {% endblock %}
 {% block scripts %}<script>window.SIRG = {ano: {{ ciclo.ano }}, csrf: "{{ csrf_token }}", editar: "{{ editar_bloco|escapejs }}", secao: {{ secao.pk }}, secaoChave: "{{ secao.chave|escapejs }}", master: {{ pode_sugerir|yesno:'true,false' }}};</script>
 <script src="{% static 'vendor/dompurify/purify.min.js' %}"></script>
-<script src="{% static 'js/quadros.js' %}?v={{ VERSAO }}"></script>
+<script src="{% static 'js/quadros.js' %}?v={% carimbo 'js/quadros.js' %}"></script>
 <script>
 (function () {   // barra do fim: quantos números do setor já estão preenchidos (atualiza enquanto digita)
   var alvo = document.querySelector(".js-fim-contagem");
@@ -148,4 +148,4 @@
   document.addEventListener("focusout", function () { setTimeout(contar, 300); });
   document.addEventListener("change", contar);
 })();
-</script><script src="{% static 'js/texto_comum.js' %}?v={{ VERSAO }}"></script><script src="{% static 'js/editor.js' %}?v={{ VERSAO }}"></script>{% endblock %}
+</script><script src="{% static 'js/texto_comum.js' %}?v={% carimbo 'js/texto_comum.js' %}"></script><script src="{% static 'js/editor.js' %}?v={% carimbo 'js/editor.js' %}"></script>{% endblock %}

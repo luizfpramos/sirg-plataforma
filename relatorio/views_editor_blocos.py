@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from . import editor_blocos as E
 from . import grade as G
+from . import textos_pdf as TP
 from .models import Ciclo, Pagina
 from .views_atributos import pode_definir_atributos
 
@@ -28,8 +29,12 @@ def editor_pagina(request, ano, n):
     i = numeros.index(pg.numero)
     dados = {"pagina": pg.numero, "largura": pg.largura, "altura": pg.altura,
              "blocos": E.blocos_da_pagina(pg), "opcoes": E.opcoes(c), "secao_da_pagina": pg.secao_id,
-             "ano": c.ano, "somente_leitura": c.situacao == Ciclo.ENCERRADO, "guias": G.guias(pg)}
+             "ano": c.ano, "somente_leitura": c.situacao == Ciclo.ENCERRADO, "guias": G.guias(pg),
+             "pdf": TP.caixas_da_pagina(pg)}
     from contas import permissoes as P
+    from django.urls import reverse
+    if P.cuida_das_cores(request.user):
+        dados["url_grade"] = reverse("padrao_design") + f"?ciclo={c.ano}#grade"
     return render(request, "relatorio/editor_pagina.html", {
         "ciclo": c, "pode_grade": P.cuida_das_cores(request.user), "pg": pg, "numeros": numeros, "dados": dados,
         "anterior": numeros[i - 1] if i > 0 else None, "proxima": numeros[i + 1] if i + 1 < len(numeros) else None})

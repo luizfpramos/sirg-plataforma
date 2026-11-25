@@ -10,6 +10,7 @@ from django.db import transaction
 from . import atributos as AT
 from . import fluxo as F
 from . import grade as G
+from . import textos_pdf as TP
 from .html_seguro import limpar, texto_puro
 from .models import Bloco, Ciclo, Quadro, Secao
 
@@ -182,9 +183,27 @@ def criar(user, pagina, d):
         if quadro is None:
             raise Recusado("Escolha o quadro de números do gráfico ou da tabela.")
     caixa = _geometria(pagina, d)
+    atributos = _atributos(ciclo, d)
+    conteudo = ""
     if tipo == Bloco.TEXTO:
         caixa.update({"css": _css_de_corpo(pagina), "quebra": False})
         config = {"caixa": caixa, "criado_no_editor": True, "campos212": True}
+        # 2.21: bloco feito a partir do texto do PDF (clique na caixa ou área desenhada sobre ela)
+        indices = [int(i) for i in (d.get("pdf") or []) if str(i).lstrip("-").isdigit()]
+        html, css, quebra = TP.juntar_caixas(pagina, indices) if indices else ("", "", False)
+        if html:
+            caixa.update({"css": css, "quebra": quebra})
+            config["pdf"] = indices
+            if d.get("texto") == "fixo":
+                conteudo, config["fixo"] = html, True
+            else:
+                config["referencia_pdf"] = html
+                if not atributos["min_caracteres"] and not atributos["max_caracteres"]:
+                    from .importador import tamanho_sugerido
+                    atributos["min_caracteres"], atributos["max_caracteres"] = \
+                        tamanho_sugerido(AT.contar_caracteres(html))
+        elif d.get("texto") == "fixo":
+            raise Recusado("Para um texto fixo, escolha o texto do PDF: clique nele ou desenhe a área por cima.")
     else:
         caixa.update({"fundo": "#ffffff", "titulo": False})
         config = {"caixa": caixa, "criado_no_editor": True}
@@ -195,8 +214,39 @@ def criar(user, pagina, d):
             config["imagem"] = {"ajuste": "contain"}
     b = Bloco.objects.create(secao=secao, pagina=pagina, tipo=tipo, quadro=quadro, ordem=_proxima_ordem(pagina),
                              titulo=quadro.titulo if quadro else "", config=config, atualizado_por=None,
-                             **_atributos(ciclo, d))
+                             conteudo=conteudo, **atributos)
+    if config.get("fixo"):
+        return [b.pk], "Texto fixo criado: só o Editor-chefe altera."
+    if config.get("referencia_pdf"):
+        return [b.pk], "Bloco criado para o setor, com o texto do PDF como referência do ano anterior."
     return [b.pk], "Bloco criado."
+
+
+@transaction.atomic
+def fixar_textos(user, pagina, d):
+    """Cria um bloco de texto fixo para cada caixa do PDF da página que ainda não tem bloco por cima (ou só para as
+    caixas `pdf`, se vierem). Serve para páginas que não mudam de um ano para o outro (capa, apresentação)."""
+    ciclo = pagina.ciclo
+    _checar_ciclo(ciclo)
+    existentes = blocos_da_pagina(pagina)
+    pedidas = {int(i) for i in (d.get("pdf") or []) if str(i).lstrip("-").isdigit()}
+    livres = [c for c in TP.caixas_da_pagina(pagina)
+              if not TP.coberta(c, existentes) and (not pedidas or c["i"] in pedidas)]
+    if not livres:
+        raise Recusado("Não há texto do PDF sem bloco nesta página.")
+    secao = _secao(ciclo, d.get("secao")) if d.get("secao") else (pagina.secao or Secao.objects.filter(
+        ciclo=ciclo).order_by("ordem", "id").first())
+    if secao is None:
+        raise Recusado("Crie as seções do relatório primeiro.")
+    novos = []
+    for c in livres:
+        caixa = {"x": round(c["x"], 1), "y": round(c["y"], 1), "w": round(c["w"], 1), "h": round(c["h"], 1),
+                 "css": c["css"], "quebra": c["quebra"]}
+        b = Bloco.objects.create(secao=secao, pagina=pagina, tipo=Bloco.TEXTO, ordem=_proxima_ordem(pagina),
+                                 conteudo=c["html"], config={"caixa": caixa, "criado_no_editor": True,
+                                                              "campos212": True, "pdf": [c["i"]], "fixo": True})
+        novos.append(b.pk)
+    return novos, f"{len(novos)} texto(s) fixo(s) criado(s)."
 
 
 @transaction.atomic
@@ -384,5 +434,5 @@ def copiar_guias(user, pagina, d):
     return [], f"Guias copiadas para {n} página{'s' if n > 1 else ''}."
 
 
-ACOES = {"criar": criar, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo,
+ACOES = {"criar": criar, "fixar_textos": fixar_textos, "salvar": salvar, "juntar": juntar, "apagar": apagar, "fixo": definir_fixo,
          "guias": definir_guias, "copiar_guias": copiar_guias}

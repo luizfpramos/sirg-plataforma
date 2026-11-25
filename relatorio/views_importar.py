@@ -51,6 +51,8 @@ def importacao_ver(request, ano, pk):
     if not reimportar and imp.situacao == ImportacaoPDF.PRONTA:
         ctx["conferencia"] = I.conferencia(imp)
         ctx["exibicoes"] = Ciclo.EXIBICOES_VAZIO
+        ctx["modos_blocos"] = I.MODOS_DOS_BLOCOS
+        ctx["modo_blocos"] = (imp.resumo or {}).get("modo_blocos") or I.MANUAL
     if imp.situacao in (ImportacaoPDF.PRONTA, ImportacaoPDF.APLICADA):
         paginas = I.paginas_lidas(imp)
         numeros = [p["n"] for p in paginas]
@@ -99,19 +101,28 @@ def importacao_aplicar(request, ano, pk):
                 c.exibicao_vazio = modo
                 c.save(update_fields=["exibicao_vazio"])
         # guarda as escolhas, para não se perderem se a aplicação for recusada
+        modo_blocos = request.POST.get("modo_blocos")
+        if modo_blocos not in dict(I.MODOS_DOS_BLOCOS):
+            modo_blocos = I.MANUAL
         ImportacaoPDF.objects.filter(pk=imp.pk).update(
-            resumo=dict(imp.resumo or {}, inicios={str(k): v for k, v in inicios.items()}))
+            resumo=dict(imp.resumo or {}, inicios={str(k): v for k, v in inicios.items()}, modo_blocos=modo_blocos))
         imp.refresh_from_db()
         if "salvar" in request.POST:
             messages.success(request, "Escolhas guardadas. Confira e aplique quando quiser.")
             return redirect("importacao_ver", ano=ano, pk=pk)
     try:
-        feito = I.aplicar(imp, request.user, inicios)
+        modo = ((imp.resumo or {}).get("modo_blocos") or I.MANUAL) if inicios is not None else I.SUGERIDOS
+        feito = I.aplicar(imp, request.user, inicios, blocos=modo)
     except I.Recusado as e:
         messages.error(request, str(e))
         return redirect("importacao_ver", ano=ano, pk=pk)
     if c.automatico:
         messages.success(request, f"{feito['paginas']} páginas e {feito['caixas']} trechos de texto criados no ciclo.")
+    elif (imp.resumo or {}).get("blocos") == I.MANUAL:
+        messages.success(request, f"{feito['paginas']} páginas criadas"
+                                  + (f", com {feito['fixos']} bloco(s) fixo(s) das seções de conteúdo fixo" if feito['fixos'] else "")
+                                  + ". Agora crie os blocos no editor: clique no texto do PDF ou desenhe a área.")
+        return redirect("editor_inicio", ano=ano)
     else:
         messages.success(request, f"{feito['paginas']} páginas e {feito['caixas']} blocos criados: {feito['vazios']} "
                                   f"vazios, para os setores escreverem, e {feito['fixos']} com texto fixo (títulos e "

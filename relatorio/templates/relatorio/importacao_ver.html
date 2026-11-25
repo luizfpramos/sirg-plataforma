@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}{{ imp.nome }} — Importar o PDF{% endblock %}
 {% block head %}{% if imp.situacao == "processando" and not imp.interrompida %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'importar_pdf' ciclo.ano %}"><i class="bi bi-arrow-left"></i> PDFs enviados</a></nav>
+{% passo_montagem ciclo 3 %}<nav class="mini mb-2"><a href="{% url 'importar_pdf' ciclo.ano %}"><i class="bi bi-arrow-left"></i> PDFs enviados</a></nav>
 <h1 class="mb-1 h3"><i class="bi bi-file-earmark-pdf"></i> {{ imp.nome }}</h1>
 <p class="mb-3">{% include "relatorio/_importacao_situacao.html" %} <span class="mini text-secondary ms-2">enviado em {{ imp.enviado_em|date:"d/m/Y H:i" }}</span></p>
 
@@ -60,12 +60,14 @@
             <td class="text-center"><input class="form-check-input" type="checkbox" name="fixo_{{ l.s.pk }}" value="1" {% if l.fixo %}checked{% endif %} aria-label="{{ l.s.titulo }}: conteúdo fixo"></td></tr>
         {% endfor %}</tbody></table></div>
       <h2 class="h6 mb-1">Os blocos</h2>
-      <p class="mini text-secondary mb-2">Títulos e seções de conteúdo fixo recebem o texto do PDF. Os demais blocos nascem <strong>vazios</strong>, para os setores escreverem; o texto do PDF fica guardado como consulta (“Ano anterior”) e o tamanho dele sugere o mínimo e o máximo de caracteres. Como o bloco vazio aparece na tela, até alguém escrever:</p>
+      <p class="mini text-secondary mb-2">Quem cria os blocos de cada página:</p>
+      {% for v, r in modos_blocos %}<div class="form-check mb-1"><input class="form-check-input" type="radio" name="modo_blocos" id="mb-{{ v }}" value="{{ v }}" {% if modo_blocos == v %}checked{% endif %}><label class="form-check-label mini" for="mb-{{ v }}">{{ r }}</label></div>{% endfor %}
+      <p class="mini text-secondary mt-3 mb-2">Os blocos de texto para os setores nascem <strong>vazios</strong>; o texto do PDF fica guardado como consulta (“Ano anterior”) e o tamanho dele sugere o mínimo e o máximo de caracteres. Como o bloco vazio aparece na tela, até alguém escrever:</p>
       {% for v, r in exibicoes %}<div class="form-check"><input class="form-check-input" type="radio" name="exibicao_vazio" id="ev-{{ v }}" value="{{ v }}" {% if ciclo.exibicao_vazio == v %}checked{% endif %}><label class="form-check-label" for="ev-{{ v }}">{{ r }}</label></div>{% endfor %}
       <p class="mini text-secondary mt-1">Dá para trocar depois, em Situação e prazo.</p>
     </div>
     <div class="card-footer d-flex flex-wrap gap-2">
-      <button class="btn btn-primary" onclick="return confirm('Aplicar este PDF ao ciclo? As páginas e os blocos serão criados com as escolhas acima.')"><i class="bi bi-check2-circle"></i> Aplicar ao ciclo</button>
+      <button class="btn btn-primary" onclick="return confirm('Aplicar este PDF ao ciclo? As páginas serão criadas com as escolhas acima.')"><i class="bi bi-check2-circle"></i> Aplicar ao ciclo</button>
       <button class="btn btn-outline-secondary" name="salvar" value="1">Só guardar as escolhas</button>
     </div>
   </form>

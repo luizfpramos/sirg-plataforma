@@ -867,3 +867,27 @@ main#conteudo:focus { outline: none; }
 .ed-leg.ed-leg-fora { border: 0; width: 0; height: 0; border-style: solid; border-width: 0 10px 10px 0; border-color: transparent #e07b00 transparent transparent; }
 .ed-leg.ed-leg-grade { border: 1px solid rgba(123, 31, 162, .8); background: rgba(123, 31, 162, .08); }
 .ed-leg.ed-leg-guia { border: 0; border-left: 2px solid #00a3c4; }
+
+/* 2.21 — barra de navegação dos passos da montagem */
+.passo-nav { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-bottom: 1rem;
+  padding: .5rem .75rem; border: 1px solid var(--bs-border-color); border-radius: .5rem; background: var(--bs-tertiary-bg); }
+.passo-nav-voltar { font-size: .875rem; text-decoration: none; }
+.passo-nav-atual { font-size: .875rem; font-weight: 600; color: var(--bs-secondary-color); }
+.passo-nav-setas { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+@media (max-width: 576px) { .passo-nav-setas { margin-left: 0; width: 100%; } .passo-nav-setas .btn { flex: 1 1 0; } }
+.ed-guia-valor { position: absolute; background: #0d6efd; color: #fff; font: 10px/1.2 system-ui, sans-serif; padding: 1px 4px; border-radius: 3px; white-space: nowrap; pointer-events: none; }
+.ed-guia.v .ed-guia-valor { top: 4px; left: 8px; }
+.ed-guia.h .ed-guia-valor { left: 4px; top: 8px; }
+
+/* 2.21 — texto do PDF no editor: a pessoa escolhe o que vira bloco */
+.ed-pdf { position: absolute; inset: 0; z-index: 3; }
+.ed-pdf-caixa { position: absolute; outline: 1px dashed rgba(13, 110, 253, .55); background: rgba(13, 110, 253, .04); cursor: pointer; }
+.ed-pdf-caixa > .ed-pdf-txt { opacity: .55; pointer-events: none; }
+.ed-pdf-caixa:hover { background: rgba(13, 110, 253, .12); outline-style: solid; }
+.ed-pdf-caixa.sel { background: rgba(13, 110, 253, .18); outline: 2px solid #0d6efd; }
+.ed-sem-pdf .ed-pdf { display: none; }
+.ed-leg-pdf { outline: 1px dashed rgba(13, 110, 253, .8); background: rgba(13, 110, 253, .08); }
+.ed-pg .ed-caixas { z-index: 4; pointer-events: none; }
+.ed-pg .ed-caixas > * { pointer-events: auto; }
+.ed-pg .ed-caixas > .ed-rascunho, .ed-pg .ed-caixas > .ed-area-sel { pointer-events: none; }
+.ed-painel legend { font-size: .875rem; font-weight: 600; float: none; }

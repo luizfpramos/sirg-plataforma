@@ -93,7 +93,38 @@ def secoes_lista(request, ano):
     existentes = {x.upper() for x in Setor.objects.values_list("sigla", flat=True)}
     return render(request, "relatorio/secoes.html", {
         "ciclo": c, "arvore": M.arvore(c), "faltam": [x for x in pedidas if x.upper() not in existentes],
-        "voltar": request.get_full_path()})
+        "voltar": request.get_full_path(), "inicios": M.inicios_das_secoes(c) if c.paginas.exists() else None})
+
+
+@login_required
+@require_POST
+def secoes_paginas(request, ano):
+    """Corrige a página em que cada seção começa, depois de aplicar o PDF (2.21)."""
+    _exigir_admin(request.user)
+    c = get_object_or_404(Ciclo, ano=ano)
+    novos = {}
+    for s in c.secoes.all():
+        campo = f"inicio_{s.pk}"
+        if campo not in request.POST:
+            continue
+        v = request.POST.get(campo, "").strip()
+        if not v:
+            novos[s.pk] = None
+        elif v.isdigit():
+            novos[s.pk] = int(v)
+        else:
+            messages.error(request, f"Página inválida em “{s.titulo}”: {v}.")
+            return redirect(reverse("secoes_lista", args=[ano]) + "#paginas")
+    try:
+        f = M.mudar_inicios(c, novos)
+    except M.Recusado as e:
+        messages.error(request, str(e))
+    else:
+        if f["paginas"]:
+            messages.success(request, f"{f['paginas']} página(s) mudaram de seção, com {f['blocos']} bloco(s).")
+        else:
+            messages.info(request, "Nenhuma página mudou de seção.")
+    return redirect(reverse("secoes_lista", args=[ano]) + "#paginas")
 
 
 @login_required

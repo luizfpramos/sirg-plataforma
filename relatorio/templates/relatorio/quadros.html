@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load sirg_rel %}
 {% block titulo %}Quadros de números — {{ ciclo.titulo }}{% endblock %}
 {% block conteudo %}
-<nav class="mini mb-2"><a href="{% url 'montagem' ciclo.ano %}"><i class="bi bi-arrow-left"></i> Montar o relatório</a></nav>
+{% passo_montagem ciclo 6 %}
 <h1 class="mb-1"><i class="bi bi-table"></i> Quadros de números</h1>
 <p class="text-secondary">{{ ciclo.titulo }}. Cada quadro é uma tabela de números que alimenta os blocos de gráfico e de tabela. Os anos anteriores ao ano-base já nascem travados: a DGDI preenche o histórico e o setor completa o ano do relatório.</p>
 

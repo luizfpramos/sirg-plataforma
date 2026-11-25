@@ -366,7 +366,17 @@ def setores(request):
                                                                      vinculos__usuario__is_active=True)))
     if request.GET.get("inativos") != "1":
         qs = qs.filter(ativo=True)
-    return render(request, "contas/setores.html", {"setores": qs, "mostrar_inativos": request.GET.get("inativos") == "1"})
+    return render(request, "contas/setores.html", {"setores": qs, "mostrar_inativos": request.GET.get("inativos") == "1",
+                                                   **_da_montagem(request)})
+
+
+def _da_montagem(request):
+    """Setores abertos pelo passo 1 de "Montar o relatório" (?montagem=ANO): a tela mostra a barra dos passos
+    e os links internos levam o parâmetro adiante (2.21)."""
+    from relatorio.models import Ciclo
+    ano = request.GET.get("montagem") or request.POST.get("montagem") or ""
+    c = Ciclo.objects.filter(ano=ano).first() if ano.isdigit() else None
+    return {"ciclo_montagem": c, "q_montagem": f"montagem={c.ano}" if c else ""}
 
 
 @login_required
@@ -381,10 +391,12 @@ def setor(request, pk):
             if mudou:
                 S.registrar("setor_alterado", request.user, setor=s, descricao=", ".join(mudou), request=request)
             messages.success(request, f"Setor {s.sigla} salvo.")
-            return redirect("setor", pk=s.pk)
+            m = _da_montagem(request)["q_montagem"]
+            return redirect(reverse("setor", args=[s.pk]) + (f"?{m}" if m else ""))
     vinculos = VinculoSetor.objects.filter(setor=s).select_related("usuario", "incluido_por", "encerrado_por")
     return render(request, "contas/setor.html", {"setor": s, "form": form, "vinculos": vinculos,
-                                                 "membros": [v for v in vinculos if v.ativo and v.usuario.is_active]})
+                                                 "membros": [v for v in vinculos if v.ativo and v.usuario.is_active],
+                                                 **_da_montagem(request)})
 
 
 @login_required
@@ -568,6 +580,13 @@ def enviar_producao(request):
 
 # Histórico de versões mostrado na tela "Sobre" (a mais recente primeiro).
 VERSOES = [
+    ("2.21", "novembro de 2026", [
+        "Montar o relatório: as oito telas dos passos têm a mesma barra no alto, com a volta para a lista de passos, a indicação \"Passo N de 8\" e os botões do passo anterior e do próximo. Setores, Importar o PDF e Atributos dos blocos, que voltavam para lugares diferentes, agora voltam para a montagem.",
+        "Blocos feitos pela pessoa: ao aplicar o PDF, o padrão passa a ser criar só as páginas. No editor, o texto do PDF aparece por cima do fundo (botão Texto do PDF ou tecla T); clicar num texto cria o bloco do tamanho certo, e a pessoa escolhe se o setor escreve (o texto do PDF fica como referência) ou se fica fixo. Shift+clique junta vários textos; desenhar uma área leva os textos de dentro e serve também para imagens e gráficos. \"Deixar como texto fixo\" resolve páginas que não mudam. A sugestão automática de antes continua como opção.",
+        "Seções: depois de aplicar o PDF, a tela de Seções mostra a página em que cada seção começa e deixa corrigir. As páginas e os blocos passam para a seção certa; blocos que alguém pôs em outra seção ficam onde estão.",
+        "Guias: criar, mudar e apagar guias pelo painel do editor, digitando a posição, sem precisar arrastar da régua; o painel mostra a grade do relatório e avisa quando ela ainda não foi definida; ao arrastar, a posição aparece ao lado da guia.",
+        "Os arquivos de tela (JavaScript e CSS) passam a levar a data do arquivo no endereço, para o navegador e o Cloudflare não usarem uma cópia antiga depois de uma atualização. Era o que fazia as guias parecerem não funcionar logo depois da 2.20.",
+    ]),
     ("2.20", "novembro de 2026", [
         "Grade das páginas: em Padrão de design, o relatório ganha margens, colunas e medianiz. No editor de páginas, a grade aparece por cima e o bloco encaixa nela ao ser desenhado, movido ou redimensionado (Alt solta livre).",
         "Guias da página: arraste a partir da régua para criar guias só daquela página, para as exceções também ficarem alinhadas. Clique na guia para digitar a posição; arraste para fora da página para apagar; copie as guias para outras páginas.",

@@ -60,7 +60,7 @@ class ConferenciaTests(TestCase):
         self.assertEqual(self.imp.situacao, ImportacaoPDF.PRONTA, self.imp.mensagem)
 
     def form(self, **muda):
-        d = {"conferido": "1", "exibicao_vazio": "orientacao"}
+        d = {"conferido": "1", "exibicao_vazio": "orientacao", "modo_blocos": "sugeridos"}
         for s, n in ((self.apres, 1), (self.grad, 2), (self.pesq, 3)):
             d[f"inicio_{s.pk}"] = str(n)
         d[f"inicio_{self.c.secoes.get(chave='cap1').pk}"] = ""

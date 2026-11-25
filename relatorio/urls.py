@@ -20,6 +20,7 @@ urlpatterns = [
     path("ciclos/<int:ano>/de-trabalho/", MO.ciclo_de_trabalho, name="ciclo_de_trabalho"),
     path("ciclos/<int:ano>/excluir/", MO.ciclo_excluir, name="ciclo_excluir"),
     path("ciclos/<int:ano>/secoes/", MO.secoes_lista, name="secoes_lista"),
+    path("ciclos/<int:ano>/secoes/paginas/", MO.secoes_paginas, name="secoes_paginas"),
     path("ciclos/<int:ano>/quadros/", MO.quadros_lista, name="quadros_lista"),
     path("ciclos/<int:ano>/pdf-anterior/", MO.pdf_anterior, name="pdf_anterior"),
     path("ciclos/<int:ano>/pdf-anterior/enviar/", MO.pdf_anterior_enviar, name="pdf_anterior_enviar"),

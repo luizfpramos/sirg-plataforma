@@ -15,6 +15,8 @@
   var reguaH = document.getElementById("ed-regua-h"), reguaV = document.getElementById("ed-regua-v");
   var camadaGrade = document.getElementById("ed-grade"), camadaGuias = document.getElementById("ed-guias");
   var verGuias = document.getElementById("ed-ver-guias"), chkEncaixar = document.getElementById("ed-encaixar");
+  var camadaPdf = document.getElementById("ed-pdf"), verPdf = document.getElementById("ed-ver-pdf");
+  var PDF = D.pdf || [], pdfSel = [];      // caixas de texto do PDF (2.21) e as escolhidas para virar um bloco
   function lembrar(k, v) { try { window.localStorage.setItem(k, v ? "1" : "0"); } catch (e) { /* sem armazenamento */ } }
   function lembrado(k) { try { return window.localStorage.getItem(k) !== "0"; } catch (e) { return true; } }
 
@@ -53,7 +55,43 @@
   }
 
   // ---- desenho ---------------------------------------------------------------------------------------------
+  // ---- texto do PDF: o que ainda não virou bloco ----------------------------------------------------------
+  function coberta(c) {
+    var cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+    return blocos.some(function (b) { return b.x <= cx && cx <= b.x + b.w && b.y <= cy && cy <= b.y + b.h; });
+  }
+  function pdfLivres() { return PDF.filter(function (c) { return !coberta(c); }); }
+  function achaPdf(i) { for (var k = 0; k < PDF.length; k++) if (PDF[k].i === i) return PDF[k]; return null; }
+  function desenharPdf() {
+    if (!camadaPdf) return;
+    var h = "";
+    pdfSel = pdfSel.filter(function (i) { var c = achaPdf(i); return c && !coberta(c); });
+    pdfLivres().forEach(function (c) {
+      h += '<div class="ed-pdf-caixa' + (pdfSel.indexOf(c.i) >= 0 ? " sel" : "") + '" data-pdf="' + c.i + '" title="Texto do PDF: clique para criar um bloco aqui" style="left:' + c.x + "px;top:" + c.y + "px;width:" + c.w + "px;height:" + c.h + 'px">' +
+        '<div class="ed-pdf-txt" style="' + esc(c.css) + '">' + c.html + "</div></div>";
+    });
+    camadaPdf.innerHTML = h;
+  }
+  function caixaDe(lista) {
+    var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    lista.forEach(function (c) { x0 = Math.min(x0, c.x); y0 = Math.min(y0, c.y); x1 = Math.max(x1, c.x + c.w); y1 = Math.max(y1, c.y + c.h); });
+    return { x: num(x0), y: num(y0), w: num(Math.max(12, x1 - x0)), h: num(Math.max(12, y1 - y0)) };
+  }
+  function rascunhoDoPdf() {                 // o bloco novo cobre as caixas escolhidas
+    var l = pdfSel.map(achaPdf).filter(Boolean);
+    if (!l.length) { rascunho = null; return; }
+    rascunho = caixaDe(l);
+    rascunho.pdf = pdfSel.slice(); rascunho.secao = secaoPerto(rascunho); rascunho.setor = ""; rascunho.descricao = ""; rascunho.min = null; rascunho.max = null;
+  }
+  function pdfDentro(r) {                    // caixas do PDF com o centro dentro da área desenhada
+    return pdfLivres().filter(function (c) {
+      var cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+      return cx >= r.x && cx <= r.x + r.w && cy >= r.y && cy <= r.y + r.h;
+    }).map(function (c) { return c.i; });
+  }
+
   function desenhar() {
+    desenharPdf();
     caixas.innerHTML = "";
     blocos.forEach(function (b) {
       var e = document.createElement("div");
@@ -118,7 +156,7 @@
       });
     });
     if (arrasto && arrasto.modo === "guia") {
-      h += '<div class="ed-guia nova ' + arrasto.eixo + '" style="' + (arrasto.eixo === "v" ? "left:" : "top:") + arrasto.valor + 'px"></div>';
+      if (arrasto.valor >= 0) h += '<div class="ed-guia nova ' + arrasto.eixo + '" style="' + (arrasto.eixo === "v" ? "left:" : "top:") + arrasto.valor + 'px"><span class="ed-guia-valor">' + arrasto.valor + " pt</span></div>";
     }
     camadaGuias.innerHTML = h;
   }
@@ -132,6 +170,10 @@
     reguaH.style.background = fino + " bottom left / 100% 5px no-repeat, #f6f8fb";
     reguaV.style.height = Math.round(D.altura * z) + "px";
     reguaV.style.background = fino.replace("to right", "to bottom") + " top right / 5px 100% no-repeat, #f6f8fb";
+  }
+  function mostrarPdf(v) {
+    raiz.classList.toggle("ed-sem-pdf", !v);
+    if (verPdf) verPdf.checked = v;
   }
   function mostrarGuias(v) {
     raiz.classList.toggle("ed-sem-guias", !v);
@@ -227,16 +269,18 @@
       painel.innerHTML = '<h2 class="h6">Guia ' + guiaTexto(gs.eixo) + '</h2><label class="form-label mini mb-0" for="f-guia">Posição (pt, a partir ' + (gs.eixo === "v" ? "da esquerda" : "de cima") + ')</label>' +
         '<input class="form-control form-control-sm mb-2" id="f-guia" type="number" step="0.5" min="0" max="' + (gs.eixo === "v" ? D.largura : D.altura) + '" value="' + gs.valor + '">' +
         '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" id="b-guia-ok"><i class="bi bi-check-lg"></i> Salvar</button><button class="btn btn-sm btn-outline-danger ms-auto" id="b-guia-apagar"><i class="bi bi-trash"></i> Apagar</button></div>' +
-        '<p class="mini text-secondary mt-3 mb-0">Também dá para arrastar a guia na página. Arrastar para fora da página apaga.</p>';
+        '<p class="mini text-secondary mt-3 mb-2">Também dá para arrastar a guia na página. Arrastar para fora da página apaga.</p>' +
+        '<button class="btn btn-sm btn-link p-0" id="b-guia-voltar"><i class="bi bi-arrow-left"></i> Todas as guias da página</button>';
       var ok = function () {
-        var v = parseFloat($("#f-guia").value);
-        if (isNaN(v)) return;
+        var v = parseFloat($("#f-guia").value), lim = gs.eixo === "v" ? D.largura : D.altura;
+        if (isNaN(v) || v < 0 || v > lim) { dizer("Digite uma posição entre 0 e " + num(lim) + " pt.", true); return; }
         v = num(v);
         var l = G.pagina[gs.eixo].filter(function (x) { return x !== gs.valor; });
         l.push(v); G.pagina[gs.eixo] = l; guiaSel = { eixo: gs.eixo, valor: v };
         salvarGuias("Guia movida.");
       };
       $("#b-guia-ok").onclick = ok;
+      $("#b-guia-voltar").onclick = function () { guiaSel = null; desenharGuias(); montarPainel(); };
       $("#f-guia").onkeydown = function (e) { if (e.key === "Enter") ok(); };
       $("#b-guia-apagar").onclick = function () {
         G.pagina[gs.eixo] = G.pagina[gs.eixo].filter(function (x) { return x !== gs.valor; });
@@ -245,16 +289,27 @@
       return;
     }
     if (rascunho) {
-      h = '<h2 class="h6">Novo bloco</h2>' + camposComuns(null, true) +
+      var temPdf = rascunho.pdf && rascunho.pdf.length;
+      h = '<h2 class="h6">Novo bloco</h2>';
+      if (temPdf) h += '<p class="mini mb-2">' + rascunho.pdf.length + " texto(s) do PDF escolhido(s). Shift+clique em outro texto para juntar.</p>" +
+        '<fieldset class="mb-2" id="f-texto-box"><legend class="form-label mini mb-1">O texto deste bloco</legend>' +
+        '<div class="form-check mini"><input class="form-check-input" type="radio" name="f-texto" id="f-texto-setor" value="setor" checked><label class="form-check-label" for="f-texto-setor"><strong>O setor escreve</strong>: o bloco nasce vazio e o texto do PDF fica como referência do ano anterior.</label></div>' +
+        '<div class="form-check mini"><input class="form-check-input" type="radio" name="f-texto" id="f-texto-fixo" value="fixo"><label class="form-check-label" for="f-texto-fixo"><strong>Texto fixo</strong>: fica como está no PDF (títulos, textos que não mudam). Só o Editor-chefe altera.</label></div></fieldset>';
+      h += camposComuns(null, true) +
         '<div class="d-flex gap-2"><button class="btn btn-sm btn-primary" id="b-criar"><i class="bi bi-plus-lg"></i> Criar bloco</button><button class="btn btn-sm btn-outline-secondary" id="b-cancelar">Cancelar</button></div>';
       painel.innerHTML = h;
-      $("#f-tipo").onchange = function () { $("#f-quadro-box").classList.toggle("d-none", this.value === "texto" || this.value === "imagem"); };
+      $("#f-tipo").onchange = function () {
+        $("#f-quadro-box").classList.toggle("d-none", this.value === "texto" || this.value === "imagem");
+        if ($("#f-texto-box")) $("#f-texto-box").classList.toggle("d-none", this.value !== "texto");
+      };
       ["x", "y", "w", "h"].forEach(function (k) {
         $("#f-" + k).oninput = function () { rascunho[k] = parseFloat(this.value) || 0; desenhar(); };
       });
-      $("#b-cancelar").onclick = function () { rascunho = null; desenhar(); montarPainel(); };
+      $("#b-cancelar").onclick = function () { rascunho = null; pdfSel = []; desenhar(); montarPainel(); };
       $("#b-criar").onclick = function () {
         var d = lerCampos(); d.tipo = $("#f-tipo").value; d.quadro = $("#f-quadro").value;
+        if (temPdf && d.tipo === "texto") { d.pdf = rascunho.pdf; var t = document.querySelector('input[name="f-texto"]:checked'); d.texto = t ? t.value : "setor"; }
+        pdfSel = [];
         enviar("criar", d);
       };
     } else if (sel.length === 1) {
@@ -290,10 +345,11 @@
         enviar("fixo", { ids: sel.filter(function (id) { return achar(id).fixo; }), fixo: false });
       };
     } else {
-      painel.innerHTML = '<h2 class="h6">Blocos da página ' + D.pagina + "</h2><p class=\"mini text-secondary\">" + blocos.length + ' bloco(s). Clique em um bloco para ver e mudar os atributos, ou arraste no fundo da página para desenhar um bloco novo. <strong>Shift + arrastar</strong> seleciona todos os blocos de uma área (por exemplo, os rótulos de um gráfico).</p>' +
+      painel.innerHTML = '<h2 class="h6">Blocos da página ' + D.pagina + "</h2><p class=\"mini text-secondary\">" + blocos.length + ' bloco(s). Clique em um bloco para ver e mudar os atributos. Para um bloco novo, clique no texto do PDF ou arraste para desenhar a área (também para imagens e gráficos). <strong>Shift + arrastar</strong> seleciona todos os blocos de uma área (por exemplo, os rótulos de um gráfico).</p>' +
         '<ul class="mini ed-legenda ps-0"><li><span class="ed-leg" style="--cor:#6c757d"></span> a cor do contorno é a do setor do bloco</li>' +
         '<li><span class="ed-leg ed-leg-fixo"></span> texto fixo do modelo (só o Editor-chefe altera)</li>' +
         '<li><span class="ed-leg ed-leg-numero"></span> texto fixo com número do ano anterior: confira</li>' +
+        '<li><span class="ed-leg ed-leg-pdf"></span> texto do PDF que ainda não virou bloco</li>' +
         '<li><span class="ed-leg ed-leg-grade"></span> margens e colunas da grade do relatório</li>' +
         '<li><span class="ed-leg ed-leg-guia"></span> guia desta página</li>' +
         '<li><span class="ed-leg ed-leg-fora"></span> bloco fora da grade e das guias</li></ul>';
@@ -301,10 +357,33 @@
       if (fora.length) h = '<div class="alert alert-warning mini py-2">' + fora.length + " bloco(s) fora da grade. " +
         '<button class="btn btn-sm btn-link p-0 align-baseline" id="b-sel-fora">Selecionar</button></div>';
       else h = "";
+      var livres = pdfLivres().length;
+      h += '<h2 class="h6 mt-3">Texto do PDF</h2>';
+      if (!PDF.length) h += '<p class="mini text-secondary mb-2">Esta página não tem texto do PDF importado.</p>';
+      else if (!livres) h += '<p class="mini text-secondary mb-2">Todo o texto do PDF desta página já está em blocos.</p>';
+      else h += '<p class="mini mb-2"><span class="ed-leg ed-leg-pdf"></span> ' + livres + " texto(s) do PDF ainda sem bloco. Clique num texto para criar o bloco; Shift+clique junta vários num só; arrastar desenha uma área e leva os textos de dentro.</p>" +
+        '<button class="btn btn-sm btn-outline-secondary mb-2" id="b-fixar-todos" title="Para páginas que não mudam de um ano para o outro"><i class="bi bi-lock"></i> Deixar os ' + livres + " como texto fixo</button>";
       var nv = G.pagina.v.length, nh = G.pagina.h.length;
+      h += '<h2 class="h6 mt-3">Grade do relatório</h2>';
+      if (!(G.grade && G.grade.colunas)) h += '<p class="mini mb-2">Ainda não definida: sem ela, os blocos só encaixam nas guias e nas bordas da página. ' +
+        (D.url_grade ? '<a href="' + esc(D.url_grade) + '">Definir margens e colunas</a>' : "Peça ao administrador para definir.") + "</p>";
+      else h += '<p class="mini text-secondary mb-2">' + G.grade.colunas + " coluna(s), medianiz de " + G.grade.medianiz + " pt; margens " + G.grade.margem_sup + " / " + G.grade.margem_dir + " / " + G.grade.margem_inf + " / " + G.grade.margem_esq + " pt (cima, direita, baixo, esquerda)." +
+        (D.url_grade ? ' <a href="' + esc(D.url_grade) + '">Mudar</a>' : "") + "</p>";
       h += '<h2 class="h6 mt-3">Guias desta página</h2>';
-      if (!(G.grade && G.grade.colunas)) h += '<p class="mini text-secondary mb-2">O relatório ainda não tem grade (margens e colunas).</p>';
-      h += '<p class="mini text-secondary mb-2">' + (nv || nh ? nv + " vertical(is) e " + nh + " horizontal(is). Clique numa guia para mudar a posição." : "Nenhuma. Arraste a partir da régua de cima (horizontal) ou da esquerda (vertical) para criar uma.") + "</p>";
+      h += '<p class="mini text-secondary mb-2">' + (nv || nh ? "Clique no número para mudar a posição." : "Nenhuma. Crie pelos botões abaixo ou arraste a partir da régua de cima (guia horizontal) ou da esquerda (guia vertical).") + "</p>";
+      if (nv || nh) {
+        h += '<ul class="list-unstyled mini ed-lista-guias mb-2">';
+        ["v", "h"].forEach(function (eixo) {
+          G.pagina[eixo].forEach(function (val) {
+            h += '<li class="d-flex align-items-center gap-2 mb-1"><span class="ed-leg ed-leg-guia"></span><span style="min-width:5.5rem">' + (eixo === "v" ? "Vertical" : "Horizontal") + '</span>' +
+              '<button class="btn btn-sm btn-link p-0" data-guia-ir="' + eixo + '" data-valor="' + val + '">' + val + " pt</button>" +
+              '<button class="btn btn-sm btn-link text-danger p-0 ms-auto" data-guia-apagar="' + eixo + '" data-valor="' + val + '" title="Apagar esta guia" aria-label="Apagar a guia ' + (eixo === "v" ? "vertical" : "horizontal") + " em " + val + ' pt"><i class="bi bi-x-lg"></i></button></li>';
+          });
+        });
+        h += "</ul>";
+      }
+      h += '<div class="input-group input-group-sm mb-2"><input class="form-control" id="f-nova-guia" type="number" step="0.5" min="0" placeholder="posição em pt" aria-label="Posição da nova guia, em pontos">' +
+        '<button class="btn btn-outline-primary" id="b-guia-v" title="Guia vertical, medida a partir da esquerda">+ Vertical</button><button class="btn btn-outline-primary" id="b-guia-h" title="Guia horizontal, medida a partir de cima">+ Horizontal</button></div>';
       if (nv || nh) {
         h += '<label class="form-label mini mb-0" for="f-copiar">Copiar estas guias para as páginas</label>' +
           '<div class="input-group input-group-sm mb-1"><input class="form-control" id="f-copiar" placeholder="ex.: 3, 5-8 ou todas"><button class="btn btn-outline-primary" id="b-copiar">Copiar</button></div>' +
@@ -312,6 +391,29 @@
           '<button class="btn btn-sm btn-link text-danger p-0" id="b-limpar-guias"><i class="bi bi-x-lg"></i> Apagar as guias desta página</button>';
       }
       painel.innerHTML += h;
+      var novaGuia = function (eixo) {
+        var v = parseFloat($("#f-nova-guia").value), lim = eixo === "v" ? D.largura : D.altura;
+        if (isNaN(v) || v < 0 || v > lim) { dizer("Digite uma posição entre 0 e " + num(lim) + " pt.", true); $("#f-nova-guia").focus(); return; }
+        v = num(v);
+        if (G.pagina[eixo].indexOf(v) >= 0) { dizer("Já existe uma guia nessa posição.", true); return; }
+        G.pagina[eixo].push(v); mostrarGuias(true); lembrar("sirg-ed-guias", true);
+        guiaSel = null; salvarGuias("Guia " + guiaTexto(eixo) + " criada em " + v + " pt.");
+      };
+      $("#b-guia-v").onclick = function () { novaGuia("v"); };
+      $("#b-guia-h").onclick = function () { novaGuia("h"); };
+      painel.querySelectorAll("[data-guia-ir]").forEach(function (bt) {
+        bt.onclick = function () { guiaSel = { eixo: bt.dataset.guiaIr, valor: parseFloat(bt.dataset.valor) }; mostrarGuias(true); desenharGuias(); montarPainel(); if ($("#f-guia")) { $("#f-guia").focus(); $("#f-guia").select(); } };
+      });
+      painel.querySelectorAll("[data-guia-apagar]").forEach(function (bt) {
+        bt.onclick = function () {
+          var e = bt.dataset.guiaApagar, v = parseFloat(bt.dataset.valor);
+          G.pagina[e] = G.pagina[e].filter(function (x) { return x !== v; }); salvarGuias("Guia apagada.");
+        };
+      });
+      if ($("#b-fixar-todos")) $("#b-fixar-todos").onclick = function () {
+        if (!window.confirm("Criar um bloco de texto fixo para cada um dos " + livres + " textos do PDF desta página? Só o Editor-chefe poderá alterá-los.")) return;
+        enviar("fixar_textos", {});
+      };
       if ($("#b-sel-fora")) $("#b-sel-fora").onclick = function () { sel = fora.map(function (b) { return b.id; }); desenhar(); montarPainel(); };
       if ($("#b-copiar")) $("#b-copiar").onclick = function () {
         var t = $("#f-copiar").value.trim();
@@ -343,6 +445,13 @@
       return;
     }
     guiaSel = null;
+    var fan = !alvo && !al && e.target.closest(".ed-pdf-caixa");
+    if (fan) {                                       // texto do PDF: clique escolhe; arrastar desenha uma área
+      sel = [];
+      arrasto = { modo: "novo", ini: p, mexeu: false, pdf: parseInt(fan.dataset.pdf, 10), shift: e.shiftKey };
+      pg.setPointerCapture(e.pointerId); e.preventDefault();
+      return;
+    }
     if (al && sel.length === 1) {
       var b = achar(sel[0]);
       arrasto = { modo: "alca", al: al.dataset.al, id: b.id, ini: p, orig: { x: b.x, y: b.y, w: b.w, h: b.h }, mexeu: false };
@@ -420,9 +529,17 @@
         if (dentro.length) dizer(dentro.length + " bloco(s) na área.");
       }
       desenhar(); montarPainel();
+    } else if (a.modo === "novo" && !a.mexeu && a.pdf != null) {
+      if (a.shift) pdfSel = pdfSel.indexOf(a.pdf) >= 0 ? pdfSel.filter(function (i) { return i !== a.pdf; }) : pdfSel.concat(a.pdf);
+      else pdfSel = [a.pdf];
+      rascunhoDoPdf();
+      desenhar(); montarPainel();
     } else if (a.modo === "novo") {
-      if (rascunho && rascunho.w >= 12 && rascunho.h >= 12) { rascunho.secao = secaoPerto(rascunho); rascunho.setor = ""; rascunho.descricao = ""; rascunho.min = null; rascunho.max = null; }
-      else rascunho = null;
+      pdfSel = [];
+      if (rascunho && rascunho.w >= 12 && rascunho.h >= 12) {
+        rascunho.pdf = pdfDentro(rascunho); pdfSel = rascunho.pdf.slice();
+        rascunho.secao = secaoPerto(rascunho); rascunho.setor = ""; rascunho.descricao = ""; rascunho.min = null; rascunho.max = null;
+      } else rascunho = null;
       desenhar(); montarPainel();
     } else if (a.mexeu) {
       var b = achar(a.id);
@@ -443,7 +560,8 @@
     }
     arrasto.valor = num(v);
     var dentro = arrasto.valor >= 0 && arrasto.valor <= (arrasto.eixo === "v" ? D.largura : D.altura);
-    dizer(dentro ? "Guia " + guiaTexto(arrasto.eixo) + " em " + arrasto.valor + " pt" : "Solte fora da página para apagar a guia");
+    dizer(dentro ? "Guia " + guiaTexto(arrasto.eixo) + " em " + arrasto.valor + " pt" :
+      (arrasto.nova ? "Arraste até a página e solte onde a guia deve ficar" : "Solte aqui para apagar a guia"));
     desenharGuias();
   }
   function soltarGuia(a) {
@@ -489,7 +607,8 @@
   // ---- teclado ---------------------------------------------------------------------------------------------
   document.addEventListener("keydown", function (e) {
     if (LEITURA || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ""))) return;
-    if (e.key === "Escape") { sel = []; rascunho = null; guiaSel = null; desenhar(); desenharGuias(); montarPainel(); return; }
+    if ((e.key === "t" || e.key === "T") && !e.ctrlKey && !e.metaKey && !e.altKey && verPdf) { mostrarPdf(!verPdf.checked); lembrar("sirg-ed-pdf", verPdf.checked); return; }
+    if (e.key === "Escape") { sel = []; rascunho = null; guiaSel = null; pdfSel = []; desenhar(); desenharGuias(); montarPainel(); return; }
     if ((e.key === "g" || e.key === "G") && !e.ctrlKey && !e.metaKey && !e.altKey) { mostrarGuias(!verGuias.checked); lembrar("sirg-ed-guias", verGuias.checked); return; }
     if (guiaSel && !sel.length && e.key === "Delete") {
       var gs = guiaSel; guiaSel = null;
@@ -516,6 +635,8 @@
   zs.onchange = function () { ajustarZoom(parseFloat(this.value)); };
   if (LEITURA) raiz.classList.add("ed-leitura");
   mostrarGuias(lembrado("sirg-ed-guias"));
+  mostrarPdf(lembrado("sirg-ed-pdf"));
+  if (verPdf) verPdf.onchange = function () { mostrarPdf(this.checked); lembrar("sirg-ed-pdf", this.checked); };
   if (chkEncaixar) chkEncaixar.checked = lembrado("sirg-ed-encaixar");
   if (verGuias) verGuias.onchange = function () { mostrarGuias(this.checked); lembrar("sirg-ed-guias", this.checked); };
   if (chkEncaixar) chkEncaixar.onchange = function () { lembrar("sirg-ed-encaixar", this.checked); };

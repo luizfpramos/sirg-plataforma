@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="{% static 'img/sirg-simbolo-180.png' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
-  <link rel="stylesheet" href="{% static 'css/sirg.css' %}?v={{ VERSAO }}">
+  <link rel="stylesheet" href="{% static 'css/sirg.css' %}?v={% carimbo 'css/sirg.css' %}">
   {% if DESIGN_CSS %}<style>{{ DESIGN_CSS|safe }}</style>{% endif %}
   {% block head %}{% endblock %}
 </head>
@@ -80,7 +80,7 @@
   {% block publico %}{% endblock %}
 {% endif %}
 <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'js/sirg.js' %}?v={{ VERSAO }}"></script>
+<script src="{% static 'js/sirg.js' %}?v={% carimbo 'js/sirg.js' %}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
