@@ -70,7 +70,7 @@ class SecaoForm(forms.ModelForm):
 
     class Meta:
         model = Secao
-        fields = ["titulo", "pai", "ordem", "chave", "setores", "orientacao", "conteudo_fixo"]
+        fields = ["titulo", "pai", "ordem", "chave", "setores", "orientacao", "conteudo_fixo", "pagina_inicio"]
         widgets = {"orientacao": forms.Textarea(attrs={"rows": 4})}
         labels = {"orientacao": "O que escrever aqui"}
         help_texts = {"orientacao": "Uma ou duas frases que aparecem para o setor no alto da seção, no documento."}

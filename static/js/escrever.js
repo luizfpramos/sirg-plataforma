@@ -22,7 +22,7 @@
   var estiloSel = app.querySelector(".js-estilo");
 
   var ativo = null;          // trecho aberto
-  var avisouLeitura = false; // o aviso de "somente leitura" aparece uma vez só
+  var avisouLeitura = {};    // 2.23: o aviso de "somente leitura" aparece uma vez por seção, dizendo de quem ela é
   var ultimoClique = null;   // posição do clique, para pôr o cursor onde a pessoa clicou
 
   function modo() { return "editar"; }
@@ -248,10 +248,20 @@
       ultimoClique = { x: e.clientX, y: e.clientY, t: Date.now() };
       if (!podeAbrir(area) && !area.classList.contains("ativo")) {
         if (area.classList.contains("ocupado")) T.aviso("Um colega está escrevendo neste trecho agora. Tente daqui a pouco.", "warning");
-        else if (!avisouLeitura) {
-          avisouLeitura = true;
-          T.aviso("Este trecho é somente leitura para você. Para propor uma mudança, selecione o trecho e clique em Comentar. " +
-            "As suas seções têm a faixa verde e o lápis no sumário.", "dark");
+        else {
+          var cx = area.closest(".doc-bloco") || area;
+          var sec = cx.dataset.titulo || area.dataset.secaoChave || "";
+          var quem = (cx.getAttribute("title") || "").trim();
+          var num = e.target.closest(".sirg-campo, .sirg-num");
+          var dica = num && num.getAttribute("title");
+          if (cx.hasAttribute("data-pode-concluir") && cx.hasAttribute("data-concluido"))
+            T.aviso("Este trecho está concluído. Para mexer de novo, use Reabrir o trecho, na barra do trecho.", "dark");
+          else if (dica) T.aviso(dica, "dark");                  // número de outro setor: de onde vem e quem preenche
+          else if (!avisouLeitura[sec]) {
+            avisouLeitura[sec] = true;
+            T.aviso((sec ? "“" + sec + "”" + (quem ? " é escrita por " + quem : " não é uma seção sua") + ": " : "") +
+              "você pode ler e comentar, mas não alterar. Para propor uma mudança, selecione o trecho e clique em Comentar.", "dark");
+          }
         }
         return;
       }

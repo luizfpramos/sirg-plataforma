@@ -20,6 +20,8 @@
     var r = atual.getBoundingClientRect(), css = getComputedStyle(document.documentElement);
     var topo = (parseInt(css.getPropertyValue("--topo-h"), 10) || 53) + (parseInt(css.getPropertyValue("--ferr-h"), 10) || 90);
     if (r.bottom < topo || r.top > window.innerHeight) { barra.style.visibility = "hidden"; return; }
+    // 2.23: com a caixa de preencher um número aberta, a barra sai da frente (uma coisa flutuando por vez)
+    if (document.querySelector(".pop-campo")) { barra.style.visibility = "hidden"; return; }
     barra.style.visibility = "visible";
     var h = barra.offsetHeight, w = barra.offsetWidth;
     var x = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
@@ -88,6 +90,13 @@
     if (b) mostrar(b);
   });
   window.addEventListener("scroll", posicionar, { passive: true });
+  if (window.MutationObserver) {        // a caixa do número abre e fecha fora deste script: reposiciona junto
+    new MutationObserver(function (ms) {
+      if (ms.some(function (m) { return Array.prototype.some.call(m.addedNodes, ehPop) || Array.prototype.some.call(m.removedNodes, ehPop); }))
+        posicionar();
+    }).observe(document.body, { childList: true });
+  }
+  function ehPop(n) { return n.nodeType === 1 && n.classList.contains("pop-campo"); }
   window.addEventListener("resize", posicionar);
 
   // ---- anterior / próximo -----------------------------------------------------------------------

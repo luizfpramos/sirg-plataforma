@@ -68,32 +68,70 @@ def ciclo_excluir(request, ano):
 def secoes_lista(request, ano):
     _exigir_admin(request.user)
     c = get_object_or_404(Ciclo, ano=ano)
+    previa, lista = None, ""
     if request.method == "POST":
-        faltando = {}
-        try:
-            caps, secs, avisos, faltando = M.adicionar_em_lote(c, request.POST.get("lista", ""))
-        except M.Recusado as e:
-            messages.error(request, str(e))
-        else:
-            if caps or secs:
-                messages.success(request, f"{caps} {'capítulo' if caps == 1 else 'capítulos'} e {secs} {'seção' if secs == 1 else 'seções'} criados.")
-            for a in avisos:
-                messages.warning(request, a)
-            if not (caps or secs or avisos):
+        lista = request.POST.get("lista", "")
+        if request.POST.get("acao") == "conferir":            # 2.23: mostra o que vai acontecer, sem gravar
+            previa = M.ler_lista(c, lista)
+            if not any(it["acao"] for it in previa):
                 messages.error(request, "A lista está vazia.")
-        if faltando:      # ao criar o setor pelo botão, ele já entra nas seções que o pediram (contas.views.setor_novo)
-            pend = request.session.get("setores_pedidos", {})
-            for sg, pks in faltando.items():
-                pend[sg] = sorted(set(pend.get(sg, [])) | set(pks))
-            request.session["setores_pedidos"] = pend
-        url = reverse("secoes_lista", args=[ano])
-        return redirect(url + ("?faltam=" + ",".join(faltando) if faltando else ""))
+                previa = None
+        else:
+            faltando = {}
+            try:
+                r = M.adicionar_em_lote(c, lista)
+            except M.Recusado as e:
+                messages.error(request, f"Nada foi gravado: {e}")
+                previa = M.ler_lista(c, lista)
+            else:
+                faltando = r["faltando"]
+                partes = []
+                if r["capitulos"]:
+                    partes.append(f"{r['capitulos']} {'capítulo criado' if r['capitulos'] == 1 else 'capítulos criados'}")
+                if r["secoes"]:
+                    partes.append(f"{r['secoes']} {'seção criada' if r['secoes'] == 1 else 'seções criadas'}")
+                if r["atualizadas"]:
+                    partes.append(f"{r['atualizadas']} {'item atualizado' if r['atualizadas'] == 1 else 'itens atualizados'}")
+                if partes:
+                    messages.success(request, ", ".join(partes) + ".")
+                if r["paginas"] and r["paginas"]["paginas"]:
+                    f = r["paginas"]
+                    messages.info(request, f"{f['paginas']} {'página mudou' if f['paginas'] == 1 else 'páginas mudaram'} "
+                                           f"de seção, conforme a lista.")
+                for a in r["avisos"]:
+                    messages.warning(request, a)
+                if not (partes or r["avisos"]):
+                    messages.info(request, "Nada mudou: os itens da lista já estavam assim.")
+                if faltando:      # ao criar o setor pelo botão, ele já entra nas seções que o pediram (contas.views.setor_novo)
+                    pend = request.session.get("setores_pedidos", {})
+                    for sg, pks in faltando.items():
+                        pend[sg] = sorted(set(pend.get(sg, [])) | set(pks))
+                    request.session["setores_pedidos"] = pend
+                url = reverse("secoes_lista", args=[ano])
+                return redirect(url + ("?faltam=" + ",".join(faltando) if faltando else ""))
     from contas.models import Setor
     pedidas = [x for x in (request.GET.get("faltam") or "").split(",") if x][:20]
     existentes = {x.upper() for x in Setor.objects.values_list("sigla", flat=True)}
+    tem_paginas = c.paginas.exists()
+    inicios = M.inicios_das_secoes(c) if tem_paginas else [(s, s.pagina_inicio) for s in M._em_ordem(c)]
+    if previa and tem_paginas:          # mostra de que página para qual a seção muda ao gravar
+        atuais = {x.pk: n for x, n in inicios}
+        for it in previa:
+            if it["existente"] is not None and it["pagina"] and atuais.get(it["existente"].pk) != it["pagina"]:
+                it["pagina_atual"] = atuais.get(it["existente"].pk)
+                it["muda_pagina"] = True
     return render(request, "relatorio/secoes.html", {
         "ciclo": c, "arvore": M.arvore(c), "faltam": [x for x in pedidas if x.upper() not in existentes],
-        "voltar": request.get_full_path(), "inicios": M.inicios_das_secoes(c) if c.paginas.exists() else None})
+        "voltar": request.get_full_path(), "inicios": inicios, "tem_paginas": tem_paginas,
+        "previa": previa, "lista": lista,
+        "previa_n": {k: sum(1 for it in (previa or []) if it["acao"] == k) for k in ("criar", "atualizar", "igual")}})
+
+
+def _gravar_previstas(ciclo, novos):
+    for s in ciclo.secoes.filter(pk__in=list(novos)):
+        if s.pagina_inicio != novos[s.pk]:
+            s.pagina_inicio = novos[s.pk]
+            s.save(update_fields=["pagina_inicio"])
 
 
 @login_required
@@ -115,11 +153,16 @@ def secoes_paginas(request, ano):
         else:
             messages.error(request, f"Página inválida em “{s.titulo}”: {v}.")
             return redirect(reverse("secoes_lista", args=[ano]) + "#paginas")
+    if not c.paginas.exists():           # 2.23: antes do PDF, é a página prevista (a importação usa na conferência)
+        _gravar_previstas(c, novos)
+        messages.success(request, "Páginas previstas salvas. A importação do PDF vai usá-las na conferência.")
+        return redirect(reverse("secoes_lista", args=[ano]) + "#paginas")
     try:
         f = M.mudar_inicios(c, novos)
     except M.Recusado as e:
         messages.error(request, str(e))
     else:
+        _gravar_previstas(c, novos)          # a página prevista acompanha a correção
         if f["paginas"]:
             messages.success(request, f"{f['paginas']} {'página mudou' if f['paginas'] == 1 else 'páginas mudaram'} de seção, com {f['blocos']} {'bloco' if f['blocos'] == 1 else 'blocos'}.")
         else:

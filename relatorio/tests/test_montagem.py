@@ -113,17 +113,22 @@ class SecoesTests(BaseMontagem):
         lista = ("Apresentação\n- Mensagem da dirigente | GAB\n- Sobre o relatório | DGDI, SEGEP\n\n"
                  "Visão geral\n  Quem somos | XYZ\n")
         r = self.client.post(reverse("secoes_lista", args=[2030]), {"lista": lista}, follow=True)
-        self.assertContains(r, "2 capítulos e 3 seções criados")
+        self.assertContains(r, "2 capítulos criados, 3 seções criadas.")
         self.assertContains(r, "setor “XYZ” não existe")
         arv = M.arvore(self.c)
         self.assertEqual([c.titulo for c, _ in arv], ["Apresentação", "Visão geral"])
         self.assertEqual([s.titulo for s in arv[0][1]], ["Mensagem da dirigente", "Sobre o relatório"])
         self.assertEqual(sorted(st.sigla for st in arv[0][1][1].setores.all()), ["DGDI", "SEGEP"])
         self.assertEqual([s.titulo for s in arv[1][1]], ["Quem somos"])
-        # uma segunda lista continua depois do último capítulo e não repete chaves
-        M.adicionar_em_lote(self.c, "Apresentação\n- Mensagem da dirigente")
-        self.assertEqual(Secao.objects.filter(ciclo=self.c, titulo="Apresentação").count(), 2)
-        self.assertEqual(M.arvore(self.c)[-1][0].titulo, "Apresentação")
+        # 2.23: colar de novo um título que já existe atualiza o item, não duplica
+        r = M.adicionar_em_lote(self.c, "Apresentação\n- Mensagem da dirigente | DGDI")
+        self.assertEqual((r["capitulos"], r["secoes"], r["atualizadas"]), (0, 0, 1))
+        self.assertEqual(Secao.objects.filter(ciclo=self.c, titulo="Apresentação").count(), 1)
+        self.assertEqual([x.sigla for x in Secao.objects.get(ciclo=self.c, titulo="Mensagem da dirigente").setores.all()],
+                         ["DGDI"])
+        # um capítulo novo continua depois do último
+        M.adicionar_em_lote(self.c, "Anexos\n- Glossário")
+        self.assertEqual(M.arvore(self.c)[-1][0].titulo, "Anexos")
 
     def test_setor_que_nao_existe_leva_a_criar(self):
         self.entrar()
@@ -152,9 +157,9 @@ class SecoesTests(BaseMontagem):
         self.assertNotIn("DIRGRAD", p["texto"].split("Sem ninguém cadastrado")[1])   # a Ana é do DIRGRAD
 
     def test_secao_sem_capitulo_vira_capitulo(self):
-        caps, secs, avisos, _ = M.adicionar_em_lote(self.c, "- Solta")
-        self.assertEqual((caps, secs), (1, 0))
-        self.assertTrue(avisos)
+        r = M.adicionar_em_lote(self.c, "- Solta")
+        self.assertEqual((r["capitulos"], r["secoes"]), (1, 0))
+        self.assertTrue(r["avisos"])
 
     def test_mover(self):
         cap = secao(self.c, "cap", "Capítulo", ordem=10)

@@ -1,6 +1,6 @@
 # SiRG — contexto do projeto
 
-Atualizado em 25/11/2026, versão **2.22**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
+Atualizado em 25/11/2026, versão **2.23**. O código fica no GitHub; ver `docs/GIT_E_IMPLANTACAO.md`.
 
 ## 1. O que é
 
@@ -130,6 +130,12 @@ Atualizado em 25/11/2026, versão **2.22**. O código fica no GitHub; ver `docs/
 - **Relatório:** o que é de outro setor fica em cinza (CSS em `#doc-corpo`); motivo do envio bloqueado escrito (`.sec-card-motivo`); Reabrir na faixa; "Enviar pelo setor" para o Editor-chefe.
 - **Acessibilidade:** `graficos.descricao()` vira `aria-label` do SVG; xxxxx e números de tabela editáveis com `role="button"`; textos de tela sem "(s)": use `formato.qtd()` no Python e `pluralize` nos modelos.
 - Avaliação completa: documento do Projeto `claude/revisao-usabilidade-2026-11-25.md`.
+
+## 4e. Seções com página (2.23)
+
+- **`Secao.pagina_inicio`** (migration 0016): a página prevista no PDF diagramado. `importador.conferencia` usa: escolha gravada → página prevista → página achada; marca `difere`. A reimportação usa a prevista para seções novas.
+- **`montagem.ler_lista`** lê a lista sem gravar (prévia na tela); **`adicionar_em_lote`** grava e devolve um dicionário. Título igual (sem acento e caixa) atualiza setores e página. Página: `| p. 51`, `| 51`, `Título ...... 51`, `Título<Tab>51`, `Título, p. 51`, `Título  51` (dois espaços); um espaço só não conta. Com o PDF aplicado, chama `mudar_inicios` na mesma transação.
+- **`pendentes.por_setor`**: os itens a preencher de cada setor numa passada (coluna do Início do Editor-chefe).
 
 ## 5. Limitações conhecidas e próximos passos possíveis
 
